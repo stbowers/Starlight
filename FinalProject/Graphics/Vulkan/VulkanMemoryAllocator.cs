@@ -226,13 +226,12 @@ namespace FinalProject.Graphics.Vulkan
 
 		private unsafe Result AllocateMemory(MemoryAllocateInfo allocInfo, out VmaAllocation allocation, long alignment)
 		{
-			// Get heap for the memoryTypeIndex
-			int heapIndex = HeapIndexForMemoryTypeIndex(allocInfo.MemoryTypeIndex);
-			if (!heaps.ContainsKey(heapIndex))
+            int heapIndex = HeapIndexForMemoryTypeIndex(allocInfo.MemoryTypeIndex);
+			if (!heaps.ContainsKey(allocInfo.MemoryTypeIndex))
 			{
-				heaps[heapIndex] = new VmaHeap(memProperties, physicalDevice, device, (uint)allocInfo.MemoryTypeIndex, (uint)heapIndex);
+				heaps[allocInfo.MemoryTypeIndex] = new VmaHeap(memProperties, physicalDevice, device, (uint)allocInfo.MemoryTypeIndex, (uint)heapIndex);
 			}
-			VmaHeap heap = heaps[heapIndex];
+			VmaHeap heap = heaps[allocInfo.MemoryTypeIndex];
 
 			return heap.AllocateMemory(allocInfo, out allocation, alignment);
 		}
@@ -249,7 +248,7 @@ namespace FinalProject.Graphics.Vulkan
 				}
 			}
 
-			throw new ApplicationException();
+            return -1;
 		}
 
 		private int HeapIndexForMemoryTypeIndex(int memoryTypeIndex)

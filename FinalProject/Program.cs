@@ -72,7 +72,7 @@ namespace FinalProject
 			catch (Exception e)
 			{
 				Console.WriteLine("Exception thrown: {0}\nStack Trace: {1}", e.Message, e.StackTrace);
-			}
+            }
 		}
 	}
 }
