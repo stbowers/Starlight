@@ -35,3 +35,9 @@
 /home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/vk.dll
 /home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/System.Runtime.CompilerServices.Unsafe.dll
 /home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/System.ValueTuple.dll
+/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/VulkanCore.dll
+/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/assets/basicShader.vert
+/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/assets/basicShader.frag.spv
+/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/assets/basicShader.vert.spv
+/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/assets/texture.jpg
+/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/bin/Debug/System.Drawing.Common.dll

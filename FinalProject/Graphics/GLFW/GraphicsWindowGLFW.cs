@@ -4,62 +4,69 @@ using System.Runtime.InteropServices;
 
 namespace FinalProject.Graphics.GLFW
 {
-	public class GraphicsWindowGLFW: Window
+	public class GraphicsWindowGLFW : IWindowManager
 	{
-		private GLFWwindow window;
-		int width, height;
+		private GLFWwindow m_window;
+		int m_width, m_height;
 
 		public GraphicsWindowGLFW(int width, int height, string name)
 		{
 			Glfw.Init();
 
-			Console.WriteLine("Is Vulkan supported: {0}", Glfw.VulkanSupported());
+			m_width = width;
+			m_height = height;
 
-			this.width = width;
-			this.height = height;
-
-			Glfw.WindowHint((int) State.ClientApi, (int) State.NoApi);
+			Glfw.WindowHint((int)State.ClientApi, (int)State.NoApi);
 			Glfw.WindowHint((int)State.Resizable, (int)State.False);
 
-			window = Glfw.CreateWindow(width, height, name, null, null);
+			m_window = Glfw.CreateWindow(width, height, name, null, null);
 		}
 
 		~GraphicsWindowGLFW()
 		{
-			Glfw.DestroyWindow(window);
+			Glfw.DestroyWindow(m_window);
 			Glfw.Terminate();
 		}
 
-		public GLFWwindow getWindow()
-		{
-			return window;
-		}
 
-		int Window.GetWidth()
-		{
-			return width;
-		}
 
-		int Window.GetHeight()
-		{
-			return height;
-		}
-
-		string[] Window.GetVulkanExtensions()
+		string[] IWindowManager.GetVulkanExtensions()
 		{
 			return Glfw.GetRequiredInstanceExtensions();
 		}
 
-		unsafe Vulkan.VkSurfaceKHR Window.GetVulkanSurface(Vulkan.VkInstance instance)
+		unsafe VulkanCore.Khr.SurfaceKhr IWindowManager.GetVulkanSurface(VulkanCore.Instance instance)
 		{
-			ulong handle;
-			glfw3.VkResult result = Glfw.CreateWindowSurface(instance.Handle, window.__Instance, (IntPtr)null, (long)&handle);
+			long handle;
+			glfw3.VkResult result = Glfw.CreateWindowSurface(instance.Handle, m_window.__Instance, (IntPtr)null, (long)&handle);
 
 			if (result != glfw3.VkResult.VK_SUCCESS)
 			{
 				throw new SystemException();
 			}
-			return new Vulkan.VkSurfaceKHR(handle);
+			System.Nullable<VulkanCore.AllocationCallbacks> nullAllocator = null;
+			return new VulkanCore.Khr.SurfaceKhr(instance, ref nullAllocator, handle);
+		}
+
+		public int Width
+		{
+			get
+			{
+				return m_width;
+			}
+		}
+
+		public int Height
+		{
+			get
+			{
+				return m_height;
+			}
+		}
+
+		public GLFWwindow getWindow()
+		{
+			return m_window;
 		}
 	}
 }
