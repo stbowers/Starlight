@@ -2,13 +2,14 @@
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using FinalProject.Graphics.Vulkan;
-using FinalProject.Graphics.Objects;
+using FinalProject.Graphics.Vulkan.Objects;
 using FinalProject.Graphics.Math;
 using VulkanCore;
+using GlmNet;
 
 namespace FinalProject
 {
-	public class TestVulkanObject: IGraphicsObject, IVulkanObject, IComponentVulkanMesh, IComponentVulkanMaterial
+	public class TestVulkanObject: IVulkanObject, IComponentExplicitVulkanMesh, IComponentVulkanMaterial
 	{
 		private VulkanAPIManager m_apiManager;
 		private VulkanPipeline m_pipeline;
@@ -23,7 +24,7 @@ namespace FinalProject
 		private DescriptorSet m_uboDescriptorSet;
 
 		// a wrapper which provides the IComponentExplicitVulkanMaterial implementation, since we don't want to do anything special
-		private DefaultComponentExplicitVulkanMaterialWrapper m_defaultMaterialWrapper;
+		private DefaultComponentVulkanMaterial m_defaultMaterialWrapper;
 
 		public TestVulkanObject(VulkanAPIManager apiManager)
 		{
@@ -59,19 +60,19 @@ namespace FinalProject
 			texSamplerInfo.type = DescriptorType.CombinedImageSampler;
 			fragInfo.uniformInputInfos = new[] { texSamplerInfo };
 
-			pipelineInfo.vertexShader = apiManager.CreateShader(vertexInfo);
-			pipelineInfo.fragmentShader = apiManager.CreateShader(fragInfo);
-			m_pipeline = apiManager.CreatePipeline(pipelineInfo);
+			pipelineInfo.vertexShader = apiManager.GetShader(vertexInfo);
+			pipelineInfo.fragmentShader = apiManager.GetShader(fragInfo);
+			m_pipeline = apiManager.GetPipeline(pipelineInfo);
 
 			List<float> verts = new List<float>();
-			verts.AddRange(new GlmSharp.vec2(-.5f, .5f).Values);
-			verts.AddRange(new GlmSharp.vec2(1.0f, 0.0f).Values);
-			verts.AddRange(new GlmSharp.vec2(.5f, .5f).Values);
-			verts.AddRange(new GlmSharp.vec2(0.0f, 0.0f).Values);
-			verts.AddRange(new GlmSharp.vec2(.5f, -.5f).Values);
-			verts.AddRange(new GlmSharp.vec2(0.0f, 1.0f).Values);
-			verts.AddRange(new GlmSharp.vec2(-.5f, -.5f).Values);
-			verts.AddRange(new GlmSharp.vec2(1.0f, 1.0f).Values);
+			verts.AddRange(new vec2(-.5f, .5f).to_array());
+			verts.AddRange(new vec2(1.0f, 0.0f).to_array());
+			verts.AddRange(new vec2(.5f, .5f).to_array());
+			verts.AddRange(new vec2(0.0f, 0.0f).to_array());
+			verts.AddRange(new vec2(.5f, -.5f).to_array());
+			verts.AddRange(new vec2(0.0f, 1.0f).to_array());
+			verts.AddRange(new vec2(-.5f, -.5f).to_array());
+			verts.AddRange(new vec2(1.0f, 1.0f).to_array());
 
 			int[] indices = {
 				0, 1, 2, 2, 3, 0
@@ -135,7 +136,7 @@ namespace FinalProject
 
 
 			// set up default material implementation
-			m_defaultMaterialWrapper = new DefaultComponentExplicitVulkanMaterialWrapper(this, m_apiManager, m_pipeline.GetFragmentShader(), "./assets/texture.jpg");
+			m_defaultMaterialWrapper = new DefaultComponentVulkanMaterial(this, m_apiManager, m_pipeline.GetFragmentShader(), "./assets/texture.jpg");
 		}
 
 		public VulkanCore.Buffer MeshBuffer

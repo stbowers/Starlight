@@ -59,6 +59,9 @@ namespace FinalProject.Graphics.Vulkan
 		// list of known pipelines, keyed by the hash code of the VulkanPipelineCreateInfo struct so as to prevent creating a new pipeline if one with compatable settings already exists
 		private Dictionary<int, VulkanPipeline> m_pipelines = new Dictionary<int, VulkanPipeline>();
 
+        // list of known shaders, keyed by the hash code of the VulkanShaderCreateInfo struct, similar to pipelines above
+        private Dictionary<int, VulkanShader> m_shaders = new Dictionary<int, VulkanShader>();
+
 		public VulkanAPIManager(IWindowManager window)
 		{
 			m_window = window;
@@ -926,12 +929,7 @@ namespace FinalProject.Graphics.Vulkan
 			m_frameIndex= m_swapchain.AcquireNextImage(-1, m_imageAvailableSemaphores[m_currentFrame]);
 		}
 
-		public VulkanShader CreateShader(VulkanShader.ShaderCreateInfo createInfo)
-		{
-			return new VulkanShader(m_device, createInfo);
-		}
-
-		public VulkanPipeline CreatePipeline(VulkanPipeline.VulkanPipelineCreateInfo createInfo)
+		public VulkanPipeline GetPipeline(VulkanPipeline.VulkanPipelineCreateInfo createInfo)
 		{
 			// Look for an existing pipeline
 			if (m_pipelines.ContainsKey(createInfo.GetHashCode()))
@@ -953,6 +951,30 @@ namespace FinalProject.Graphics.Vulkan
 			m_pipelines[createInfo.GetHashCode()] = new VulkanPipeline(createInfo);
 
 			return m_pipelines[createInfo.GetHashCode()];
+		}
+
+		public VulkanShader GetShader(VulkanShader.ShaderCreateInfo createInfo)
+		{
+			// Look for an existing shader
+			if (m_shaders.ContainsKey(createInfo.GetHashCode()))
+			{
+				return m_shaders[createInfo.GetHashCode()];
+			}
+
+			// otherwise fill in the apiInfo part of createInfo and make a new shader
+			VulkanPipeline.ApiInfo apiInfo = new VulkanPipeline.ApiInfo();
+			apiInfo.device = m_device;
+			apiInfo.extent = m_swapchainImageExtent;
+			apiInfo.swapchainImageFormat = m_swapchainImageFormat;
+			apiInfo.depthImageFormat = m_depthImageFormat;
+			apiInfo.imageCount = m_swapchainImages.Length;
+			apiInfo.swapchainImageViews = m_swapchainImageViews;
+			apiInfo.depthImageView = m_depthImageView;
+			createInfo.apiInfo = apiInfo;
+
+			m_shaders[createInfo.GetHashCode()] = new VulkanShader(createInfo);
+
+			return m_shaders[createInfo.GetHashCode()];
 		}
 
 		public CommandBuffer StartRecordingSwapchainCommandBuffer(out int currentFrame)

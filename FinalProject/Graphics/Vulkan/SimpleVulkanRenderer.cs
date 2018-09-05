@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using FinalProject.Graphics.Objects;
+using FinalProject.Graphics.Vulkan.Objects;
 using VulkanCore;
 
 namespace FinalProject.Graphics.Vulkan
@@ -97,7 +98,7 @@ namespace FinalProject.Graphics.Vulkan
 
 					if (graphicsObject is IComponentVulkanMesh)
 					{
-						IComponentVulkanMesh mesh = (IComponentVulkanMesh)graphicsObject;
+						IComponentExplicitVulkanMesh mesh = (graphicsObject as IComponentVulkanMesh).ExplicitMesh;
 						commandBuffer.CmdBindVertexBuffer(mesh.MeshBuffer, mesh.VBOOffset);
 						commandBuffer.CmdBindIndexBuffer(mesh.MeshBuffer, mesh.IBOOffset);
 						commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, graphicsObject.Pipeline.GetPipelineLayout(), mesh.UBODescriptorSetIndex, new[] { mesh.UBODescriptorSet });

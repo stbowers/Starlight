@@ -1,8 +1,9 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout (location = 0) in vec2 inPos;
+layout (location = 0) in vec3 inPos;
 layout (location = 1) in vec2 inTexCoord;
+layout (location = 2) in vec3 normal;
 
 layout (set = 0, binding = 0) uniform UniformBufferObject{
 	mat4 mvp;
@@ -14,6 +15,6 @@ out gl_PerVertex {
 };
 
 void main() {
-    gl_Position = ubo.mvp * vec4(inPos, 0.0f, 1.0f);
+    gl_Position = ubo.mvp * vec4(inPos, 1.0f);
     texCoord = inTexCoord;
 }

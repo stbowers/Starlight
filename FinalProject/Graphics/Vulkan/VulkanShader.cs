@@ -55,6 +55,7 @@ namespace FinalProject.Graphics.Vulkan
 	{
 		public struct ShaderCreateInfo
 		{
+            public VulkanPipeline.ApiInfo apiInfo;
 			public string shaderFile;
 			public string entryPoint;
 			public ShaderStages stage;
@@ -67,6 +68,39 @@ namespace FinalProject.Graphics.Vulkan
 			/* Array of info for uniform inputs to the shader
 			 */
 			public ShaderUniformInputInfo[] uniformInputInfos;
+
+			public override int GetHashCode()
+			{
+				unchecked // overflow is ok
+                {
+                    int hash = 17;
+
+                    hash = hash * 23 + shaderFile.GetHashCode();
+                    hash = hash * 23 + entryPoint.GetHashCode();
+                    hash = hash * 23 + stage.GetHashCode();
+
+                    if (inputs != null)
+                    {
+                        foreach (ShaderTypes[] array in inputs)
+                        {
+                            foreach (ShaderTypes type in array)
+                            {
+                                hash = hash * 23 + type.GetHashCode();
+                            }
+                        }
+                    }
+
+                    if (uniformInputInfos != null)
+                    {
+                        foreach (ShaderUniformInputInfo info in uniformInputInfos)
+                        {
+                            hash = hash * 23 + info.GetHashCode();
+                        }
+                    }
+
+					return hash;
+				}
+			}
 		}
 
 		// How many descriptor sets should a pool be able to allocate by default?
@@ -81,8 +115,9 @@ namespace FinalProject.Graphics.Vulkan
 		private List<DescriptorSetLayout> m_uniformInputLayouts = new List<DescriptorSetLayout>();
 		private Dictionary<int, DescriptorSetBlock> m_descriptorSetPools;
 
-		public VulkanShader(Device device, ShaderCreateInfo createInfo)
+		public VulkanShader(ShaderCreateInfo createInfo)
 		{
+            Device device = createInfo.apiInfo.device;
 			m_shaderCode = File.ReadAllBytes(createInfo.shaderFile);
 			m_stage = createInfo.stage;
 

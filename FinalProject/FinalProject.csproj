@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -42,13 +42,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GlmNet, Version=0.5.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\GlmNet.0.5.1.0\lib\net40\GlmNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="WrapperGLFW">
       <HintPath>..\packages\GLFW.NET.0.9.7.1\lib\net45\WrapperGLFW.dll</HintPath>
-    </Reference>
-    <Reference Include="GlmSharp">
-      <HintPath>..\packages\GlmSharp.0.9.8\lib\Net45\GlmSharp.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System.IO.Compression.FileSystem" />
@@ -140,6 +140,9 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Graphics\Math\Vector.cs" />
+    <Compile Include="Graphics\Objects\WavefrontModelLoader.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\BasicVulkanTexturedObject.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Network\NetworkManager.cs" />
@@ -157,25 +160,22 @@
     <Compile Include="Graphics\Vulkan\VulkanMemoryAllocator.cs" />
     <Compile Include="Graphics\Vulkan\VulkanPipeline.cs" />
     <Compile Include="Graphics\Vulkan\VulkanShader.cs" />
-    <Compile Include="Graphics\Vulkan\IComponentVulkanMesh.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\IComponentVulkanMesh.cs" />
     <Compile Include="Graphics\Vulkan\SimpleVulkanRenderer.cs" />
-    <Compile Include="Graphics\Vulkan\IVulkanObject.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\IVulkanObject.cs" />
     <Compile Include="TestVulkanObject.cs" />
     <Compile Include="Graphics\Math\IConvertableToPrimative.cs" />
     <Compile Include="Graphics\Math\Matrix.cs" />
-    <Compile Include="Graphics\Vulkan\IComponentVulkanMaterial.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\IComponentVulkanMaterial.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Network\" />
     <Folder Include="GameCore\" />
-    <Folder Include="Graphics\" />
-    <Folder Include="Graphics\GLFW\" />
-    <Folder Include="Graphics\Objects\" />
-    <Folder Include="Graphics\Vulkan\" />
-    <Folder Include="assets\" />
-    <Folder Include="Graphics\Math\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+    <None Include="assets\TestObject.obj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="WrapperGLFW.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -193,6 +193,11 @@
     <None Include="assets\texture.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="assets\objtexture.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

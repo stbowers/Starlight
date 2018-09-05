@@ -5,6 +5,7 @@ using glfw3;
 using FinalProject.Graphics;
 using FinalProject.Graphics.GLFW;
 using FinalProject.Graphics.Vulkan;
+using FinalProject.Graphics.Vulkan.Objects;
 
 namespace FinalProject
 {
@@ -47,7 +48,7 @@ namespace FinalProject
 				// use simple renderer
 				IRenderer renderer = new SimpleVulkanRenderer(apiManager);
 
-				TestVulkanObject obj = new TestVulkanObject(apiManager);
+				BasicVulkanTexturedObject obj = new BasicVulkanTexturedObject(apiManager, "./assets/TestObject.obj", "./assets/objtexture.png");
 				renderer.AddObject(1, obj);
 
 				int framesDrawn = 0;
@@ -68,6 +69,8 @@ namespace FinalProject
 						framesDrawn = 0;
 					}
 				}
+
+                Console.WriteLine("Closing Application");
 			}
 			catch (Exception e)
 			{
