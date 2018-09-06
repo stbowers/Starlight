@@ -42,9 +42,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GlmNet, Version=0.5.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\GlmNet.0.5.1.0\lib\net40\GlmNet.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="WrapperGLFW">
@@ -138,6 +135,9 @@
       <HintPath>..\packages\System.Drawing.Common.4.5.0\lib\net461\System.Drawing.Common.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="GlmNet">
+      <HintPath>..\packages\GlmNet.0.5.1.0\lib\net40\GlmNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Graphics\Math\Vector.cs" />
@@ -163,7 +163,6 @@
     <Compile Include="Graphics\Vulkan\Objects\IComponentVulkanMesh.cs" />
     <Compile Include="Graphics\Vulkan\SimpleVulkanRenderer.cs" />
     <Compile Include="Graphics\Vulkan\Objects\IVulkanObject.cs" />
-    <Compile Include="TestVulkanObject.cs" />
     <Compile Include="Graphics\Math\IConvertableToPrimative.cs" />
     <Compile Include="Graphics\Math\Matrix.cs" />
     <Compile Include="Graphics\Vulkan\Objects\IComponentVulkanMaterial.cs" />
@@ -191,6 +190,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="assets\texture.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\dragon.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

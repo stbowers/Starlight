@@ -95,6 +95,13 @@ namespace FinalProject.Graphics.Vulkan.Objects
             m_meshDescriptorSet.Parent.UpdateSets(new[] { descriptorWrite });
         }
 
+		public void UpdateUBO(byte[] newUBO)
+		{
+            IntPtr mappedMemory = m_meshBufferAllocation.memory.Map(m_meshBufferAllocation.offset, m_meshBufferAllocation.size);
+			Marshal.Copy(newUBO, 0, (mappedMemory + m_uboOffset), newUBO.Length);
+			m_meshBufferAllocation.memory.Unmap();
+		}
+
         public VulkanCore.Buffer MeshBuffer
         {
             get

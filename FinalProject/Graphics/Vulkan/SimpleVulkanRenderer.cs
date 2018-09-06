@@ -63,6 +63,9 @@ namespace FinalProject.Graphics.Vulkan
 			{
 				foreach (IVulkanObject graphicsObject in graphicsObjectList.Value)
 				{
+					// Call object's update function
+					graphicsObject.Update();
+
 					// Start render pass and bind pipeline
 					VulkanPipeline pipeline = graphicsObject.Pipeline;
 					RenderPassBeginInfo renderPassInfo = new RenderPassBeginInfo();

@@ -48,7 +48,7 @@ namespace FinalProject
 				// use simple renderer
 				IRenderer renderer = new SimpleVulkanRenderer(apiManager);
 
-				BasicVulkanTexturedObject obj = new BasicVulkanTexturedObject(apiManager, "./assets/TestObject.obj", "./assets/objtexture.png");
+				BasicVulkanTexturedObject obj = new BasicVulkanTexturedObject(apiManager, "./assets/dragon.obj", "./assets/objtexture.png");
 				renderer.AddObject(1, obj);
 
 				int framesDrawn = 0;

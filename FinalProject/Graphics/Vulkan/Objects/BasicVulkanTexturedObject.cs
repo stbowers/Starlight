@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using FinalProject.Graphics.Objects;
 using FinalProject.Graphics.Math;
 using VulkanCore;
@@ -23,8 +24,12 @@ namespace FinalProject.Graphics.Vulkan.Objects
         byte[] m_uboData;
         DescriptorSet m_meshDescriptorSet;
 
+		Stopwatch timer = new Stopwatch();
+
         public BasicVulkanTexturedObject(VulkanAPIManager apiManager, string objFile, string textureFile)
         {
+			timer.Start();
+
             m_apiManager = apiManager;
             WavefrontObject loadedObject = WavefrontModelLoader.LoadFile(objFile);
 
@@ -32,8 +37,8 @@ namespace FinalProject.Graphics.Vulkan.Objects
 			pipelineInfo.topology = VulkanCore.PrimitiveTopology.TriangleList;
 			pipelineInfo.primitiveRestartEnable = false;
 			pipelineInfo.frontFaceCCW = true;
-			pipelineInfo.depthTestEnable = false;
-			pipelineInfo.depthWriteEnable = false;
+			pipelineInfo.depthTestEnable = true;
+			pipelineInfo.depthWriteEnable = true;
 			pipelineInfo.clearColorAttachment = true;
 			pipelineInfo.clearDepthAttachment = true;
 
@@ -62,19 +67,16 @@ namespace FinalProject.Graphics.Vulkan.Objects
 			pipelineInfo.fragmentShader = apiManager.GetShader(fragInfo);
 			m_pipeline = apiManager.GetPipeline(pipelineInfo);
 
-            // mesh
-            //Mat4 model = new Mat4(1.0f);
-            //Mat4 view = Mat4.LookAt(new Vec3(2.0f, 2.0f, 2.0f), new Vec3(0.0f, 0.0f, 0.0f), new Vec3(0.0f, 0.0f, 1.0f));
-            //Mat4 proj = Mat4.Perspective((float)System.Math.PI / 4, m_apiManager.GetSwapchainImageExtent().Width / m_apiManager.GetSwapchainImageExtent().Height, 0.1f, 10.0f);
-            //Mat4 mvp = proj * view * model;
-            //GlmNet.mat4 model = GlmNet.glm.rotate(new GlmNet.mat4(1.0f), GlmNet.glm.radians(45.0f), new GlmNet.vec3(0.0f, 0.0f, 1.0f));
-            //GlmNet.mat4 view = GlmNet.glm.lookAt(new GlmNet.vec3(2.0f, 2.0f, 2.0f), new GlmNet.vec3(0.0f, 0.0f, 0.0f), new GlmNet.vec3(0.0f, 0.0f, 1.0f));
-            //GlmNet.mat4 proj = GlmNet.glm.perspective(GlmNet.glm.radians(45.0f), m_apiManager.GetSwapchainImageExtent().Width / m_apiManager.GetSwapchainImageExtent().Height, 0.1f, 10.0f);
-            //GlmNet.mat4 mvp = proj * model * view;
-            Mat4 mvp = new Mat4(1.0f);
-            mvp = .2f * mvp;
-            mvp[1, 1] *= -1f;
-            m_uboData = mvp.Bytes;
+			// ubo
+			Mat4 model = Mat4.Rotate((timer.ElapsedMilliseconds / 1000.0f) * ((float)System.Math.PI / 4), new Vec3(0.0f, 1.0f, 0.0f));
+            Mat4 view = Mat4.LookAt(new Vec3(1.0f, 1.0f, 1.0f), new Vec3(0.0f, 0.0f, 0.0f), new Vec3(0.0f, 1.0f, 0.0f));
+            Mat4 proj = Mat4.Perspective((float)System.Math.PI / 2, m_apiManager.GetSwapchainImageExtent().Width / m_apiManager.GetSwapchainImageExtent().Height, 0.1f, 10.0f);
+            proj[1, 1] *= -1f;
+
+			m_uboData = new byte[3 * model.PrimativeSizeOf];
+			model.Bytes.CopyTo(m_uboData, 0);
+			view.Bytes.CopyTo(m_uboData, model.PrimativeSizeOf);
+			proj.Bytes.CopyTo(m_uboData, model.PrimativeSizeOf + view.PrimativeSizeOf);
 
             m_meshData = new byte[loadedObject.VertexData.Length + (loadedObject.Indices.Length * 4)];
             System.Buffer.BlockCopy(loadedObject.VertexData, 0, m_meshData, 0, loadedObject.VertexData.Length);
@@ -86,6 +88,22 @@ namespace FinalProject.Graphics.Vulkan.Objects
 
             m_materialComponent = new DefaultComponentVulkanMaterial(this, m_apiManager, m_pipeline.GetFragmentShader(), textureFile);
         }
+
+		public void Update()
+		{
+			// update ubo
+			Mat4 model = Mat4.Rotate((timer.ElapsedMilliseconds / 1000.0f) * ((float)System.Math.PI / 4), new Vec3(0.0f, 1.0f, 0.0f));
+			Mat4 view = Mat4.LookAt(new Vec3(6.0f, 6.0f, 6.0f), new Vec3(0.0f, 4.0f, 0.0f), new Vec3(0.0f, 1.0f, 0.0f));
+			Mat4 proj = Mat4.Perspective(((float)System.Math.PI * 2 )/ 3, m_apiManager.GetSwapchainImageExtent().Width / m_apiManager.GetSwapchainImageExtent().Height, 0.1f, 20.0f);
+			proj[1, 1] *= -1f;
+
+			m_uboData = new byte[3 * model.PrimativeSizeOf];
+			model.Bytes.CopyTo(m_uboData, 0);
+			view.Bytes.CopyTo(m_uboData, model.PrimativeSizeOf);
+			proj.Bytes.CopyTo(m_uboData, model.PrimativeSizeOf + view.PrimativeSizeOf);
+
+			m_meshComponent.UpdateUBO(m_uboData);
+		}
 
         public VulkanPipeline Pipeline
         {

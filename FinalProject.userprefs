@@ -1,24 +1,14 @@
 ﻿<Properties StartupConfiguration="{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
-  <MonoDevelop.Ide.Workbench ActiveDocument="FinalProject/TestVulkanObject.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="FinalProject/Graphics/Vulkan/Objects/BasicVulkanTexturedObject.cs">
     <Files>
-      <File FileName="FinalProject/Program.cs" Line="63" Column="28" />
-      <File FileName="FinalProject/TestVulkanObject.cs" Line="57" Column="30" />
-      <File FileName="FinalProject/Graphics/Vulkan/IComponentVulkanMaterial.cs" Line="103" Column="38" />
-      <File FileName="FinalProject/Graphics/Vulkan/IComponentVulkanMesh.cs" Line="28" Column="3" />
-      <File FileName="FinalProject/Graphics/Vulkan/SimpleVulkanRenderer.cs" Line="95" Column="113" />
-      <File FileName="FinalProject/Graphics/Vulkan/VulkanAPIManager.cs" Line="736" Column="57" />
-      <File FileName="FinalProject/assets/basicShader.frag" Line="6" Column="28" />
-      <File FileName="FinalProject/assets/basicShader.vert" Line="18" Column="13" />
-      <File FileName="FinalProject/Graphics/Vulkan/VulkanShader.cs" Line="145" Column="69" />
-      <File FileName="FinalProject/Graphics/Vulkan/VulkanPipeline.cs" Line="303" Column="26" />
+      <File FileName="FinalProject/Graphics/Vulkan/Objects/BasicVulkanTexturedObject.cs" Line="105" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
-      <Breakpoint file="/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/Graphics/VK/VulkanDriver.cs" relfile="FinalProject/Graphics/VK/VulkanDriver.cs" line="572" column="1" />
-      <Breakpoint file="/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/Graphics/VK/VulkanDriver.cs" relfile="FinalProject/Graphics/VK/VulkanDriver.cs" line="334" column="35" />
-      <Breakpoint file="/home/bowers/Build/CS3020/FinalProject/FinalProject/FinalProject/TestVulkanObject.cs" relfile="FinalProject/TestVulkanObject.cs" line="63" column="1" />
+      <Breakpoint file="/home/bowers/Build/CS3020/FinalProject/FinalProject/Graphics/VK/VulkanDriver.cs" relfile="FinalProject/Graphics/VK/VulkanDriver.cs" line="572" column="1" />
+      <Breakpoint file="/home/bowers/Build/CS3020/FinalProject/FinalProject/Graphics/VK/VulkanDriver.cs" relfile="FinalProject/Graphics/VK/VulkanDriver.cs" line="334" column="35" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches>

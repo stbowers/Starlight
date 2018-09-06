@@ -20,12 +20,12 @@ namespace FinalProject.Graphics.Math
         {
             get
             {
-                return this[0, n];
+                return this[n, 0];
             }
 
             set
             {
-                this[0, n] = value;
+                this[n, 0] = value;
             }
         }
     }
@@ -131,7 +131,24 @@ namespace FinalProject.Graphics.Math
         }
     }
 
-    public class IVec3 : BasicVector<int>
+	public class IVec2 : BasicVector<int>
+	{
+		public IVec2() : base(2)
+		{
+		}
+
+		public IVec2(int[] data) : base(2, data)
+		{
+		}
+
+		public IVec2(int x, int y) : this()
+		{
+			this[0] = x;
+			this[1] = y;
+		}
+	}
+
+	public class IVec3 : BasicVector<int>
     {
         public IVec3(): base(3)
         {
@@ -147,5 +164,32 @@ namespace FinalProject.Graphics.Math
             this[1] = y;
             this[2] = z;
         }
+
+		public override bool Equals(object obj)
+		{
+			IVec3 vec = obj as IVec3;
+			return (this[0] == vec[0]) &&
+				(this[1] == vec[1]) &&
+				(this[2] == vec[2]);
+		}
     }
+
+	public class IVec4 : BasicVector<int>
+	{
+		public IVec4() : base(4)
+		{
+		}
+
+		public IVec4(int[] data) : base(4, data)
+		{
+		}
+
+		public IVec4(int x, int y, int z, int w) : this()
+		{
+			this[0] = x;
+			this[1] = y;
+			this[2] = z;
+			this[3] = w;
+		}
+	}
 }

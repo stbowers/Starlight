@@ -5,5 +5,6 @@ namespace FinalProject.Graphics.Objects
 	 */
 	public interface IGraphicsObject
 	{
+		void Update();
 	}
 }
