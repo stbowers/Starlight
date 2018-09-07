@@ -240,7 +240,7 @@ namespace FinalProject.Graphics.Math
         public static Mat4 Perspective(float angle, float ratio, float near, float far)
         {
             Mat4 perspectiveMatrix = new Mat4();
-            float f = (float)System.Math.Atan(angle / 2);
+			float f = 1.0f / (float)System.Math.Tan(angle / 2);
 
 			perspectiveMatrix[0, 0] = f / ratio;
 			perspectiveMatrix[1, 1] = f;

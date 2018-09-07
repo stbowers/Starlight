@@ -12,8 +12,11 @@ layout (set = 0, binding = 0) uniform UniformBufferObject{
 } ubo;
 
 layout (location = 0) out vec2 texCoord;
-layout (location = 1) out float brightness;
-layout (location = 2) out float specFactor;
+layout(location = 1) out vec3 toLight;
+layout(location = 2) out vec3 toCamera;
+layout(location = 3) out vec3 normalVector;
+layout(location = 4) out mat4 modelMatrix;
+
 out gl_PerVertex {
     vec4 gl_Position;
 };
@@ -25,13 +28,11 @@ void main() {
     gl_Position = ubo.proj * ubo.view * vec4(worldPosition, 1.0f);
 
     texCoord = inTexCoord;
-    brightness = dot(normalize(lightPosition - worldPosition), normalize((ubo.model * vec4(normal, 1.0f)).xyz));
-
-    vec3 toCameraVector = (inverse(ubo.view) * vec4(0.0f, 0.0f, 0.0f, 1.0f)).xyz - worldPosition.xyz;
-    toCameraVector = normalize(toCameraVector);
-    vec3 toLight = lightPosition.xyz - worldPosition.xyz;
-    vec3 reflectedLightDirection = reflect(-toLight, normal);
-    reflectedLightDirection = normalize(reflectedLightDirection);
-
-    specFactor = dot(toCameraVector, reflectedLightDirection);
+    toLight = lightPosition - worldPosition.xyz;
+    toLight = normalize(toLight);
+    toCamera = (inverse(ubo.view) * vec4(0.0f, 0.0f, 0.0f, 1.0f)).xyz - worldPosition.xyz;
+    toCamera = normalize(toCamera);
+    normalVector = (ubo.model * vec4(normal, 0.0f)).xyz;
+    normalVector = normalize(normal);
+    modelMatrix = ubo.model;
 }

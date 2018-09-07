@@ -48,8 +48,11 @@ namespace FinalProject
 				// use simple renderer
 				IRenderer renderer = new SimpleVulkanRenderer(apiManager);
 
-				BasicVulkanTexturedObject obj = new BasicVulkanTexturedObject(apiManager, "./assets/dragon.obj", "./assets/objtexture.png");
+				BasicVulkanTexturedObject obj = new BasicVulkanTexturedObject(apiManager, "./assets/dragon.obj", "./assets/bricks.jpg");
 				renderer.AddObject(1, obj);
+
+				// create fps counter
+				AngelcodeFont arielFont = AngelcodeFontLoader.LoadFile("./assets/Arial.fnt");
 
 				int framesDrawn = 0;
 				Stopwatch sw = new Stopwatch();

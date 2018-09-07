@@ -1,7 +1,14 @@
 ﻿<Properties StartupConfiguration="{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
-  <MonoDevelop.Ide.Workbench ActiveDocument="FinalProject/Graphics/Vulkan/Objects/BasicVulkanTexturedObject.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="FinalProject/Program.cs">
     <Files>
-      <File FileName="FinalProject/Graphics/Vulkan/Objects/BasicVulkanTexturedObject.cs" Line="105" Column="1" />
+      <File FileName="FinalProject/Graphics/Vulkan/Objects/BasicVulkanTexturedObject.cs" Line="96" Column="53" />
+      <File FileName="FinalProject/assets/basicShader.vert" Line="29" Column="5" />
+      <File FileName="FinalProject/assets/basicShader.frag" Line="15" Column="23" />
+      <File FileName="FinalProject/Graphics/Vulkan/Objects/IComponentVulkanMaterial.cs" Line="92" Column="30" />
+      <File FileName="FinalProject/Graphics/Vulkan/VulkanAPIManager.cs" Line="599" Column="45" />
+      <File FileName="FinalProject/Graphics/Fonts/AngelcodeFontLoader.cs" Line="104" Column="9" />
+      <File FileName="FinalProject/assets/Arial.fnt" Line="1" Column="100" />
+      <File FileName="FinalProject/Program.cs" Line="55" Column="9" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />

@@ -446,7 +446,7 @@ namespace FinalProject.Graphics.Vulkan
 				// transition image - renderer expects image to be in present layout
 				TransitionImageLayout(
 					image, m_swapchainImageFormat,
-					ImageLayout.Undefined, ImageLayout.PresentSrcKhr);
+					ImageLayout.Undefined, ImageLayout.PresentSrcKhr, 1);
 			}
 
 			/* Create depth buffer */
@@ -461,6 +461,7 @@ namespace FinalProject.Graphics.Vulkan
 			CreateImage2D(
 				m_swapchainImageExtent.Width,
 				m_swapchainImageExtent.Height,
+				1,
 				m_depthImageFormat,
 				ImageTiling.Optimal,
 				ImageUsages.DepthStencilAttachment,
@@ -489,7 +490,7 @@ namespace FinalProject.Graphics.Vulkan
 
 			// transition depth buffer
 			TransitionImageLayout(m_depthImage, m_depthImageFormat,
-			                      ImageLayout.Undefined, ImageLayout.DepthStencilAttachmentOptimal);
+			                      ImageLayout.Undefined, ImageLayout.DepthStencilAttachmentOptimal, 1);
 
 			/* Create command buffers */
 			CommandBufferAllocateInfo allocInfo = new CommandBufferAllocateInfo();
@@ -516,6 +517,93 @@ namespace FinalProject.Graphics.Vulkan
 			// Get first image from swapchain
 			m_currentFrame = 0;
 			m_frameIndex = m_swapchain.AcquireNextImage(-1, m_imageAvailableSemaphores[m_currentFrame], null);
+		}
+
+		public void GenerateMipmaps(Image image, int texWidth, int texHeight, uint mipLevels)
+		{
+			CommandBuffer commandBuffer = BeginSingleTimeCommands(m_device, m_transferCommandPool);
+
+			ImageMemoryBarrier barrier = new ImageMemoryBarrier();
+			barrier.Image = image;
+			barrier.SrcQueueFamilyIndex = Constant.QueueFamilyIgnored;
+			barrier.DstQueueFamilyIndex = Constant.QueueFamilyIgnored;
+			barrier.SubresourceRange.AspectMask = ImageAspects.Color;
+			barrier.SubresourceRange.BaseArrayLayer = 0;
+			barrier.SubresourceRange.LayerCount = 1;
+			barrier.SubresourceRange.LevelCount = 1;
+
+			int mipWidth = texWidth;
+			int mipHeight = texHeight;
+
+			for (int i = 1; i < mipLevels; i++)
+			{
+				// Transition source image into optimal layout (dst image is already in optimal layout)
+				barrier.SubresourceRange.BaseMipLevel = i - 1;
+				barrier.OldLayout = ImageLayout.TransferDstOptimal;
+				barrier.NewLayout = ImageLayout.TransferSrcOptimal;
+				barrier.SrcAccessMask = Accesses.TransferWrite;
+				barrier.DstAccessMask = Accesses.TransferRead;
+
+				commandBuffer.CmdPipelineBarrier(PipelineStages.Transfer, PipelineStages.Transfer, 0,
+					null,
+					null,
+					new[] { barrier});
+
+				// Blit the image (copy 1/2 res version into next mip level)
+				ImageBlit blit = new ImageBlit();
+				blit.SrcOffset1.X = 0;
+				blit.SrcOffset1.Y = 0;
+				blit.SrcOffset1.Z = 0;
+				blit.SrcOffset2.X = mipWidth;
+				blit.SrcOffset2.Y = mipHeight;
+				blit.SrcOffset2.Z = 1;
+				blit.SrcSubresource.AspectMask = ImageAspects.Color;
+				blit.SrcSubresource.MipLevel = i - 1;
+				blit.SrcSubresource.BaseArrayLayer = 0;
+				blit.SrcSubresource.LayerCount = 1;
+				blit.DstOffset1.X = 0;
+				blit.DstOffset1.Y = 0;
+				blit.DstOffset1.Z = 0;
+				blit.DstOffset2.X = mipWidth > 1 ? mipWidth / 2 : 1;
+				blit.DstOffset2.Y = mipHeight > 1 ? mipHeight / 2 : 1;
+				blit.DstOffset2.Z = 1;
+				blit.DstSubresource.AspectMask = ImageAspects.Color;
+				blit.DstSubresource.MipLevel = i;
+				blit.DstSubresource.BaseArrayLayer = 0;
+				blit.DstSubresource.LayerCount = 1;
+
+				commandBuffer.CmdBlitImage(image, ImageLayout.TransferSrcOptimal, image, ImageLayout.TransferDstOptimal, new[] { blit }, Filter.Linear);
+
+				// transition src image into shader read optimal
+				barrier.SubresourceRange.BaseMipLevel = i - 1;
+				barrier.OldLayout = ImageLayout.TransferSrcOptimal;
+				barrier.NewLayout = ImageLayout.ShaderReadOnlyOptimal;
+				barrier.SrcAccessMask = Accesses.TransferRead;
+				barrier.DstAccessMask = Accesses.ShaderRead;
+
+				commandBuffer.CmdPipelineBarrier(PipelineStages.Transfer, PipelineStages.Transfer, 0,
+					null,
+					null,
+					new[] { barrier });
+
+				// divide mipWidth and mipHeight by 2 for next image
+				if (mipWidth > 1) mipWidth /= 2;
+				if (mipHeight > 1) mipHeight /= 2;
+			}
+
+			// transition last mip level to shader optimal
+			barrier.SubresourceRange.BaseMipLevel = (int) mipLevels - 1;
+			barrier.OldLayout = ImageLayout.TransferDstOptimal;
+			barrier.NewLayout = ImageLayout.ShaderReadOnlyOptimal;
+			barrier.SrcAccessMask = Accesses.TransferWrite;
+			barrier.DstAccessMask = Accesses.ShaderRead;
+
+			commandBuffer.CmdPipelineBarrier(PipelineStages.Transfer, PipelineStages.Transfer, 0,
+				null,
+				null,
+				new[] { barrier });
+
+			EndSingleTimeCommands(commandBuffer, m_transferCommandPool, m_transferQueue);
 		}
 
 		private SwapChainSupportDetails querySwapChainSupport()
@@ -608,7 +696,7 @@ namespace FinalProject.Graphics.Vulkan
 			}
 		}
 
-		public void TransitionImageLayout(Image image, Format format, ImageLayout oldLayout, ImageLayout newLayout)
+		public void TransitionImageLayout(Image image, Format format, ImageLayout oldLayout, ImageLayout newLayout, int mipLevels)
 		{
 			CommandBuffer commandBuffer = BeginSingleTimeCommands(m_device, m_graphicsCommandPool);
 
@@ -620,7 +708,7 @@ namespace FinalProject.Graphics.Vulkan
 			barrier.Image = image;
 			barrier.SubresourceRange = new ImageSubresourceRange();
 			barrier.SubresourceRange.BaseMipLevel = 0;
-			barrier.SubresourceRange.LevelCount = 1;
+			barrier.SubresourceRange.LevelCount = mipLevels;
 			barrier.SubresourceRange.BaseArrayLayer = 0;
 			barrier.SubresourceRange.LayerCount = 1;
 
@@ -853,6 +941,7 @@ namespace FinalProject.Graphics.Vulkan
 		public void CreateImage2D(
 			int width,
 			int height,
+			int mipLevels,
 			Format format,
 			ImageTiling tiling,
 			ImageUsages usage,
@@ -875,7 +964,7 @@ namespace FinalProject.Graphics.Vulkan
 			imageInfo.Extent.Width = width;
 			imageInfo.Extent.Height = height;
 			imageInfo.Extent.Depth = 1;
-			imageInfo.MipLevels = 1;
+			imageInfo.MipLevels = mipLevels;
 			imageInfo.ArrayLayers = 1;
 			imageInfo.Samples = SampleCounts.Count1;
 			imageInfo.Tiling = tiling;

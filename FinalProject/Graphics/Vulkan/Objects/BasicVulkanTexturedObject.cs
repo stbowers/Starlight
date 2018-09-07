@@ -93,8 +93,8 @@ namespace FinalProject.Graphics.Vulkan.Objects
 		{
 			// update ubo
 			Mat4 model = Mat4.Rotate((timer.ElapsedMilliseconds / 1000.0f) * ((float)System.Math.PI / 4), new Vec3(0.0f, 1.0f, 0.0f));
-			Mat4 view = Mat4.LookAt(new Vec3(6.0f, 6.0f, 6.0f), new Vec3(0.0f, 4.0f, 0.0f), new Vec3(0.0f, 1.0f, 0.0f));
-			Mat4 proj = Mat4.Perspective(((float)System.Math.PI * 2 )/ 3, m_apiManager.GetSwapchainImageExtent().Width / m_apiManager.GetSwapchainImageExtent().Height, 0.1f, 20.0f);
+			Mat4 view = Mat4.LookAt(new Vec3(10.0f, 10.0f, 10.0f), new Vec3(0.0f, 4.0f, 0.0f), new Vec3(0.0f, 1.0f, 0.0f));
+			Mat4 proj = Mat4.Perspective( (float)(75 * System.Math.PI) / 180, m_apiManager.GetSwapchainImageExtent().Width / m_apiManager.GetSwapchainImageExtent().Height, 0.1f, 20.0f);
 			proj[1, 1] *= -1f;
 
 			m_uboData = new byte[3 * model.PrimativeSizeOf];

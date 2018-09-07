@@ -42,6 +42,8 @@ namespace FinalProject.Graphics.Vulkan.Objects
 
 			BitmapData imageData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
 
+			int mipLevels = (int)System.Math.Floor(System.Math.Log(System.Math.Max(bitmap.Width, bitmap.Height), 2));
+
 			VulkanCore.Buffer stagingBuffer;
 			VmaAllocation stagingBufferAllocation;
 
@@ -56,18 +58,18 @@ namespace FinalProject.Graphics.Vulkan.Objects
 			}
 			stagingBufferAllocation.memory.Unmap();
 
-			apiManager.CreateImage2D(imageData.Width, imageData.Height, Format.B8G8R8A8UNorm, ImageTiling.Optimal, ImageUsages.TransferDst | ImageUsages.Sampled, MemoryProperties.None, MemoryProperties.DeviceLocal, out m_textureImage, out m_textureImageAllocation);
+			apiManager.CreateImage2D(imageData.Width, imageData.Height, mipLevels, Format.B8G8R8A8UNorm, ImageTiling.Optimal, ImageUsages.TransferSrc | ImageUsages.TransferDst | ImageUsages.Sampled, MemoryProperties.None, MemoryProperties.DeviceLocal, out m_textureImage, out m_textureImageAllocation);
 
-			apiManager.TransitionImageLayout(m_textureImage, Format.B8G8R8A8UNorm, ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
+			apiManager.TransitionImageLayout(m_textureImage, Format.B8G8R8A8UNorm, ImageLayout.Undefined, ImageLayout.TransferDstOptimal, mipLevels);
 			apiManager.CopyBufferToImage(stagingBuffer, m_textureImage, imageData.Width, imageData.Height);
-			apiManager.TransitionImageLayout(m_textureImage, Format.B8G8R8A8UNorm, ImageLayout.TransferDstOptimal, ImageLayout.ShaderReadOnlyOptimal);
+			apiManager.GenerateMipmaps(m_textureImage, imageData.Width, imageData.Height, (uint)mipLevels);
 
 			ImageViewCreateInfo viewInfo = new ImageViewCreateInfo();
 			viewInfo.ViewType = ImageViewType.Image2D;
 			viewInfo.Format = Format.B8G8R8A8UNorm;
 			viewInfo.SubresourceRange.AspectMask = ImageAspects.Color;
 			viewInfo.SubresourceRange.BaseMipLevel = 0;
-			viewInfo.SubresourceRange.LevelCount = 1;
+			viewInfo.SubresourceRange.LevelCount = mipLevels;
 			viewInfo.SubresourceRange.BaseArrayLayer = 0;
 			viewInfo.SubresourceRange.LayerCount = 1;
 
@@ -88,7 +90,7 @@ namespace FinalProject.Graphics.Vulkan.Objects
 			samplerInfo.MipmapMode = SamplerMipmapMode.Linear;
 			samplerInfo.MipLodBias = 0.0f;
 			samplerInfo.MinLod = 0.0f;
-			samplerInfo.MaxLod = 0.0f;
+			samplerInfo.MaxLod = mipLevels;
 
 			m_textureImageSampler = apiManager.GetDevice().CreateSampler(samplerInfo);
 
