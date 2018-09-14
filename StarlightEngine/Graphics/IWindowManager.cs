@@ -1,6 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+using glfw3;
+
 namespace StarlightEngine.Graphics
 {
+	public enum KeyAction
+	{
+		Press,
+		Release,
+		Repeat
+	}
+
+	public struct WindowManagerCallbacks
+	{
+		public delegate void KeyboardEventDelegate(Key key, KeyAction action, List<KeyModifier> modifiers);
+	}
+
 	/* Interface that any window manager class should implement
 	 */
 	public interface IWindowManager
@@ -20,6 +35,8 @@ namespace StarlightEngine.Graphics
         /* Generate new events from window
          */
         void PollEvents();
+
+		void SetKeyboardEventDelegate(WindowManagerCallbacks.KeyboardEventDelegate keyboardEventDelegate);
 
 		/* getters for width and height
 		 */

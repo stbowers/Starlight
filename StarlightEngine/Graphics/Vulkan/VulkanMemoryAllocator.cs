@@ -144,6 +144,38 @@ namespace StarlightEngine.Graphics.Vulkan
 			this.device = device;
 
 			memProperties = physicalDevice.GetMemoryProperties();
+
+			Console.WriteLine("Memory summary for \"{0}\":", physicalDevice.GetProperties().DeviceName);
+			Console.WriteLine("  Max memory allocations: {0}", physicalDevice.GetProperties().Limits.MaxMemoryAllocationCount);
+			Console.WriteLine("  Available heaps: {0}", memProperties.MemoryHeaps.Length);
+			string[] sizeSuffixes = { "B", "KB", "MB", "GB", "TB" };
+			for (int i = 0; i < memProperties.MemoryHeaps.Length; i++)
+			{
+				MemoryHeap heap = memProperties.MemoryHeaps[i];
+				int pow = (int)System.Math.Floor(System.Math.Log(heap.Size, 1024));
+				string sizeSuffix = sizeSuffixes[pow];
+
+				string flags = "(";
+				if (heap.Flags.HasFlag(MemoryHeaps.DeviceLocal) && heap.Flags.HasFlag(MemoryHeaps.MultiInstanceKhx))
+				{
+					flags += "Device Local, MultiInstanceKHX";
+				}
+				else if (heap.Flags.HasFlag(MemoryHeaps.DeviceLocal))
+				{
+					flags += "Device Local";
+				}
+				else if (heap.Flags.HasFlag(MemoryHeaps.MultiInstanceKhx))
+				{
+					flags += "MultiInstanceKHX";
+				}
+				else
+				{
+					flags += "No Flags";
+				}
+				flags += ")";
+
+				Console.WriteLine("    Heap {0}: {1:0.#} {2}, {3}", i, (float)((heap.Size) / (System.Math.Pow(1024, pow))), sizeSuffix, flags);
+			}
 		}
 
 		public unsafe Result CreateImage(ImageCreateInfo imageCreateInfo, VmaAllocationCreateInfo imageAllocInfo, out Image image, out VmaAllocation allocation)

@@ -7,14 +7,11 @@ using System.Collections.Generic;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 {
-    class BasicVulkanMaterial : IVulkanBindableComponent
+    class VulkanTextureComponent : IVulkanBindableComponent
     {
         VulkanAPIManager m_apiManager;
         VulkanPipeline m_pipeline;
         RenderPass m_renderPass;
-
-        VulkanCore.Buffer m_meshBuffer;
-        VmaAllocation m_meshBufferAllocation;
 
         VulkanCore.Image m_textureImage;
         VmaAllocation m_textureImageAllocation;
@@ -24,7 +21,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
         int m_setIndex;
         int m_binding;
 
-        public BasicVulkanMaterial(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, DescriptorSet textureSamplerSet, int setIndex, int binding)
+        public VulkanTextureComponent(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, bool useMipmaps, DescriptorSet textureSamplerSet, int setIndex, int binding)
         {
             m_apiManager = apiManager;
             m_pipeline = pipeline;
@@ -38,7 +35,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 
 			BitmapData imageData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
 
-			int mipLevels = (int)System.Math.Floor(System.Math.Log(System.Math.Max(bitmap.Width, bitmap.Height), 2));
+			int mipLevels = (useMipmaps) ? (int)System.Math.Floor(System.Math.Log(System.Math.Max(bitmap.Width, bitmap.Height), 2)) : 1;
 
 			VulkanCore.Buffer stagingBuffer;
 			VmaAllocation stagingBufferAllocation;
@@ -58,7 +55,14 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 
 			apiManager.TransitionImageLayout(m_textureImage, Format.B8G8R8A8UNorm, ImageLayout.Undefined, ImageLayout.TransferDstOptimal, mipLevels);
 			apiManager.CopyBufferToImage(stagingBuffer, m_textureImage, imageData.Width, imageData.Height);
-			apiManager.GenerateMipmaps(m_textureImage, imageData.Width, imageData.Height, (uint)mipLevels);
+			if (useMipmaps)
+			{
+				apiManager.GenerateMipmaps(m_textureImage, imageData.Width, imageData.Height, (uint)mipLevels);
+			}
+			else
+			{
+				apiManager.TransitionImageLayout(m_textureImage, Format.B8G8R8A8UNorm, ImageLayout.TransferDstOptimal, ImageLayout.ShaderReadOnlyOptimal, mipLevels);
+			}
 
 			ImageViewCreateInfo viewInfo = new ImageViewCreateInfo();
 			viewInfo.ViewType = ImageViewType.Image2D;

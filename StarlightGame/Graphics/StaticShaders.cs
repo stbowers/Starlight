@@ -140,12 +140,96 @@ namespace StarlightGame.Graphics
             shader_distanceFieldFont = apiManager.CreateShader(shaderCreateInfo);
         }
 
-        /* Creates shaders that can be loaded quickly, usually the ones needed to set up a loading screen so that can be shown almost instantly
-         * while the other shaders are loaded in.
+		/* A basic shader to render 2d sprites
+         * Vertex inputs:
+         *      vec2 vertexPosition
+         *      vec2 textureCoordinate
+         *      
+         * Uniforms:
+         *      (set 0, binding 0) mvp buffer (vertex)
+         *          mat4 mvp
+         *          float depth
+         *          
+         *      (set 1, binding 1) texture sampler (fragment)
          */
-        public static void LoadLowImpactShaders(VulkanAPIManager apiManager)
-        {
-        }
+		public static VulkanShader shader_basic2D = null;
+		public static void LoadShaderBasic2D(VulkanAPIManager apiManager)
+		{
+			if (shader_basic2D != null) return;
+
+			VulkanShader.ShaderCreateInfo shaderCreateInfo = new VulkanShader.ShaderCreateInfo();
+			shaderCreateInfo.vertexShaderFile = "./assets/shaders/shader_basic2D.vert.spv";
+			shaderCreateInfo.vertexEntryPoint = "main";
+			shaderCreateInfo.fragmentShaderFile = "./assets/shaders/shader_basic2D.frag.spv";
+			shaderCreateInfo.fragmentEntryPoint = "main";
+
+			shaderCreateInfo.inputs = new[] {
+				new[] {
+					ShaderTypes.vec2,
+					ShaderTypes.vec2,
+				}
+			};
+
+			ShaderUniformInputInfo mvpBufferInfo = new ShaderUniformInputInfo();
+			mvpBufferInfo.set = 0;
+			mvpBufferInfo.binding = 0;
+			mvpBufferInfo.type = DescriptorType.UniformBuffer;
+			mvpBufferInfo.stage = ShaderStages.Vertex;
+
+			ShaderUniformInputInfo textureSamplerInfo = new ShaderUniformInputInfo();
+			textureSamplerInfo.set = 1;
+			textureSamplerInfo.binding = 1;
+			textureSamplerInfo.type = DescriptorType.CombinedImageSampler;
+			textureSamplerInfo.stage = ShaderStages.Fragment;
+
+			shaderCreateInfo.uniformInputInfos = new[] {
+				mvpBufferInfo,
+				textureSamplerInfo,
+			};
+
+			shader_basic2D = apiManager.CreateShader(shaderCreateInfo);
+		}
+
+		/* A basic shader to render colored 2d geometry
+         * Vertex inputs:
+         *      vec2 vertexPosition
+         *      vec4 color
+         *      
+         * Uniforms:
+         *      (set 0, binding 0) mvp buffer (vertex)
+         *          mat4 mvp
+         *          float depth
+         */
+		public static VulkanShader shader_color2D;
+		public static void LoadShaderColor2D(VulkanAPIManager apiManager)
+		{
+			if (shader_color2D != null) return;
+
+			VulkanShader.ShaderCreateInfo shaderCreateInfo = new VulkanShader.ShaderCreateInfo();
+			shaderCreateInfo.vertexShaderFile = "./assets/shaders/shader_color2D.vert.spv";
+			shaderCreateInfo.vertexEntryPoint = "main";
+			shaderCreateInfo.fragmentShaderFile = "./assets/shaders/shader_color2D.frag.spv";
+			shaderCreateInfo.fragmentEntryPoint = "main";
+
+			shaderCreateInfo.inputs = new[] {
+				new[] {
+					ShaderTypes.vec2,
+					ShaderTypes.vec4,
+				}
+			};
+
+			ShaderUniformInputInfo mvpBufferInfo = new ShaderUniformInputInfo();
+			mvpBufferInfo.set = 0;
+			mvpBufferInfo.binding = 0;
+			mvpBufferInfo.type = DescriptorType.UniformBuffer;
+			mvpBufferInfo.stage = ShaderStages.Vertex;
+
+			shaderCreateInfo.uniformInputInfos = new[] {
+				mvpBufferInfo,
+			};
+
+			shader_color2D = apiManager.CreateShader(shaderCreateInfo);
+		}
 
         /* Creates all shaders, which might take a while
          * (though usually not too long, the actually intensive part of loading the shaders will be done during pipeline creation)
@@ -154,6 +238,8 @@ namespace StarlightGame.Graphics
         {
             LoadShaderBasic3D(apiManager);
             LoadShaderDistanceFieldFont(apiManager);
+			LoadShaderBasic2D(apiManager);
+			LoadShaderColor2D(apiManager);
         }
     }
 }

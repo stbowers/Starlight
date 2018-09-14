@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using VulkanCore;
 
@@ -24,6 +25,8 @@ namespace StarlightEngine.Graphics.Vulkan
 			// Should be left blank when creating a pipeline, filled in by calling apiManager.CreatePipeline()
 			public ApiInfo apiInfo;
 
+			public string name;
+
 			public VulkanShader shader;
 
 			public PrimitiveTopology topology;
@@ -48,10 +51,13 @@ namespace StarlightEngine.Graphics.Vulkan
 
 		public VulkanPipeline(VulkanPipelineCreateInfo createInfo)
 		{
+			// Time how long it takes to make the pipeline
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
+
 			m_apiInfo = createInfo.apiInfo;
             m_shader = createInfo.shader;
 
-			Console.WriteLine("Creating graphics pipeline\n");
 			/* Create shader stages */
 			// Programmable stages
 			PipelineShaderStageCreateInfo vertShaderStageInfo = new PipelineShaderStageCreateInfo();
@@ -143,7 +149,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			PipelineDepthStencilStateCreateInfo depthStencil = new PipelineDepthStencilStateCreateInfo();
 			depthStencil.DepthTestEnable = createInfo.depthTestEnable;
 			depthStencil.DepthWriteEnable = createInfo.depthWriteEnable;
-			depthStencil.DepthCompareOp = CompareOp.Less;
+			depthStencil.DepthCompareOp = CompareOp.LessOrEqual;
 			depthStencil.DepthBoundsTestEnable = false;
 			depthStencil.StencilTestEnable = false;
 			depthStencil.Front = new StencilOpState();
@@ -170,7 +176,14 @@ namespace StarlightEngine.Graphics.Vulkan
 			colorAttachment.StoreOp = AttachmentStoreOp.Store;
 			colorAttachment.StencilLoadOp = AttachmentLoadOp.DontCare;
 			colorAttachment.StencilStoreOp = AttachmentStoreOp.DontCare;
-			colorAttachment.InitialLayout = ImageLayout.Undefined;
+			if (createInfo.clearColorAttachment)
+			{
+				colorAttachment.InitialLayout = ImageLayout.Undefined;
+			}
+			else
+			{
+				colorAttachment.InitialLayout = ImageLayout.PresentSrcKhr;
+			}
 			colorAttachment.FinalLayout = ImageLayout.PresentSrcKhr;
 
 			AttachmentReference colorAttachmentRef = new AttachmentReference();
@@ -184,7 +197,14 @@ namespace StarlightEngine.Graphics.Vulkan
 			depthAttachment.StoreOp = AttachmentStoreOp.Store;
 			depthAttachment.StencilLoadOp = AttachmentLoadOp.DontCare;
 			depthAttachment.StencilStoreOp = AttachmentStoreOp.DontCare;
-			depthAttachment.InitialLayout = ImageLayout.Undefined;
+			if (createInfo.clearDepthAttachment)
+			{
+				depthAttachment.InitialLayout = ImageLayout.Undefined;
+			}
+			else
+			{
+				depthAttachment.InitialLayout = ImageLayout.DepthStencilAttachmentOptimal;
+			}
 			depthAttachment.FinalLayout = ImageLayout.DepthStencilAttachmentOptimal;
 
 			AttachmentReference depthAttachmentRef = new AttachmentReference();
@@ -230,7 +250,6 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineInfo.BasePipelineIndex = -1;
 
 			m_pipeline = m_apiInfo.device.CreateGraphicsPipeline(pipelineInfo);
-			Console.WriteLine("Graphics pipeline created\n");
 
 			/* Create swapchain framebuffers */
 			m_framebuffers = new Framebuffer[m_apiInfo.imageCount];
@@ -249,7 +268,8 @@ namespace StarlightEngine.Graphics.Vulkan
 
 				m_framebuffers[framebufferIndex] = m_renderPass.CreateFramebuffer(framebufferInfo);
 			}
-			Console.WriteLine("{0} framebuffers allocated", m_framebuffers.Length);
+
+			Console.WriteLine("Graphics pipeline created (Name: \"{0}\", {1} FBs allocated, took {2}ms)", createInfo.name, m_framebuffers.Length, stopwatch.ElapsedMilliseconds);
 		}
 
 		public RenderPass GetRenderPass()

@@ -6,7 +6,7 @@
 layout(location = 0) in vec2 texCoord;
 layout(location = 1) in vec3 worldPosition;
 layout(location = 2) in vec3 cameraPosition;
-layout(location = 3) in vec3 normal;
+layout(location = 3) in vec3 normalIn;
 layout(location = 4) in mat4 model;
 
 // Uniform inputs
@@ -26,8 +26,9 @@ layout(location = 0) out vec4 outColor;
 void main() {
 	vec3 toLight = normalize(lightingSettings.lightPosition.xyz - worldPosition);
 	vec3 toCamera = normalize(cameraPosition - worldPosition);
+	vec3 normal = normalize((model * vec4(normalIn, 0.0f)).xyz);
 
-    float brightness = dot(normalize(toCamera), normalize((model * vec4(normal, 1.0f)).xyz));
+    float brightness = dot(toLight, normal);
 
     vec3 reflectedLightDirection = reflect(-toLight, normal);
     reflectedLightDirection = normalize(reflectedLightDirection);

@@ -22,25 +22,25 @@ namespace StarlightEngine.Graphics.Objects
         public byte[] VertexData;
         public int[] Indices;
 
-        public Vec3 GetVertexPosition(int index)
+        public FVec3 GetVertexPosition(int index)
         {
             float[] posData = new float[3];
             Buffer.BlockCopy(VertexData, (index * VERTEX_SIZE) + VERTEX_POSITION_OFFSET, posData, 0, VERTEX_POSITION_SIZE);
-            return new Vec3(posData);
+            return new FVec3(posData);
         }
 
-        public Vec2 GetVertexTextureCoordinate(int index)
+        public FVec2 GetVertexTextureCoordinate(int index)
         {
             float[] texCoordData = new float[2];
             Buffer.BlockCopy(VertexData, (index * VERTEX_SIZE) + VERTEX_TEXTURE_COORDINATE_OFFSET, texCoordData, 0, VERTEX_TEXTURE_COORDINATE_SIZE);
-            return new Vec2(texCoordData);
+            return new FVec2(texCoordData);
         }
 
-        public Vec3 GetVertexNormal(int index)
+        public FVec3 GetVertexNormal(int index)
         {
             float[] normalData = new float[3];
             Buffer.BlockCopy(VertexData, (index * VERTEX_SIZE) + VERTEX_NORMAL_OFFSET, normalData, 0, VERTEX_NORMAL_SIZE);
-            return new Vec3(normalData);
+            return new FVec3(normalData);
         }
     }
 
@@ -52,9 +52,9 @@ namespace StarlightEngine.Graphics.Objects
             string line;
 
             // lists of the vectors defined by v, vt, and vn in the obj file
-            List<Vec3> obj_v = new List<Vec3>();
-            List<Vec2> obj_vt = new List<Vec2>();
-            List<Vec3> obj_vn = new List<Vec3>();
+            List<FVec3> obj_v = new List<FVec3>();
+            List<FVec2> obj_vt = new List<FVec2>();
+            List<FVec3> obj_vn = new List<FVec3>();
 
 			// List of indicies into obj_v, obj_vt, and obj_vn describing a vertex in a face
 			List<IVec3> obj_f = new List<IVec3>();
@@ -67,16 +67,16 @@ namespace StarlightEngine.Graphics.Objects
                 {
                     case "v":
                         // vertex: v x y z
-                        obj_v.Add(new Vec3(float.Parse(words[1]), float.Parse(words[2]), float.Parse(words[3])));
+                        obj_v.Add(new FVec3(float.Parse(words[1]), float.Parse(words[2]), float.Parse(words[3])));
                         break;
                     case "vt":
                         // texture coordinate: vt x y
                         // flip y component of texture coordinates for Vulkan
-                        obj_vt.Add(new Vec2(float.Parse(words[1]), -float.Parse(words[2])));
+                        obj_vt.Add(new FVec2(float.Parse(words[1]), -float.Parse(words[2])));
                         break;
                     case "vn":
                         // normal: vn x y z
-                        obj_vn.Add(new Vec3(float.Parse(words[1]), float.Parse(words[2]), float.Parse(words[3])));
+                        obj_vn.Add(new FVec3(float.Parse(words[1]), float.Parse(words[2]), float.Parse(words[3])));
                         break;
                     case "f":
                         // face: v/vt/vn v/vt/vn v/vt/vn
@@ -107,9 +107,9 @@ namespace StarlightEngine.Graphics.Objects
 				if (!writtenIndices.ContainsKey(vertexIndicies))
 				{
 					// write vertex info to newObject.VertexData
-					Vec3 vertPos = obj_v[vertexIndicies[0] - 1];
-					Vec2 vertTex = obj_vt[vertexIndicies[1] - 1];
-					Vec3 vertNorm = obj_vn[vertexIndicies[2] - 1];
+					FVec3 vertPos = obj_v[vertexIndicies[0] - 1];
+					FVec2 vertTex = obj_vt[vertexIndicies[1] - 1];
+					FVec3 vertNorm = obj_vn[vertexIndicies[2] - 1];
 
 					vertPos.Bytes.CopyTo(newObject.VertexData, (vertexIndex * WavefrontObject.VERTEX_SIZE) + WavefrontObject.VERTEX_POSITION_OFFSET);
 					vertTex.Bytes.CopyTo(newObject.VertexData, (vertexIndex * WavefrontObject.VERTEX_SIZE) + WavefrontObject.VERTEX_TEXTURE_COORDINATE_OFFSET);

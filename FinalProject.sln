@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarlightGame", "StarlightGame\StarlightGame.csproj", "{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarlightEngine", "StarlightEngine\StarlightEngine.csproj", "{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarlightGame", "StarlightGame\StarlightGame.csproj", "{DED3B137-5B9B-4132-AB1B-21B466535E2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,20 +14,20 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}.Debug|x86.Build.0 = Debug|Any CPU
-		{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}.Release|x86.ActiveCfg = Release|Any CPU
-		{24A538FD-6E4A-4265-8057-2EA5FA9E34A4}.Release|x86.Build.0 = Release|Any CPU
 		{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}.Debug|x86.ActiveCfg = Debug|x86
 		{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}.Debug|x86.Build.0 = Debug|x86
 		{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}.Release|Any CPU.ActiveCfg = Release|x86
 		{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}.Release|x86.ActiveCfg = Release|x86
 		{E77ACABC-FFB6-4D74-93B4-FDC3D7B08F25}.Release|x86.Build.0 = Release|x86
+		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Debug|Any CPU.Build.0 = Debug|x86
+		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Debug|x86.ActiveCfg = Debug|x86
+		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Debug|x86.Build.0 = Debug|x86
+		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Release|Any CPU.ActiveCfg = Release|x86
+		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Release|Any CPU.Build.0 = Release|x86
+		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Release|x86.ActiveCfg = Release|x86
+		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

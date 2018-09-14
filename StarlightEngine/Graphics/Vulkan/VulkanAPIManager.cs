@@ -324,6 +324,7 @@ namespace StarlightEngine.Graphics.Vulkan
 
 			PhysicalDeviceFeatures deviceFeatures = new PhysicalDeviceFeatures();
 			deviceFeatures.SamplerAnisotropy = true;
+			deviceFeatures.FillModeNonSolid = true;
 
 			DeviceCreateInfo logicalDeviceCreateInfo = new DeviceCreateInfo();
 			logicalDeviceCreateInfo.QueueCreateInfos = queueCreateInfos;
@@ -413,7 +414,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			m_swapchainImages = m_swapchain.GetImages();
 
 			imageCount = m_swapchainImages.Length;
-			Console.WriteLine("Swap chain created with {0} images\n", imageCount);
+			Console.WriteLine("Swap chain created with {0} images", imageCount);
 
 			/* Create swap chain image views */
 			m_swapchainImageViews = new ImageView[imageCount];
@@ -575,7 +576,7 @@ namespace StarlightEngine.Graphics.Vulkan
 				barrier.SrcAccessMask = Accesses.TransferRead;
 				barrier.DstAccessMask = Accesses.ShaderRead;
 
-				commandBuffer.CmdPipelineBarrier(PipelineStages.Transfer, PipelineStages.Transfer, 0,
+				commandBuffer.CmdPipelineBarrier(PipelineStages.Transfer, PipelineStages.FragmentShader, 0,
 					null,
 					null,
 					new[] { barrier });
@@ -592,7 +593,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			barrier.SrcAccessMask = Accesses.TransferWrite;
 			barrier.DstAccessMask = Accesses.ShaderRead;
 
-			commandBuffer.CmdPipelineBarrier(PipelineStages.Transfer, PipelineStages.Transfer, 0,
+			commandBuffer.CmdPipelineBarrier(PipelineStages.Transfer, PipelineStages.FragmentShader, 0,
 				null,
 				null,
 				new[] { barrier });
@@ -930,6 +931,24 @@ namespace StarlightEngine.Graphics.Vulkan
 			{
 				throw new VulkanException(result);
 			}
+		}
+
+		/* Creates a buffer with enough space for each section, plus padding to keep each section aligned, returns the buffer & allocation along with an array of offsets into the buffer for each entry of sizes
+		 */
+		public void CreateSectionedBuffer(int[] sizes, int alignment, BufferUsages usage, MemoryProperties requiredFlags, MemoryProperties preferredFlags, out VulkanCore.Buffer buffer, out VmaAllocation allocation, out int[] offsets)
+		{
+			offsets = new int[sizes.Length];
+
+			int bufferSize = 0;
+			for (int i = 0; i < sizes.Length; i++)
+			{
+				int padding = alignment - (bufferSize % alignment);
+
+				offsets[i] = bufferSize + padding;
+				bufferSize += sizes[i] + padding;
+			}
+
+			CreateBuffer(bufferSize, usage, requiredFlags, preferredFlags, out buffer, out allocation);
 		}
 
 		public void CreateImage2D(

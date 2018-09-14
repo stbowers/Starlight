@@ -238,12 +238,12 @@ namespace StarlightEngine.Graphics.Fonts
 
         // Make a mesh out of a given string of text
         // The resulting mesh will start at (0, 0), expanding down and to the right
-        public static TextMesh CreateTextMesh(AngelcodeFont font, int size, string text, Vec2 offset, float width)
+        public static TextMesh CreateTextMesh(AngelcodeFont font, int size, string text, FVec2 offset, float width)
         {
             TextMesh newTextMesh = new TextMesh();
 
             // list of vertices for the mesh (posX, posY, textureX, textureY)
-            List<Vec4> verts = new List<Vec4>();
+            List<FVec4> verts = new List<FVec4>();
             List<int> indices = new List<int>();
 
             // calculate scaling factors
@@ -255,7 +255,7 @@ namespace StarlightEngine.Graphics.Fonts
             float xPadding = scaleX * (float)font.padding[1];
 
             // keep track of where to put new characters
-            Vec2 cursor = new Vec2(offset.X + xPadding, offset.Y + (scaleY * font.@base) - yPadding);
+            FVec2 cursor = new FVec2(offset.X + xPadding, offset.Y + (scaleY * font.@base) - yPadding);
 
             // loop through words, adding them to the mesh one at a time
             int lineWordCount = 0;
@@ -330,7 +330,7 @@ namespace StarlightEngine.Graphics.Fonts
             return width;
         }
 
-        private static void AddWordToMesh(AngelcodeFont font, float scaleX, float scaleY, string word, ref Vec2 cursor, ref List<Vec4> verts, ref List<int> indices)
+        private static void AddWordToMesh(AngelcodeFont font, float scaleX, float scaleY, string word, ref FVec2 cursor, ref List<FVec4> verts, ref List<int> indices)
         {
             byte[] bytes = Encoding.ASCII.GetBytes(word);
             for (int i = 0; i < bytes.Length; i++)
@@ -355,10 +355,10 @@ namespace StarlightEngine.Graphics.Fonts
 
                 // Calculate verticies for char
                 int topLeftIndex = verts.Count;
-                Vec4 topLeft = new Vec4(cursor.X + xOffset, cursor.Y + yOffset - charHeight, textureX, textureY);
-                Vec4 topRight = new Vec4(cursor.X + charWidth + xOffset, cursor.Y + yOffset - charHeight, textureX + textureWidth, textureY);
-                Vec4 bottomLeft = new Vec4(cursor.X + xOffset, cursor.Y + yOffset, textureX, textureY + textureHeight);
-                Vec4 bottomRight = new Vec4(cursor.X + charWidth + xOffset, cursor.Y + yOffset, textureX + textureWidth, textureY + textureHeight);
+                FVec4 topLeft = new FVec4(cursor.X + xOffset, cursor.Y + yOffset - charHeight, textureX, textureY);
+                FVec4 topRight = new FVec4(cursor.X + charWidth + xOffset, cursor.Y + yOffset - charHeight, textureX + textureWidth, textureY);
+                FVec4 bottomLeft = new FVec4(cursor.X + xOffset, cursor.Y + yOffset, textureX, textureY + textureHeight);
+                FVec4 bottomRight = new FVec4(cursor.X + charWidth + xOffset, cursor.Y + yOffset, textureX + textureWidth, textureY + textureHeight);
                 verts.Add(topLeft);
                 verts.Add(topRight);
                 verts.Add(bottomLeft);

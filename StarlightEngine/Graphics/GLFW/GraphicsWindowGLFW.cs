@@ -1,6 +1,7 @@
 ﻿using System;
 using glfw3;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 namespace StarlightEngine.Graphics.GLFW
 {
@@ -8,6 +9,9 @@ namespace StarlightEngine.Graphics.GLFW
 	{
 		private GLFWwindow m_window;
 		int m_width, m_height;
+
+		// event delegate for GLFW window pointer
+		static Dictionary<IntPtr, WindowManagerCallbacks.KeyboardEventDelegate> m_keyboardEventDelegate = new Dictionary<IntPtr, WindowManagerCallbacks.KeyboardEventDelegate>();
 
 		public GraphicsWindowGLFW(int width, int height, string name)
 		{
@@ -20,6 +24,28 @@ namespace StarlightEngine.Graphics.GLFW
 			Glfw.WindowHint((int)State.Resizable, (int)State.False);
 
 			m_window = Glfw.CreateWindow(width, height, name, null, null);
+			Glfw.SetKeyCallback(m_window, KeyCallback);
+		}
+
+		public void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
+		{
+			List<KeyModifier> modifiers = Glfw.GetKeyModifiers(mods);
+
+			KeyAction keyAction = KeyAction.Release;
+			switch (action)
+			{
+				case 0:
+					keyAction = KeyAction.Release;
+					break;
+				case 1:
+					keyAction = KeyAction.Press;
+					break;
+				case 2:
+					keyAction = KeyAction.Repeat;
+					break;
+			}
+
+			m_keyboardEventDelegate[window]((Key)key, keyAction, modifiers);
 		}
 
 		~GraphicsWindowGLFW()
@@ -27,8 +53,6 @@ namespace StarlightEngine.Graphics.GLFW
 			Glfw.DestroyWindow(m_window);
 			Glfw.Terminate();
 		}
-
-
 
 		string[] IWindowManager.GetVulkanExtensions()
 		{
@@ -78,5 +102,10 @@ namespace StarlightEngine.Graphics.GLFW
         {
             Glfw.PollEvents();
         }
-    }
+
+		public void SetKeyboardEventDelegate(WindowManagerCallbacks.KeyboardEventDelegate keyboardEventDelegate)
+		{
+			m_keyboardEventDelegate[m_window.__Instance] = keyboardEventDelegate;
+		}
+	}
 }
