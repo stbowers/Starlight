@@ -21,7 +21,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
         int m_setIndex;
         int m_binding;
 
-        public VulkanTextureComponent(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, bool useMipmaps, DescriptorSet textureSamplerSet, int setIndex, int binding)
+        public VulkanTextureComponent(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, bool useMipmaps, Filter magFilter, Filter minFilter, DescriptorSet textureSamplerSet, int setIndex, int binding)
         {
             m_apiManager = apiManager;
             m_pipeline = pipeline;
@@ -76,8 +76,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 			m_textureImageView = m_textureImage.CreateView(viewInfo);
 
 			SamplerCreateInfo samplerInfo = new SamplerCreateInfo();
-			samplerInfo.MagFilter = Filter.Linear;
-			samplerInfo.MinFilter = Filter.Linear;
+			samplerInfo.MagFilter = magFilter;
+			samplerInfo.MinFilter = minFilter;
 			samplerInfo.AddressModeU = SamplerAddressMode.Repeat;
 			samplerInfo.AddressModeV = SamplerAddressMode.Repeat;
 			samplerInfo.AddressModeW = SamplerAddressMode.Repeat;

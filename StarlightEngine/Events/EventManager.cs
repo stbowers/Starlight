@@ -125,6 +125,7 @@ namespace StarlightEngine.Events
 
 				// Wait until EVENT_THREAD_PERIOD has passed
 				float timeLeft = EVENT_THREAD_PERIOD - (m_eventThreadTimer.ElapsedMilliseconds / 1000.0f);
+                timeLeft = Functions.Clamp(timeLeft, 0.0f, float.MaxValue);
 				m_eventThreadTimer.Stop();
 				m_eventThreadTimer.Reset();
 				Thread.Sleep((int)(timeLeft * 1000));

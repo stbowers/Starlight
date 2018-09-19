@@ -8,19 +8,21 @@ using VulkanCore;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
-	public class Vulkan2DSprite : IVulkanDrawableObject
+	public class VulkanRecolorable2DSprite : IVulkanDrawableObject
 	{
 		VulkanAPIManager m_apiManager;
 		VulkanPipeline m_pipeline;
 
 		byte[] m_meshData;
 		byte[] m_mvpData;
+        byte[] m_recolorData;
 		int m_numIndices;
 
 		VulkanCore.Buffer m_objectBuffer;
 		VmaAllocation m_objectBufferAllocation;
 		int m_meshDataOffset;
 		int m_mvpDataOffset;
+        int m_recolorDataOffset;
 
 		DescriptorSet m_meshDescriptorSet;
 		DescriptorSet m_materialDescriptorSet;
@@ -28,9 +30,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		VulkanMeshComponent m_mesh;
 		VulkanTextureComponent m_texture;
 		VulkanUniformBufferComponent m_mvpUniform;
+        VulkanUniformBufferComponent m_recolorUniform;
 		IVulkanBindableComponent[] m_bindableComponents;
 
-		public Vulkan2DSprite(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, FVec2 position, FVec2 scale)
+		public VulkanRecolorable2DSprite(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, FVec2 position, FVec2 scale, FVec4 fromColor1, FVec4 toColor1, FVec4 fromColor2, FVec4 toColor2)
 		{
 			m_apiManager = apiManager;
 			m_pipeline = pipeline;
@@ -58,13 +61,21 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, 4 * 4 * 4);
 			System.Buffer.BlockCopy(new[] { depth }, 0, m_mvpData, 4 * 4 * 4, 4);
 
+            // Create recolor data
+            m_recolorData = new byte[4 * 4 * 4];
+            System.Buffer.BlockCopy(fromColor1.Bytes, 0, m_recolorData, 0, 4 * 4);
+            System.Buffer.BlockCopy(toColor1.Bytes, 0, m_recolorData, 1 * (4 * 4), 4 * 4);
+            System.Buffer.BlockCopy(fromColor2.Bytes, 0, m_recolorData, 2 * (4 * 4), 4 * 4);
+            System.Buffer.BlockCopy(toColor2.Bytes, 0, m_recolorData, 3 * (4 * 4), 4 * 4);
+
 			// Create object buffer
 			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
 			int meshDataSize = m_meshData.Length;
 			int mvpDataSize = m_mvpData.Length;
+            int recolorDataSize = m_recolorData.Length;
 			int[] objectBufferOffsets;
 			m_apiManager.CreateSectionedBuffer(
-				new int[] { meshDataSize, mvpDataSize },
+				new int[] { meshDataSize, mvpDataSize, recolorDataSize },
 				bufferAlignment,
 				BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer,
 				MemoryProperties.HostVisible,
@@ -75,6 +86,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			);
 			m_meshDataOffset = objectBufferOffsets[0];
 			m_mvpDataOffset = objectBufferOffsets[1];
+            m_recolorDataOffset = objectBufferOffsets[2];
 
 			// Create descriptor sets
 			m_meshDescriptorSet = m_pipeline.GetShader().AllocateDescriptorSets(0, 1)[0];
@@ -84,12 +96,15 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, ReallocateObjectBuffer, m_meshData, 0, 4 * 4 * 4, m_objectBuffer, m_objectBufferAllocation, m_meshDataOffset);
 
 			// Create texture component
-			m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, textureFile, true, Filter.Linear, Filter.Linear, m_materialDescriptorSet, 1, 1);
+			m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, textureFile, true, Filter.Nearest, Filter.Nearest, m_materialDescriptorSet, 1, 2);
 
 			// Create mvp uniform buffer
 			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_objectBufferAllocation, m_mvpDataOffset, m_meshDescriptorSet, 0, 0);
 
-			m_bindableComponents = new IVulkanBindableComponent[] { m_mesh, m_texture, m_mvpUniform };
+            // Create recolor settings buffer
+            m_recolorUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_recolorData, m_objectBuffer, m_objectBufferAllocation, m_recolorDataOffset, m_materialDescriptorSet, 1, 1);
+
+            m_bindableComponents = new IVulkanBindableComponent[] { m_mesh, m_texture, m_mvpUniform, m_recolorUniform };
 		}
 
 		public void ReallocateObjectBuffer(VulkanCore.Buffer buffer, VmaAllocation bufferAllocation, int newSize)
@@ -97,9 +112,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
 			int meshDataSize = m_meshData.Length;
 			int mvpDataSize = m_mvpData.Length;
+            int recolorDataSize = m_recolorData.Length;
 			int[] objectBufferOffsets;
 			m_apiManager.CreateSectionedBuffer(
-				new int[] { meshDataSize, mvpDataSize },
+				new int[] { meshDataSize, mvpDataSize, recolorDataSize },
 				bufferAlignment,
 				BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer,
 				MemoryProperties.HostVisible,
@@ -110,6 +126,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			);
 			m_meshDataOffset = objectBufferOffsets[0];
 			m_mvpDataOffset = objectBufferOffsets[1];
+            m_recolorDataOffset = objectBufferOffsets[2];
 		}
 
 		public void Update()

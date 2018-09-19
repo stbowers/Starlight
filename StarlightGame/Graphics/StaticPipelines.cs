@@ -119,6 +119,43 @@ namespace StarlightGame.Graphics
 			pipeline_basic2D = apiManager.CreatePipeline(pipelineCreateInfo);
 		}
 
+		/* A basic 2d sprite render pipeline, with the option to dynamically swap out colors in the texture
+         * Shader: recolor2D
+         * Primatives: triangle list
+         * Primative restart: no
+         * Polygon mode: fill
+         * Depth test: yes
+         * Depth writes: yes
+         * Clear color: no
+         * Clear depth: no
+         */
+		public static VulkanPipeline pipeline_recolor2D;
+		public static void LoadPipelineRecolor2D(VulkanAPIManager apiManager)
+		{
+			if (pipeline_recolor2D != null) return;
+
+			VulkanPipeline.VulkanPipelineCreateInfo pipelineCreateInfo = new VulkanPipeline.VulkanPipelineCreateInfo();
+			pipelineCreateInfo.name = "recolor2D";
+
+			// make sure shader is loaded
+			StaticShaders.LoadShaderRecolor2D(apiManager);
+			pipelineCreateInfo.shader = StaticShaders.shader_recolor2D;
+
+			pipelineCreateInfo.topology = PrimitiveTopology.TriangleList;
+			pipelineCreateInfo.primitiveRestartEnable = false;
+			pipelineCreateInfo.polygonMode = PolygonMode.Fill;
+
+			pipelineCreateInfo.frontFaceCCW = false;
+
+			pipelineCreateInfo.depthTestEnable = true;
+			pipelineCreateInfo.depthWriteEnable = true;
+
+			pipelineCreateInfo.clearColorAttachment = false;
+			pipelineCreateInfo.clearDepthAttachment = false;
+
+			pipeline_recolor2D = apiManager.CreatePipeline(pipelineCreateInfo);
+		}
+
 		/* A pipeline which clears the screen
 		 * Shader: basic2D
          * Primatives: triangle list
@@ -241,6 +278,7 @@ namespace StarlightGame.Graphics
 			LoadPipelineClear(apiManager);
 			LoadPipelineColor2D(apiManager);
 			LoadPipelineColorLine(apiManager);
+            LoadPipelineRecolor2D(apiManager);
         }
     }
 }

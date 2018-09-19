@@ -103,6 +103,15 @@ namespace StarlightGame
 			Vulkan2DProgressBar loadBar = new Vulkan2DProgressBar(apiManager, StaticPipelines.pipeline_colorLine, StaticPipelines.pipeline_color2D, new FVec2(-.5f, .25f), new FVec2(1.0f, .1f), fill, new FVec4(1.0f, 1.0f, 1.0f, 1.0f));
 			renderer.AddObject(4, loadBar);
 
+            // status recolorable asset
+            FVec4 from1 = new FVec4(1.0f, 1.0f, 1.0f, 0.0f);
+            FVec4 to1 = new FVec4(1.0f, 0.0f, 0.0f, 0.0f);
+            FVec4 from2 = new FVec4(0.0f, 0.0f, 0.0f, 0.0f);
+            FVec4 to2 = new FVec4(0.0f, 1.0f, 0.0f, 0.0f);
+
+            VulkanRecolorable2DSprite status = new VulkanRecolorable2DSprite(apiManager, StaticPipelines.pipeline_recolor2D, "./assets/Indicator.png", new FVec2(.5f, .5f), new FVec2(.2f, .2f), from1, to1, from2, to2);
+            renderer.AddObject(5, status);
+
             try
             {
                 int framesDrawn = 0;

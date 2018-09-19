@@ -84,7 +84,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, ReallocateObjectBuffer, m_meshData, 0, m_loadedObject.VertexData.Length, m_objectBuffer, m_objectBufferAllocation, m_meshDataOffset);
 
 			// Create texture component
-			m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, textureFile, true, m_materialDescriptorSet, 1, 2);
+			m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, textureFile, true, Filter.Linear, Filter.Linear, m_materialDescriptorSet, 1, 2);
 
 			// Create mvp uniform buffer
 			m_mvpData = new byte[mvpDataSize];

@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarlightEngine", "Starligh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarlightGame", "StarlightGame\StarlightGame.csproj", "{DED3B137-5B9B-4132-AB1B-21B466535E2C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraSanctum", "TerraSanctum\TerraSanctum.csproj", "{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,14 @@ Global
 		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Release|Any CPU.Build.0 = Release|x86
 		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Release|x86.ActiveCfg = Release|x86
 		{DED3B137-5B9B-4132-AB1B-21B466535E2C}.Release|x86.Build.0 = Release|x86
+		{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}.Debug|x86.Build.0 = Debug|Any CPU
+		{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}.Release|x86.ActiveCfg = Release|Any CPU
+		{555A642D-03DA-40ED-8D1E-CE41A70B0F6B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
