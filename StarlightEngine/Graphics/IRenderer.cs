@@ -1,5 +1,5 @@
-﻿using System;
-using StarlightEngine.Graphics.Objects;
+﻿using StarlightEngine.Graphics.Objects;
+using StarlightEngine.Graphics.Scenes;
 
 namespace StarlightEngine.Graphics
 {
@@ -7,10 +7,8 @@ namespace StarlightEngine.Graphics
 	 */
 	public interface IRenderer
 	{
-		// add an object to be rendered
-		void AddObject(int layer, IGraphicsObject obj);
-		// remove an object from this renderer
-		void RemoveObject(int layer, IGraphicsObject obj);
+		// display a scene
+		void DisplayScene(Scene scene);
 
 		// Update objects and/or caches to speed up rendering
 		void Update();

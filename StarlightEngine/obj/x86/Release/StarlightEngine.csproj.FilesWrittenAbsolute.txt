@@ -1,0 +1,8 @@
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/obj/x86/Release/.NETFramework,Version=v4.6.1.AssemblyAttribute.cs
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Release/WrapperGLFW.dll.config
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Release/StarlightEngine.dll
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/obj/x86/Release/StarlightEngine.dll
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Release/System.Runtime.CompilerServices.Unsafe.dll
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Release/System.ValueTuple.dll
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Release/VulkanCore.dll
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Release/WrapperGLFW.dll

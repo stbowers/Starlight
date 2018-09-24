@@ -167,16 +167,16 @@ namespace StarlightEngine.Graphics.Math
             }
         }
 
-		public T this[int i, int j]
+		public T this[int j, int i]
 		{
 			get
 			{
-				return m_data[(j * m_m) + i];
+				return m_data[(i * m_n) + j];
 			}
 
 			set
 			{
-				m_data[(j * m_m) + i] = value;
+				m_data[(i * m_n) + j] = value;
 			}
 		}
 
@@ -392,12 +392,31 @@ namespace StarlightEngine.Graphics.Math
             return newMatrix;
         }
 
+		public static FVec4 operator *(FMat4 left, FVec4 right)
+		{
+			FVec4 result = new FVec4();
+
+			result[0] = (left[0, 0] * right[0]) + (left[0, 1] * right[1]) + (left[0, 2] * right[2]) + (left[0, 3] * right[3]);
+			result[1] = (left[1, 0] * right[0]) + (left[1, 1] * right[1]) + (left[1, 2] * right[2]) + (left[1, 3] * right[3]);
+			result[2] = (left[2, 0] * right[0]) + (left[2, 1] * right[1]) + (left[2, 2] * right[2]) + (left[2, 3] * right[3]);
+			result[3] = (left[3, 0] * right[0]) + (left[3, 1] * right[1]) + (left[3, 2] * right[2]) + (left[3, 3] * right[3]);
+
+			return result;
+		}
+
 		public static FMat4 operator+(FMat4 left, FMat4 right)
 		{
 			BasicMatrix<float> l = left as BasicMatrix<float>;
 			BasicMatrix<float> r = right as BasicMatrix<float>;
 			BasicMatrix<float> sum = l + r;
 			return new FMat4(sum);
+		}
+
+		public static FMat4 Invert(FMat4 matrix)
+		{
+			FMat4 newMatrix = new FMat4();
+
+			return newMatrix;
 		}
 
         // Static functions for model, view, and projection matricies
@@ -493,6 +512,18 @@ namespace StarlightEngine.Graphics.Math
 			newMatrix[0, 3] = translate.X;
 			newMatrix[1, 3] = translate.Y;
 			newMatrix[2, 3] = translate.Z;
+
+			return newMatrix;
+		}
+
+		public static FMat4 Scale(FVec3 scale)
+		{
+			FMat4 newMatrix = new FMat4(1.0f);
+
+			newMatrix[0, 0] = scale.X;
+			newMatrix[1, 1] = scale.Y;
+			newMatrix[2, 2] = scale.Z;
+			newMatrix[3, 3] = 1;
 
 			return newMatrix;
 		}

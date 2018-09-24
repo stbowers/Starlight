@@ -1,7 +1,4 @@
-﻿using System;
-using VulkanCore;
-using StarlightEngine.Graphics.Vulkan;
-using StarlightEngine.Graphics.Vulkan.Objects;
+﻿using VulkanCore;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Graphics.Vulkan.Objects.Components;
 using StarlightEngine.Graphics.Fonts;
@@ -14,6 +11,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 	{
 		VulkanAPIManager m_apiManager;
 		VulkanPipeline m_pipeline;
+
+		FVec2 m_position;
+		float m_width;
 
 		TextMesh m_textMesh;
 
@@ -37,13 +37,17 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		VulkanUniformBufferComponent m_fontSettingsUniform;
 		IVulkanBindableComponent[] m_bindableComponents;
 
-		public VulkanTextObject(VulkanAPIManager apiManager, VulkanPipeline pipeline, AngelcodeFont font, string text, int size, FVec2 location, float width)
+		public VulkanTextObject(VulkanAPIManager apiManager, AngelcodeFont font, string text, int size, FVec2 location, float width)
 		{
 			m_apiManager = apiManager;
-			m_pipeline = pipeline;
+			m_pipeline = StaticPipelines.pipeline_distanceFieldFont;
+
+			this.Visible = true;
 
 			// Create text mesh
-			m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, text, location, width);
+			m_position = new FVec2(location.X * (apiManager.GetSwapchainImageExtent().Width / 2.0f), location.Y * (apiManager.GetSwapchainImageExtent().Height / 2.0f));
+			m_width = width * (apiManager.GetSwapchainImageExtent().Width / 2);
+			m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, text, m_position, m_width);
 			m_numIndices = m_textMesh.numVertices;
 
 			// Create object buffer
@@ -135,7 +139,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		public void UpdateText(AngelcodeFont font, string newText, int size)
 		{
-			TextMesh textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, newText, new FVec2(-638.0f, -357.0f), 640.0f);
+			TextMesh textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, newText, m_position, m_width);
 			m_textMesh = textMesh;
 			m_numIndices = textMesh.numVertices;
 			int meshDataSize = m_textMesh.meshBufferData.Length;
@@ -172,10 +176,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			}
 		}
 
-
 		public void Draw(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets, int renderPassIndex)
 		{
 			commandBuffer.CmdDrawIndexed(m_numIndices);
 		}
+
+		public bool Visible { get; set; }
 	}
 }

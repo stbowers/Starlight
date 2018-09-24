@@ -1,12 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using StarlightEngine.Graphics.Objects;
+﻿using StarlightEngine.Graphics.Objects;
 using StarlightEngine.Graphics.Math;
 using VulkanCore;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Graphics.Vulkan.Objects.Components;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
@@ -44,10 +41,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		VulkanUniformBufferComponent m_mvpUniform;
 		VulkanUniformBufferComponent m_lightingUniform;
 
-		public VulkanTexturedMesh(VulkanAPIManager apiManager, VulkanPipeline pipeline, string objFile, string textureFile, FMat4 model, FMat4 view, FMat4 proj, FVec4 lightPosition, FVec4 lightColor, float ambientLight, float shineDamper, float reflectivity)
+		public VulkanTexturedMesh(VulkanAPIManager apiManager, string objFile, string textureFile, FMat4 model, FMat4 view, FMat4 proj, FVec4 lightPosition, FVec4 lightColor, float ambientLight, float shineDamper, float reflectivity)
         {
 			m_apiManager = apiManager;
-			m_pipeline = pipeline;
+			m_pipeline = StaticPipelines.pipeline_basic3D;
+
+			this.Visible = true;
 
 			// Load object
 			m_loadedObject = WavefrontModelLoader.LoadFile(objFile);
@@ -179,5 +178,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
 			commandBuffer.CmdDrawIndexed(m_numIndices);
         }
+
+		public bool Visible { get; set; }
     }
 }

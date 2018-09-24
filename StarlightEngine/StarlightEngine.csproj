@@ -64,7 +64,6 @@
   <ItemGroup>
     <Compile Include="Graphics\Math\Vector.cs" />
     <Compile Include="Graphics\Objects\WavefrontModelLoader.cs" />
-    <Compile Include="Graphics\Vulkan\Objects\VulkanUIButton.cs" />
     <Compile Include="Graphics\Vulkan\Objects\VulkanRecolorable2DSprite.cs" />
     <Compile Include="Graphics\Vulkan\Objects\VulkanTexturedMesh.cs" />
     <Compile Include="Graphics\Vulkan\Objects\Components\VulkanTextureComponent.cs" />
@@ -99,10 +98,66 @@
     <Compile Include="Graphics\Vulkan\Objects\Vulkan2DSprite.cs" />
     <Compile Include="Graphics\Vulkan\Objects\Vulkan2DProgressBar.cs" />
     <Compile Include="Events\EventManager.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\VulkanUIButton.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\VulkanBoxCollider.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\Interfaces\IVulkanCollider.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\Vulkan2DRect.cs" />
+    <Compile Include="Graphics\Vulkan\StaticPipelines.cs" />
+    <Compile Include="Graphics\Vulkan\StaticShaders.cs" />
+    <Compile Include="Graphics\Vulkan\Objects\Vulkan2DRectOutline.cs" />
+    <Compile Include="Graphics\Scenes\SceneManager.cs" />
+    <Compile Include="Graphics\Scenes\Scene.cs" />
+    <Compile Include="Graphics\Objects\ICollectionObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="WrapperGLFW.dll.config" />
+    <None Include="WrapperGLFW.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_basic2D.frag" />
+    <None Include="Shaders\shader_basic2D.frag.spv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_basic2D.vert" />
+    <None Include="Shaders\shader_basic2D.vert.spv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_basic3D.frag" />
+    <None Include="Shaders\shader_basic3D.frag.spv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_basic3D.vert" />
+    <None Include="Shaders\shader_basic3D.vert.spv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_color2D.frag" />
+    <None Include="Shaders\shader_color2D.frag.spv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_color2D.vert" />
+    <None Include="Shaders\shader_color2D.vert.spv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_distanceFieldFont.frag" />
+    <None Include="Shaders\shader_distanceFieldFont.frag.spv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_distanceFieldFont.vert" />
+    <None Include="Shaders\shader_distanceFieldFont.vert.spv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_recolor2D.frag" />
+    <None Include="Shaders\shader_recolor2D.frag.spv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\shader_recolor2D.vert" />
+    <None Include="Shaders\shader_recolor2D.vert.spv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Shaders\" />
+    <Folder Include="Graphics\Scenes\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />

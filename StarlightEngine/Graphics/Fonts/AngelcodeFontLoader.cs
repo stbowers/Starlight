@@ -312,23 +312,90 @@ namespace StarlightEngine.Graphics.Fonts
             return newTextMesh;
         }
 
-        // get the width of the string (currently doesn't take into account padding or kernings, so this will be a slight overestimate probably)
+        // get the width of the string
         public static float GetWidthOfString(AngelcodeFont font, int size, string text)
         {
             float width = 0;
 
-            // calculate scaling factors
-            float scaleX = 1 / ((float)size / (float)font.size);
-            float scaleY = 1 / ((float)size / (float)font.size);
+			// calculate scaling factors
+			float scaleX = 1 / ((float)font.size / (float)size);
+			float scaleY = 1 / ((float)font.size / (float)size);
 
-            foreach (byte ch in Encoding.ASCII.GetBytes(text))
-            {
-                // add xadvance of char to total width
-                width += scaleX * font.GetGlyph((int)ch).xadvance;
-            }
+			// padding constants
+			float yPadding = scaleY * (float)font.padding[0];
+			float xPadding = scaleX * (float)font.padding[1];
 
-            return width;
+			byte[] bytes = Encoding.ASCII.GetBytes(text);
+			for (int i = 0; i < bytes.Length; i++)
+			{
+				byte ch = bytes[i];
+				AngelcodeGlyph glyph = font.GetGlyph(ch);
+				AngelcodeKerning kerning = (i == 0) ? null : font.GetKerning((int)bytes[i - 1], (int)ch);
+				float paddingOffset = scaleX * (float)font.padding[0];
+				float kerningOffset = scaleX * (float)((kerning == null) ? 0 : kerning.amount);
+
+				// calculate width of char
+				float charWidth = scaleX * font.GetGlyph((int)ch).width;
+
+				// move cursor
+				width += scaleX * font.GetGlyph((int)ch).xadvance;
+				width -= paddingOffset - kerningOffset;
+			}
+
+			return width;
         }
+
+		// get height of string
+		public static float GetHeightOfString(AngelcodeFont font, int size, string text, float width)
+		{
+			// calculate scaling factors
+			float scaleX = 1 / ((float)font.size / (float)size);
+			float scaleY = 1 / ((float)font.size / (float)size);
+
+			// padding constants
+			float yPadding = scaleY * (float)font.padding[0];
+			float xPadding = scaleX * (float)font.padding[1];
+
+			// keep track of where to put new characters
+			FVec2 cursor = new FVec2(xPadding, (scaleY * font.@base) - yPadding);
+
+			// loop through words, adding them to the mesh one at a time
+			int lineWordCount = 0;
+			foreach (string word in text.Split(' '))
+			{
+				// If this is the first word of the line add it without checking the length
+				if (lineWordCount == 0)
+				{
+					cursor.X += GetWidthOfString(font, size, word);
+					lineWordCount++;
+					continue;
+				}
+
+				// Else check if there is enough space for the word, and if not move the cursor to the next line
+				float wordWidth = GetWidthOfString(font, size, word);
+				if (cursor.X + wordWidth > width)
+				{
+					// move cursor to next line by resting x and adding lineHeight to it
+					cursor.X = xPadding;
+					cursor.Y += scaleY * font.lineHeight;
+					cursor.Y -= yPadding;
+
+					// reset word count
+					lineWordCount = 0;
+				}
+
+				// if this is not the first word of the line add a space
+				if (lineWordCount > 0)
+				{
+					cursor.X += scaleX * font.GetGlyph(Encoding.ASCII.GetBytes(" ")[0]).xadvance;
+				}
+
+				// add the word
+				lineWordCount++;
+			}
+
+			return cursor.Y;
+		}
 
         private static void AddWordToMesh(AngelcodeFont font, float scaleX, float scaleY, string word, ref FVec2 cursor, ref List<FVec4> verts, ref List<int> indices)
         {

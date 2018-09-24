@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using glfw3;
+using StarlightEngine.Graphics.Math;
 
 namespace StarlightEngine.Graphics
 {
@@ -9,6 +10,13 @@ namespace StarlightEngine.Graphics
 		Press,
 		Release,
 		Repeat
+	}
+
+	public enum MouseButton
+	{
+		Primary,
+		Secondary,
+		Middle
 	}
 
 	public struct WindowManagerCallbacks
@@ -31,6 +39,14 @@ namespace StarlightEngine.Graphics
         /* Should the window close
          */
         bool ShouldWindowClose();
+
+		/* Gets the current mouse position in the window (top left is -1, -1, +x is to the right, +y is down)
+		 */
+		FVec2 GetMousePosition();
+
+		/* Gets the current state of the given mouse button
+		 */
+		bool IsMouseButtonPressed(MouseButton button);
 
         /* Generate new events from window
          */

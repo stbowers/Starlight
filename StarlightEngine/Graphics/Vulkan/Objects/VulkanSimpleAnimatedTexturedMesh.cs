@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using StarlightEngine.Graphics.Objects;
 using StarlightEngine.Graphics.Math;
 
@@ -15,18 +14,16 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		}
 
 		VulkanAPIManager m_apiManager;
-		VulkanPipeline m_pipeline;
 
 		AnimationKeyframe[] m_keyframes;
 
 		AnimationState m_animationState = new AnimationState();
 		Stopwatch m_stopwatch = new Stopwatch();
 
-		public VulkanSimpleAnimatedTexturedMesh(VulkanAPIManager apiManager, VulkanPipeline pipeline, string objFile, string textureFile, AnimationKeyframe[] keyframes, FMat4 view, FMat4 proj, FVec4 lightPosition, FVec4 lightColor, float ambientLight, float shineDamper, float reflectivity):
-		base(apiManager, pipeline, objFile, textureFile, keyframes[0].Translation * keyframes[0].Rotation.GetRotationMatrix(), view, proj, lightPosition, lightColor, ambientLight, shineDamper, reflectivity)
+		public VulkanSimpleAnimatedTexturedMesh(VulkanAPIManager apiManager, string objFile, string textureFile, AnimationKeyframe[] keyframes, FMat4 view, FMat4 proj, FVec4 lightPosition, FVec4 lightColor, float ambientLight, float shineDamper, float reflectivity):
+		base(apiManager, objFile, textureFile, keyframes[0].Translation * keyframes[0].Rotation.GetRotationMatrix(), view, proj, lightPosition, lightColor, ambientLight, shineDamper, reflectivity)
 		{
 			m_apiManager = apiManager;
-			m_pipeline = pipeline;
 
 			m_keyframes = keyframes;
 

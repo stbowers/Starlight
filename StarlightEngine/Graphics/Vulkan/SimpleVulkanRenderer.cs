@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using StarlightEngine.Graphics.Objects;
 using StarlightEngine.Graphics.Vulkan.Objects;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
+using StarlightEngine.Graphics.Scenes;
 using VulkanCore;
 
 namespace StarlightEngine.Graphics.Vulkan
@@ -10,8 +11,9 @@ namespace StarlightEngine.Graphics.Vulkan
 	public class SimpleVulkanRenderer : IRenderer
 	{
 		private VulkanAPIManager m_apiManager;
-		private SortedDictionary<int, List<IVulkanObject>> objects = new SortedDictionary<int, List<IVulkanObject>>();
 		VulkanPipeline m_clearPipeline;
+
+		Scene m_currentScene;
 
 		public SimpleVulkanRenderer(VulkanAPIManager apiManager, VulkanPipeline clearPipeline)
 		{
@@ -19,42 +21,9 @@ namespace StarlightEngine.Graphics.Vulkan
 			m_clearPipeline = clearPipeline;
 		}
 
-		public void AddObject(int layer, IGraphicsObject obj)
+		public void DisplayScene(Scene scene)
 		{
-			// make sure the object is a Vulkan object
-			if (!(obj is IVulkanObject))
-			{
-				throw new ArgumentException();
-			}
-			IVulkanObject vulkanObject = (IVulkanObject)obj;
-			List<IVulkanObject> list;
-			if (objects.ContainsKey(layer))
-			{
-				list = objects[layer];
-			}
-			else
-			{
-				list = new List<IVulkanObject>();
-				objects.Add(layer, list);
-			}
-
-			list.Add(vulkanObject);
-		}
-
-		public void RemoveObject(int layer, IGraphicsObject obj)
-		{
-			// make sure the object is a Vulkan object
-			if (!(obj is IVulkanObject))
-			{
-				// silently fail if obj is not a Vulkan object (effect is same, since obj won't be in our collection anyway)
-				return;
-			}
-			IVulkanObject vulkanObject = (IVulkanObject)obj;
-
-			if (objects.ContainsKey(layer))
-			{
-				objects[layer].Remove(vulkanObject);
-			}
+			m_currentScene = scene;
 		}
 
 		public void Update()
@@ -87,15 +56,20 @@ namespace StarlightEngine.Graphics.Vulkan
 			commandBuffer.CmdBeginRenderPass(renderPassInfo);
 			commandBuffer.CmdEndRenderPass();
 
-			foreach (var graphicsObjectList in objects)
+			foreach (var graphicsObjectList in m_currentScene.GetObjects())
 			{
-				foreach (IVulkanObject graphicsObject in graphicsObjectList.Value)
+				foreach (IGraphicsObject graphicsObject in graphicsObjectList.Value)
 				{
 					// Call object's update function
 					graphicsObject.Update();
 
 					if (graphicsObject is IVulkanDrawableObject)
 					{
+						if (!((IVulkanDrawableObject)graphicsObject).Visible)
+						{
+							// if the object is not visible, don't draw it
+							break;
+						}
 						IVulkanDrawableObject drawableObject = graphicsObject as IVulkanDrawableObject;
 						for (int renderPassIndex = 0; renderPassIndex < drawableObject.RenderPasses.Length; renderPassIndex++)
 						{

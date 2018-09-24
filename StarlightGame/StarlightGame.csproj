@@ -21,15 +21,6 @@
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
     <PlatformTarget>x64</PlatformTarget>
-    <CustomCommands>
-      <CustomCommands>
-        <Command>
-          <type>BeforeBuild</type>
-          <command>assets/shaders/compile_shaders.sh</command>
-          <workingdir>${ProjectDir}/assets/shaders</workingdir>
-        </Command>
-      </CustomCommands>
-    </CustomCommands>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <Optimize>true</Optimize>
@@ -37,7 +28,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -59,68 +50,54 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Graphics\StaticPipelines.cs" />
-    <Compile Include="Graphics\StaticShaders.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\Arial.fnt" />
-    <None Include="assets\Arial.png" />
-    <None Include="assets\bricks.jpg" />
-    <None Include="assets\Comic Sans MS.fnt" />
-    <None Include="assets\Comic Sans MS.png" />
-    <None Include="assets\dragon.mtl" />
-    <None Include="assets\dragon.obj" />
-    <None Include="assets\objtexture.png" />
-    <None Include="assets\Press Start 2P.fnt" />
-    <None Include="assets\Press Start 2P.png" />
-    <None Include="assets\shaders\shader_recolor2D.frag" />
-    <None Include="assets\shaders\shader_recolor2D.frag.spv">
+    <None Include="assets\Arial.fnt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="assets\shaders\shader_recolor2D.vert" />
-    <None Include="assets\shaders\shader_recolor2D.vert.spv">
+    <None Include="assets\Arial.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="assets\TestObject.mtl" />
-    <None Include="assets\TestObject.obj" />
-    <None Include="assets\texture.jpg" />
+    <None Include="assets\bricks.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\Comic Sans MS.fnt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\Comic Sans MS.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\dragon.mtl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\dragon.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\objtexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\Press Start 2P.fnt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\Press Start 2P.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\TestObject.mtl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\TestObject.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="assets\texture.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="assets\Title.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="assets\shaders\shader_basic3D.frag" />
-    <None Include="assets\shaders\shader_basic3D.frag.spv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="assets\shaders\shader_basic3D.vert" />
-    <None Include="assets\shaders\shader_basic3D.vert.spv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="assets\shaders\shader_distanceFieldFont.frag" />
-    <None Include="assets\shaders\shader_distanceFieldFont.frag.spv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="assets\shaders\shader_distanceFieldFont.vert" />
-    <None Include="assets\shaders\shader_distanceFieldFont.vert.spv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="assets\shaders\shader_basic2D.frag" />
-    <None Include="assets\shaders\shader_basic2D.vert" />
-    <None Include="assets\shaders\shader_basic2D.frag.spv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="assets\shaders\shader_basic2D.vert.spv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="assets\shaders\shader_color2D.frag" />
-    <None Include="assets\shaders\shader_color2D.vert" />
-    <None Include="assets\shaders\shader_color2D.frag.spv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="assets\shaders\shader_color2D.vert.spv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
-    <None Include="WrapperGLFW.dll.config" />
+    <None Include="WrapperGLFW.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StarlightEngine\StarlightEngine.csproj">

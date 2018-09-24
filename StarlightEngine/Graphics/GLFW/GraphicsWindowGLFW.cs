@@ -2,6 +2,7 @@
 using glfw3;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using StarlightEngine.Graphics.Math;
 
 namespace StarlightEngine.Graphics.GLFW
 {
@@ -97,6 +98,50 @@ namespace StarlightEngine.Graphics.GLFW
         {
             return Glfw.WindowShouldClose(m_window) != 0;
         }
+
+		public FVec2 GetMousePosition()
+		{
+			FMat4 translation = new FMat4(1.0f);
+			translation *= FMat4.Translate(new FVec3(-1.0f, -1.0f, 0.0f));
+			translation *= FMat4.Scale(new FVec3(2.0f, 2.0f, 0.0f));
+
+			double xPos = 0.0f;
+			double yPos = 0.0f;
+			Glfw.GetCursorPos(m_window, ref xPos, ref yPos);
+			xPos /= (float)m_width;
+			yPos /= (float)m_height;
+
+			FVec4 mousePos = translation * new FVec4((float)xPos, (float)yPos, 0.0f, 1.0f);
+
+			return new FVec2(mousePos.X, mousePos.Y);
+		}
+
+		public bool IsMouseButtonPressed(MouseButton button)
+		{
+			int glfwButtonID = 0;
+			switch (button)
+			{
+				case MouseButton.Primary:
+					glfwButtonID = (int)glfw3.Mouse._Left;
+					break;
+				case MouseButton.Secondary:
+					glfwButtonID = (int)glfw3.Mouse._Right;
+					break;
+				case MouseButton.Middle:
+					glfwButtonID = (int)glfw3.Mouse._Middle;
+					break;
+			}
+
+			int result = Glfw.GetMouseButton(m_window, glfwButtonID);
+			if (result == (int)glfw3.State.Press)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 
         public void PollEvents()
         {

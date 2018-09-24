@@ -34,3 +34,13 @@
 /home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/VulkanCore.dll
 /home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/System.Drawing.Common.dll
 /home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/GlmNet.dll
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_basic3D.frag.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_basic3D.vert.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_distanceFieldFont.frag.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_distanceFieldFont.vert.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_basic2D.frag.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_basic2D.vert.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_color2D.frag.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_color2D.vert.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_recolor2D.frag.spv
+/home/bowers/Build/CS3020/FinalProject/StarlightEngine/bin/Debug/Shaders/shader_recolor2D.vert.spv

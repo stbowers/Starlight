@@ -1,8 +1,6 @@
-﻿using System;
-using StarlightEngine.Graphics.Math;
+﻿using StarlightEngine.Graphics.Math;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Graphics.Vulkan.Objects.Components;
-using StarlightEngine.Graphics.Vulkan;
 using System.Collections.Generic;
 using VulkanCore;
 
@@ -30,17 +28,19 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		VulkanUniformBufferComponent m_mvpUniform;
 		IVulkanBindableComponent[] m_bindableComponents;
 
-		public Vulkan2DSprite(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, FVec2 position, FVec2 scale)
+		public Vulkan2DSprite(VulkanAPIManager apiManager, string textureFile, FVec2 position, FVec2 scale)
 		{
 			m_apiManager = apiManager;
-			m_pipeline = pipeline;
+			m_pipeline = StaticPipelines.pipeline_basic2D;
+
+			this.Visible = true;
 
 			// Create mesh data
 			FVec4 topLeft = new FVec4(position.X, position.Y, 0.0f, 0.0f);
 			FVec4 topRight = new FVec4(position.X + scale.X, position.Y, 1.0f, 0.0f);
 			FVec4 bottomLeft = new FVec4(position.X, position.Y + scale.Y, 0.0f, 1.0f);
 			FVec4 bottomRight = new FVec4(position.X + scale.X, position.Y + scale.Y, 1.0f, 1.0f);
-			int[] indices = new[] { 0, 1, 3, 3, 2, 0 };
+			int[] indices = { 0, 1, 3, 3, 2, 0 };
 			m_numIndices = 6;
 
 			m_meshData = new byte[(4 * 4 * 4) + (6 * 4)];
@@ -144,5 +144,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		{
 			commandBuffer.CmdDrawIndexed(m_numIndices);
 		}
+
+		public bool Visible { get; set; }
 	}
 }

@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using StarlightEngine.Graphics;
 using StarlightEngine.Graphics.Vulkan;
 using StarlightEngine.Graphics.Vulkan.Objects;
 using StarlightEngine.Graphics.GLFW;
-using StarlightGame.Graphics;
 using StarlightEngine.Graphics.Fonts;
 using StarlightEngine.Graphics.Math;
+using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Events;
 using glfw3;
 
@@ -60,6 +59,10 @@ namespace StarlightGame
 
             // use simple renderer
 			IRenderer renderer = new SimpleVulkanRenderer(apiManager, StaticPipelines.pipeline_clear);
+			SceneManager sceneManager = new SceneManager(renderer);
+
+			// Title screen
+			Scene titleScene = new Scene();
 
 			FMat4 model = FMat4.Rotate((0.0f / 1000.0f) * ((float)System.Math.PI / 4), new FVec3(0.0f, 1.0f, 0.0f));
 			FMat4 view = FMat4.LookAt(new FVec3(10.0f, 10.0f, 10.0f), new FVec3(0.0f, 4.0f, 0.0f), new FVec3(0.0f, 1.0f, 0.0f));
@@ -88,20 +91,24 @@ namespace StarlightGame
 			kf4.time = 8.0f;
 			VulkanSimpleAnimatedTexturedMesh.AnimationKeyframe[] keyframes = new[] { kf1, kf2, kf3, kf4 };
 
-			//VulkanSimpleAnimatedTexturedMesh obj = new VulkanSimpleAnimatedTexturedMesh(apiManager, StaticPipelines.pipeline_basic3D, "./assets/dragon.obj", "./assets/bricks.jpg", keyframes, view, proj, lightPosition, lightColor, settings[0], settings[1], settings[2]);
-            //renderer.AddObject(1, obj);
+			VulkanSimpleAnimatedTexturedMesh obj = new VulkanSimpleAnimatedTexturedMesh(apiManager, "./assets/dragon.obj", "./assets/bricks.jpg", keyframes, view, proj, lightPosition, lightColor, settings[0], settings[1], settings[2]);
+			titleScene.AddObject(1, obj);
 
             // create fps counter
             AngelcodeFont arialFont = AngelcodeFontLoader.LoadFile("./assets/Arial.fnt");
-			VulkanTextObject textTest = new VulkanTextObject(apiManager, StaticPipelines.pipeline_distanceFieldFont, arialFont, "FPS: 00.00", 20, new FVec2(-638.0f, -357.0f), 640.0f);
-            renderer.AddObject(2, textTest);
+			VulkanTextObject textTest = new VulkanTextObject(apiManager, arialFont, "FPS: 00.00", 20, new FVec2(-.99f, -.99f), 1.0f);
+			titleScene.AddObject(2, textTest);
 
-			Vulkan2DSprite title = new Vulkan2DSprite(apiManager, StaticPipelines.pipeline_basic2D, "./assets/Title.png", new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f));
-			renderer.AddObject(3, title);
+			// create mouse position indicator
+			VulkanTextObject mousePosText = new VulkanTextObject(apiManager, arialFont, "Mouse: (0.00, 0.00)", 20, new FVec2(-.99f, -.9f), 1.0f);
+			titleScene.AddObject(2, mousePosText);
+
+			Vulkan2DSprite title = new Vulkan2DSprite(apiManager, "./assets/Title.png", new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f));
+			titleScene.AddObject(3, title);
 
 			float fill = 0.0f;
-			Vulkan2DProgressBar loadBar = new Vulkan2DProgressBar(apiManager, StaticPipelines.pipeline_colorLine, StaticPipelines.pipeline_color2D, new FVec2(-.5f, .25f), new FVec2(1.0f, .1f), fill, new FVec4(1.0f, 1.0f, 1.0f, 1.0f));
-			renderer.AddObject(4, loadBar);
+			Vulkan2DProgressBar loadBar = new Vulkan2DProgressBar(apiManager, new FVec2(-.5f, .25f), new FVec2(1.0f, .1f), fill, new FVec4(1.0f, 1.0f, 1.0f, 1.0f));
+			titleScene.AddObject(4, loadBar);
 
             // status recolorable asset
             FVec4 from1 = new FVec4(1.0f, 1.0f, 1.0f, 0.0f);
@@ -109,9 +116,23 @@ namespace StarlightGame
             FVec4 from2 = new FVec4(0.0f, 0.0f, 0.0f, 0.0f);
             FVec4 to2 = new FVec4(0.0f, 1.0f, 0.0f, 0.0f);
 
-            VulkanRecolorable2DSprite status = new VulkanRecolorable2DSprite(apiManager, StaticPipelines.pipeline_recolor2D, "./assets/Indicator.png", new FVec2(.5f, .5f), new FVec2(.2f, .2f), from1, to1, from2, to2);
-            renderer.AddObject(5, status);
+            VulkanRecolorable2DSprite status = new VulkanRecolorable2DSprite(apiManager, "./assets/Indicator.png", new FVec2(.5f, .5f), new FVec2(.2f, .2f), from1, to1, from2, to2);
+			titleScene.AddObject(5, status);
 
+			// new game
+			Scene newGameScene = new Scene();
+			newGameScene.AddObject(1, textTest);
+			newGameScene.AddObject(1, mousePosText);
+			StartGameButtonWrapper button = new StartGameButtonWrapper(apiManager, titleScene, arialFont, sceneManager, newGameScene);
+
+			Vulkan2DRect rect = new Vulkan2DRect(apiManager, new FVec2(.1f, .1f), new FVec2(.1f, .1f), new FVec4(1.0f, 0.0f, 0.0f, 1.0f));
+			titleScene.AddObject(7, rect);
+
+			VulkanBoxCollider boxCollider = new VulkanBoxCollider(new FVec2(0.5f, 0.5f), new FVec2(.3f, .3f));
+			bool isIn = boxCollider.IsCollision(new FVec3(.6f, 1.6f, 0.0f));
+			Console.WriteLine("Point is {0}", isIn? "in" : "not in");
+
+			sceneManager.PushScene(titleScene);
             try
             {
                 int framesDrawn = 0;
@@ -126,14 +147,17 @@ namespace StarlightGame
 
 					if (spacePressed)
 					{
-						//obj.PlayAnimation();
+						obj.PlayAnimation();
 						fill += .0003f;
 						loadBar.UpdatePercentage(fill);
 					}
 					else
 					{
-						//obj.PauseAnimation();
+						obj.PauseAnimation();
 					}
+
+					FVec2 mousePos = window.GetMousePosition();
+					mousePosText.UpdateText(arialFont, string.Format("Mouse: ({0:0.##}, {1:0.##})", mousePos.X, mousePos.Y), 20);
 
                     if (sw.ElapsedMilliseconds > 1000)
                     {
@@ -172,6 +196,27 @@ namespace StarlightGame
 						spacePressed = false;
 					}
 				}
+			}
+		}
+
+		public class StartGameButtonWrapper
+		{
+			VulkanUIButton m_button;
+			SceneManager m_sceneManager;
+			Scene m_newGameScene;
+
+			public StartGameButtonWrapper(VulkanAPIManager apiManager, Scene titleScene, AngelcodeFont arialFont, SceneManager sceneManager, Scene newGameScene)
+			{
+				m_newGameScene = newGameScene;
+				m_sceneManager = sceneManager;
+				VulkanUIButton button = new VulkanUIButton(apiManager, arialFont, "Start Game", 20, new FVec2(.1f, 0.0f), new FVec2(.3f, .1f), Clicked);
+				titleScene.AddObject(6, button);
+			}
+
+			public void Clicked()
+			{
+				// push new game scene
+				m_sceneManager.PushScene(m_newGameScene);
 			}
 		}
 	}

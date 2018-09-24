@@ -1095,6 +1095,11 @@ namespace StarlightEngine.Graphics.Vulkan
 			return m_physicalDevice;
 		}
 
+		public IWindowManager GetWindowManager()
+		{
+			return m_window;
+		}
+
 		private class DeviceQueueFamilies
 		{
 			public uint graphicsFamily = uint.MaxValue;
