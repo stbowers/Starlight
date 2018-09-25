@@ -7,24 +7,8 @@ namespace StarlightEngine.Graphics.Vulkan
 {
 	public class VulkanPipeline
 	{
-		/* Contains info for the VulkanPipelineCreateInfo struct which can only be supplied by the api manager
-		 */
-		public struct ApiInfo
-		{
-			public Device device;
-			public Extent2D extent;
-			public Format swapchainImageFormat;
-			public Format depthImageFormat;
-			public int imageCount;
-			public ImageView[] swapchainImageViews;
-			public ImageView depthImageView;
-		}
-
 		public struct VulkanPipelineCreateInfo
 		{
-			// Should be left blank when creating a pipeline, filled in by calling apiManager.CreatePipeline()
-			public ApiInfo apiInfo;
-
 			public string name;
 
 			public VulkanShader shader;
@@ -42,20 +26,21 @@ namespace StarlightEngine.Graphics.Vulkan
 			public bool clearDepthAttachment;
 		}
 
-		private ApiInfo m_apiInfo;
+		//private ApiInfo m_apiInfo;
+		private VulkanAPIManager m_apiManager;
 		private PipelineLayout m_pipelineLayout;
 		private RenderPass m_renderPass;
 		private Pipeline m_pipeline;
 		private Framebuffer[] m_framebuffers;
 		private VulkanShader m_shader;
 
-		public VulkanPipeline(VulkanPipelineCreateInfo createInfo)
+		public VulkanPipeline(VulkanAPIManager apiManager, VulkanPipelineCreateInfo createInfo)
 		{
 			// Time how long it takes to make the pipeline
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
 
-			m_apiInfo = createInfo.apiInfo;
+			m_apiManager = apiManager;
             m_shader = createInfo.shader;
 
 			/* Create shader stages */
@@ -87,8 +72,8 @@ namespace StarlightEngine.Graphics.Vulkan
 			Viewport viewport = new Viewport();
 			viewport.X = 0.0f;
 			viewport.Y = 0.0f;
-			viewport.Width = createInfo.apiInfo.extent.Width;
-			viewport.Height = createInfo.apiInfo.extent.Height;
+			viewport.Width = m_apiManager.GetSwapchainImageExtent().Width;
+			viewport.Height = m_apiManager.GetSwapchainImageExtent().Height;
 			viewport.MinDepth = 0.0f;
 			viewport.MaxDepth = 1.0f;
 
@@ -97,7 +82,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			scissor.Offset = new Offset2D();
 			scissor.Offset.X = 0;
 			scissor.Offset.Y = 0;
-			scissor.Extent = createInfo.apiInfo.extent;
+			scissor.Extent = m_apiManager.GetSwapchainImageExtent();
 
 			// viewport state
 			PipelineViewportStateCreateInfo viewportState = new PipelineViewportStateCreateInfo();
@@ -165,12 +150,12 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineLayoutInfo.SetLayouts = setLayouts.ToArray();
 			pipelineLayoutInfo.PushConstantRanges = null;
 
-			m_pipelineLayout = m_apiInfo.device.CreatePipelineLayout(pipelineLayoutInfo);
+			m_pipelineLayout = m_apiManager.GetDevice().CreatePipelineLayout(pipelineLayoutInfo);
 
 			/* Create subpasses */
 			// Attachment descriptions
 			AttachmentDescription colorAttachment = new AttachmentDescription();
-			colorAttachment.Format = m_apiInfo.swapchainImageFormat;
+			colorAttachment.Format = m_apiManager.GetSwapchainImageFormat();
 			colorAttachment.Samples = SampleCounts.Count1;
 			colorAttachment.LoadOp = createInfo.clearColorAttachment ? AttachmentLoadOp.Clear : AttachmentLoadOp.Load;
 			colorAttachment.StoreOp = AttachmentStoreOp.Store;
@@ -191,7 +176,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			colorAttachmentRef.Layout = ImageLayout.ColorAttachmentOptimal;
 
 			AttachmentDescription depthAttachment = new AttachmentDescription();
-			depthAttachment.Format = m_apiInfo.depthImageFormat;
+			depthAttachment.Format = m_apiManager.GetDepthImageFormat();
 			depthAttachment.Samples = SampleCounts.Count1;
 			depthAttachment.LoadOp = createInfo.clearDepthAttachment ? AttachmentLoadOp.Clear : AttachmentLoadOp.Load;
 			depthAttachment.StoreOp = AttachmentStoreOp.Store;
@@ -230,7 +215,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			renderPassInfo.Subpasses = new[] { subpass };
 			renderPassInfo.Dependencies = new[] { dependency };
 
-			m_renderPass = m_apiInfo.device.CreateRenderPass(renderPassInfo);
+			m_renderPass = m_apiManager.GetDevice().CreateRenderPass(renderPassInfo);
 
 			/* Create graphics pipeline */
 			GraphicsPipelineCreateInfo pipelineInfo = new GraphicsPipelineCreateInfo();
@@ -249,21 +234,21 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineInfo.BasePipelineHandle = null;
 			pipelineInfo.BasePipelineIndex = -1;
 
-			m_pipeline = m_apiInfo.device.CreateGraphicsPipeline(pipelineInfo);
+			m_pipeline = m_apiManager.GetDevice().CreateGraphicsPipeline(pipelineInfo);
 
 			/* Create swapchain framebuffers */
-			m_framebuffers = new Framebuffer[m_apiInfo.imageCount];
+			m_framebuffers = new Framebuffer[m_apiManager.GetSwapchainImageCount()];
 			for (int framebufferIndex = 0; framebufferIndex < m_framebuffers.Length; framebufferIndex++)
 			{
 				long[] attachments = {
-					m_apiInfo.swapchainImageViews[framebufferIndex].Handle,
-					m_apiInfo.depthImageView.Handle
+					m_apiManager.GetSwapchainImageView(framebufferIndex).Handle,
+					m_apiManager.GetDepthImageView().Handle
 				};
 
 				FramebufferCreateInfo framebufferInfo = new FramebufferCreateInfo();
 				framebufferInfo.Attachments = attachments;
-				framebufferInfo.Width = m_apiInfo.extent.Width;
-				framebufferInfo.Height = m_apiInfo.extent.Height;
+				framebufferInfo.Width = m_apiManager.GetSwapchainImageExtent().Width;
+				framebufferInfo.Height = m_apiManager.GetSwapchainImageExtent().Height;
 				framebufferInfo.Layers = 1;
 
 				m_framebuffers[framebufferIndex] = m_renderPass.CreateFramebuffer(framebufferInfo);
@@ -295,6 +280,12 @@ namespace StarlightEngine.Graphics.Vulkan
 		public VulkanShader GetShader()
 		{
 			return m_shader;
+		}
+
+		public VulkanDescriptorSet CreateDescriptorSet(int index)
+		{
+			DescriptorSet[] sets = m_shader.AllocateDescriptorSets(index, m_framebuffers.Length);
+			return new VulkanDescriptorSet(m_apiManager, sets, index);
 		}
 	}
 }

@@ -109,6 +109,7 @@
     <Compile Include="Graphics\Objects\ICollectionObject.cs" />
     <Compile Include="Graphics\Vulkan\Memory\VulkanMemoryAllocator.cs" />
     <Compile Include="Graphics\Vulkan\Memory\VulkanManagedBuffer.cs" />
+    <Compile Include="Graphics\Vulkan\VulkanDescriptorSet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

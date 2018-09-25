@@ -41,6 +41,7 @@ namespace StarlightEngine.Graphics.Vulkan
 		private CommandPool m_graphicsCommandPool;
 		private CommandPool m_transferCommandPool;
 
+		// Swapchain info
 		private SwapchainKhr m_swapchain;
 		private Format m_swapchainImageFormat;
 		private Extent2D m_swapchainImageExtent;
@@ -1010,6 +1011,13 @@ namespace StarlightEngine.Graphics.Vulkan
 			}
 		}
 
+		/* Block until the command buffer and swapchain image at index are idle
+		 */
+		public void WaitForSwapchainBufferIdle(int index)
+		{
+			m_device.WaitFences(new[] { m_inFlightFences[index] }, true);
+		}
+
 		public void Draw()
 		{
 			SubmitInfo submitInfo = new SubmitInfo();
@@ -1037,34 +1045,12 @@ namespace StarlightEngine.Graphics.Vulkan
 
 		public VulkanPipeline CreatePipeline(VulkanPipeline.VulkanPipelineCreateInfo createInfo)
 		{
-            // Fill in the api info section
-			VulkanPipeline.ApiInfo apiInfo = new VulkanPipeline.ApiInfo();
-			apiInfo.device = m_device;
-			apiInfo.extent = m_swapchainImageExtent;
-			apiInfo.swapchainImageFormat = m_swapchainImageFormat;
-			apiInfo.depthImageFormat = m_depthImageFormat;
-			apiInfo.imageCount = m_swapchainImages.Length;
-			apiInfo.swapchainImageViews = m_swapchainImageViews;
-			apiInfo.depthImageView = m_depthImageView;
-			createInfo.apiInfo = apiInfo;
-
-            return new VulkanPipeline(createInfo);
+            return new VulkanPipeline(this, createInfo);
 		}
 
 		public VulkanShader CreateShader(VulkanShader.ShaderCreateInfo createInfo)
 		{
-            // Fill in the api info section
-			VulkanPipeline.ApiInfo apiInfo = new VulkanPipeline.ApiInfo();
-			apiInfo.device = m_device;
-			apiInfo.extent = m_swapchainImageExtent;
-			apiInfo.swapchainImageFormat = m_swapchainImageFormat;
-			apiInfo.depthImageFormat = m_depthImageFormat;
-			apiInfo.imageCount = m_swapchainImages.Length;
-			apiInfo.swapchainImageViews = m_swapchainImageViews;
-			apiInfo.depthImageView = m_depthImageView;
-			createInfo.apiInfo = apiInfo;
-
-            return new VulkanShader(createInfo);
+            return new VulkanShader(this, createInfo);
 		}
 
 		public CommandBuffer StartRecordingSwapchainCommandBuffer(out int currentFrame)
@@ -1087,6 +1073,31 @@ namespace StarlightEngine.Graphics.Vulkan
 		public Extent2D GetSwapchainImageExtent()
 		{
 			return m_swapchainImageExtent;
+		}
+
+		public Format GetSwapchainImageFormat()
+		{
+			return m_swapchainImageFormat;
+		}
+
+		public Format GetDepthImageFormat()
+		{
+			return m_depthImageFormat;
+		}
+
+		public int GetSwapchainImageCount()
+		{
+			return m_swapchainImages.Length;
+		}
+
+		public ImageView GetSwapchainImageView(int index)
+		{
+			return m_swapchainImageViews[index];
+		}
+
+		public ImageView GetDepthImageView()
+		{
+			return m_depthImageView;
 		}
 
 		public Device GetDevice()

@@ -101,7 +101,7 @@ namespace StarlightEngine.Graphics.Vulkan
 							List<int> boundSets = new List<int>();
 							foreach (IVulkanBindableComponent binding in bindings)
 							{
-								binding.BindComponent(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets);
+								binding.BindComponent(commandBuffer, currentFrame);
 							}
 							drawableObject.Draw(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets, renderPassIndex);
 
@@ -134,7 +134,7 @@ namespace StarlightEngine.Graphics.Vulkan
 							List<int> boundSets = new List<int>();
 							foreach (IVulkanBindableComponent binding in bindings)
 							{
-								binding.BindComponent(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets);
+								binding.BindComponent(commandBuffer, currentFrame);
 							}
 							drawableObject.Draw(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets, renderPassIndex);
 
@@ -165,7 +165,7 @@ namespace StarlightEngine.Graphics.Vulkan
 							List<int> boundSets = new List<int>();
 							foreach (IVulkanBindableComponent binding in bindings)
 							{
-								binding.BindComponent(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets);
+								binding.BindComponent(commandBuffer, currentFrame);
 							}
 							drawableObject.Draw(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets, renderPassIndex);
 

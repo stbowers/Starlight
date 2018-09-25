@@ -21,7 +21,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		VulkanManagedBuffer m_objectBuffer;
 
-		DescriptorSet m_mvpDescriptorSet;
+		VulkanDescriptorSet m_mvpDescriptorSet;
 
 		VulkanMeshComponent m_mesh;
 		VulkanUniformBufferComponent m_mvpUniform;
@@ -69,13 +69,13 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_objectBuffer = new VulkanManagedBuffer(m_apiManager, bufferAlignment, BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer, MemoryProperties.None, MemoryProperties.DeviceLocal);
 
 			// Allocate descriptor sets
-			m_mvpDescriptorSet = m_pipeline.GetShader().AllocateDescriptorSets(0, 1)[0];
+			m_mvpDescriptorSet = m_pipeline.CreateDescriptorSet(0);
 
 			// Create mesh component
 			m_mesh = new VulkanMeshComponent(apiManager, m_pipeline, m_meshData, 0, m_meshData.Length - (8 * 4), m_objectBuffer);
 
 			// Create mvp uniform component
-			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_mvpDescriptorSet, 0, 0);
+			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_mvpDescriptorSet, 0);
 
 			m_objectBuffer.WriteBuffer();
 

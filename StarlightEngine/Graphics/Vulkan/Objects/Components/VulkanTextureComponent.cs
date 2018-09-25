@@ -18,17 +18,15 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
         VmaAllocation m_textureImageAllocation;
         ImageView m_textureImageView;
         Sampler m_textureImageSampler;
-        DescriptorSet m_textureSamplerSet;
-        int m_setIndex;
+        VulkanDescriptorSet m_textureSamplerSet;
         int m_binding;
 
-        public VulkanTextureComponent(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, bool useMipmaps, Filter magFilter, Filter minFilter, DescriptorSet textureSamplerSet, int setIndex, int binding)
+		public VulkanTextureComponent(VulkanAPIManager apiManager, VulkanPipeline pipeline, string textureFile, bool useMipmaps, Filter magFilter, Filter minFilter, VulkanDescriptorSet descriptorSet, int binding)
         {
             m_apiManager = apiManager;
             m_pipeline = pipeline;
             m_renderPass = pipeline.GetRenderPass();
-            m_textureSamplerSet = textureSamplerSet;
-            m_setIndex = setIndex;
+			m_textureSamplerSet = descriptorSet;
             m_binding = binding;
 
 			System.Drawing.Image texture = System.Drawing.Image.FromFile(textureFile);
@@ -100,15 +98,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 			imageInfo.ImageView = m_textureImageView;
 			imageInfo.ImageLayout = ImageLayout.ShaderReadOnlyOptimal;
 
-			WriteDescriptorSet descriptorSetUpdate = new WriteDescriptorSet();
-			descriptorSetUpdate.DstSet = m_textureSamplerSet;
-			descriptorSetUpdate.DstBinding = binding;
-			descriptorSetUpdate.DstArrayElement = 0;
-			descriptorSetUpdate.DescriptorCount = 1;
-			descriptorSetUpdate.DescriptorType = DescriptorType.CombinedImageSampler;
-			descriptorSetUpdate.ImageInfo = new[] { imageInfo };
-
-			m_textureSamplerSet.Parent.UpdateSets(new[] { descriptorSetUpdate });
+			m_textureSamplerSet.UpdateImage(binding, imageInfo, DescriptorType.CombinedImageSampler, true);
         }
 
         public VulkanPipeline Pipeline
@@ -127,13 +117,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
             }
         }
 
-        public void BindComponent(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets)
+        public void BindComponent(CommandBuffer commandBuffer, int swapchainIndex)
         {
-            if (!boundSets.Contains(m_setIndex))
-            {
-                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, boundPipeline.GetPipelineLayout(), m_setIndex, new[] { m_textureSamplerSet });
-                boundSets.Add(m_setIndex);
-            }
+			commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, m_pipeline.GetPipelineLayout(), m_textureSamplerSet.GetSetIndex(), new[] { m_textureSamplerSet.GetSet(swapchainIndex) });
         }
     }
 }

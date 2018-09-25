@@ -56,7 +56,6 @@ namespace StarlightEngine.Graphics.Vulkan
 	{
 		public struct ShaderCreateInfo
 		{
-            public VulkanPipeline.ApiInfo apiInfo;
 			public string vertexShaderFile;
             public string fragmentShaderFile;
 			public string vertexEntryPoint;
@@ -75,6 +74,7 @@ namespace StarlightEngine.Graphics.Vulkan
 		// How many descriptor sets should a pool be able to allocate by default?
 		private const int DESCRIPTOR_SET_POOL_PREFERRED_SIZE = 32;
 
+		private VulkanAPIManager m_apiManager;
 		private byte[] m_vertexCode;
         private byte[] m_fragmentCode;
 		private ShaderModule m_vertexModule;
@@ -86,9 +86,10 @@ namespace StarlightEngine.Graphics.Vulkan
 		private List<DescriptorSetLayout> m_uniformInputLayouts = new List<DescriptorSetLayout>();
 		private Dictionary<int, DescriptorSetBlock> m_descriptorSetPools;
 
-		public VulkanShader(ShaderCreateInfo createInfo)
+		public VulkanShader(VulkanAPIManager apiManager, ShaderCreateInfo createInfo)
 		{
-            Device device = createInfo.apiInfo.device;
+			m_apiManager = apiManager;
+			Device device = m_apiManager.GetDevice();
 			m_vertexCode = File.ReadAllBytes(createInfo.vertexShaderFile);
 			m_fragmentCode = File.ReadAllBytes(createInfo.fragmentShaderFile);
 

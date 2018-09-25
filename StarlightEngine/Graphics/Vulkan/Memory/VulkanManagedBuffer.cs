@@ -20,10 +20,9 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			public byte[] Data;
 
 			// if this section has a descriptor attached, the following members will be filled (otherwise they'll be null/uninitialized)
-			public DescriptorSet DescriptorSet;
+			public VulkanDescriptorSet DescriptorSet;
 			public DescriptorType DescriptorType;
 			public int DescriptorSetBinding;
-			public WriteDescriptorSet? DescriptorUpdate;
 
 			// Has this section changed since the last write?
 			public bool HasChanged;
@@ -77,27 +76,12 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 
 		/* Creates a new section in the buffer along with a descriptor for it
 		 */
-		public VulkanManagedBufferSection AddSection(int size, byte[] data, DescriptorType descriptorType, DescriptorSet set, int setBinding) {
+		public VulkanManagedBufferSection AddSection(int size, byte[] data, DescriptorType descriptorType, VulkanDescriptorSet set, int setBinding) {
 			VulkanManagedBufferSection newSection = AddSection(size, data);
 
 			newSection.DescriptorSet = set;
 			newSection.DescriptorType = descriptorType;
 			newSection.DescriptorSetBinding = setBinding;
-
-			DescriptorBufferInfo bufferInfo = new DescriptorBufferInfo();
-			bufferInfo.Buffer = m_buffer;
-			bufferInfo.Offset = newSection.Offset;
-			bufferInfo.Range = newSection.Size;
-
-			WriteDescriptorSet descriptorWrite = new WriteDescriptorSet();
-			descriptorWrite.DstSet = set;
-			descriptorWrite.DstBinding = setBinding;
-			descriptorWrite.DstArrayElement = 0;
-			descriptorWrite.DescriptorCount = 1;
-			descriptorWrite.DescriptorType = descriptorType;
-			descriptorWrite.BufferInfo = new[] { bufferInfo };
-
-			newSection.DescriptorUpdate = descriptorWrite;
 
 			return newSection;
 		}
@@ -148,31 +132,13 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 					UpdateSection(nextSection, nextSection.Size, nextSection.Data, followingOffset);
 				}
 			}
-
-			if (memoryFootprintChanged && section.DescriptorSet != null)
-			{
-				// if the buffer has moved in memory, we need to rewrite the descriptor
-				DescriptorBufferInfo bufferInfo = new DescriptorBufferInfo();
-				bufferInfo.Buffer = m_buffer;
-				bufferInfo.Offset = section.Offset;
-				bufferInfo.Range = section.Size;
-
-				WriteDescriptorSet descriptorWrite = new WriteDescriptorSet();
-				descriptorWrite.DstSet = section.DescriptorSet;
-				descriptorWrite.DstBinding = section.DescriptorSetBinding;
-				descriptorWrite.DstArrayElement = 0;
-				descriptorWrite.DescriptorCount = 1;
-				descriptorWrite.DescriptorType = section.DescriptorType;
-				descriptorWrite.BufferInfo = new[] { bufferInfo };
-
-				section.DescriptorUpdate = descriptorWrite;
-			}
 		}
 
 		/* Writes the sections to a Vulkan buffer (or updates the buffer if changes were made)
 		 */
 		public void WriteBuffer()
 		{
+			m_apiManager.GetDevice().WaitIdle();
 			// Get buffer
 			if (m_buffer == null)
 			{
@@ -246,17 +212,17 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 				stagingBuffer.Dispose();
 			}
 
-			// update any descriptor sets if needed
+			// update descriptor sets
 			foreach (VulkanManagedBufferSection section in m_sections)
 			{
-				if (section.DescriptorUpdate != null)
+				if (section.DescriptorSet != null)
 				{
-					// update buffer
-					section.DescriptorUpdate.Value.BufferInfo[0].Buffer = m_buffer;
+					DescriptorBufferInfo bufferInfo = new DescriptorBufferInfo();
+					bufferInfo.Buffer = m_buffer;
+					bufferInfo.Offset = section.Offset;
+					bufferInfo.Range = section.Size;
 
-					// write set
-					section.DescriptorSet.Parent.UpdateSets(new[] { section.DescriptorUpdate.Value });
-					section.DescriptorUpdate = null;
+					section.DescriptorSet.UpdateBuffer(section.DescriptorSetBinding, bufferInfo, section.DescriptorType, true);
 				}
 			}
 		}

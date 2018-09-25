@@ -1,15 +1,16 @@
 ﻿<Properties StartupConfiguration="{DED3B137-5B9B-4132-AB1B-21B466535E2C}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
-  <MonoDevelop.Ide.Workbench ActiveDocument="StarlightEngine/Graphics/Vulkan/Objects/Vulkan2DSprite.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="StarlightEngine/Graphics/Vulkan/Objects/Components/VulkanTextureComponent.cs">
     <Files>
       <File FileName="StarlightGame/Program.cs" Line="49" Column="1" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/Memory/VulkanManagedBuffer.cs" Line="221" Column="33" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/VulkanAPIManager.cs" Line="834" Column="81" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/Memory/VulkanMemoryAllocator.cs" Line="360" Column="1" />
-      <File FileName="StarlightGame/Graphics/Scenes/TitleScene.cs" Line="45" Column="6" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Vulkan2DRect.cs" Line="94" Column="32" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Components/VulkanMeshComponent.cs" Line="43" Column="22" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/VulkanTextObject.cs" Line="105" Column="4" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Vulkan2DSprite.cs" Line="77" Column="1" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/VulkanAPIManager.cs" Line="1053" Column="42" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/VulkanDescriptorSet.cs" Line="17" Column="26" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/VulkanPipeline.cs" Line="288" Column="62" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Components/VulkanMeshComponent.cs" Line="70" Column="10" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/VulkanTexturedMesh.cs" Line="78" Column="137" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/SimpleVulkanRenderer.cs" Line="168" Column="45" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Memory/VulkanManagedBuffer.cs" Line="83" Column="1" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Components/VulkanUniformBufferComponent.cs" Line="64" Column="128" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Components/VulkanTextureComponent.cs" Line="22" Column="18" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />

@@ -12,6 +12,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Interfaces
         RenderPass RenderPass { get; }
 
         // the current pipeline and render pass are specified, since they may not be the exact pipeline and render pass asked for, but rather a compatible pipeline and render pass
-        void BindComponent(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets);
+        void BindComponent(CommandBuffer commandBuffer, int swapchainIndex);
     }
 }

@@ -66,7 +66,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
             }
         }
 
-        public void BindComponent(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets)
+        public void BindComponent(CommandBuffer commandBuffer, int swapchainIndex)
         {
 			commandBuffer.CmdBindVertexBuffer(m_buffer.GetBuffer(), m_meshSection.Offset + m_vboOffset);
 			commandBuffer.CmdBindIndexBuffer(m_buffer.GetBuffer(), m_meshSection.Offset + m_iboOffset);

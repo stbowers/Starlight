@@ -20,11 +20,10 @@ namespace StarlightEngine
 		VulkanManagedBuffer m_buffer;
 		VulkanManagedBuffer.VulkanManagedBufferSection m_uniformBufferSection;
 
-		DescriptorSet m_descriptorSet;
-		int m_setIndex;
+		VulkanDescriptorSet m_descriptorSet;
 		int m_binding;
 
-		public VulkanUniformBufferComponent(VulkanAPIManager apiManager, VulkanPipeline pipeline, byte[] bufferData, VulkanManagedBuffer buffer, DescriptorSet descriptorSet, int setIndex, int binding)
+		public VulkanUniformBufferComponent(VulkanAPIManager apiManager, VulkanPipeline pipeline, byte[] bufferData, VulkanManagedBuffer buffer, VulkanDescriptorSet descriptorSet, int binding)
 		{
 			m_apiManager = apiManager;
 			m_pipeline = pipeline;
@@ -32,7 +31,6 @@ namespace StarlightEngine
 
 
 			m_descriptorSet = descriptorSet;
-			m_setIndex = setIndex;
 			m_binding = binding;
 
 			m_bufferData = bufferData;
@@ -61,13 +59,9 @@ namespace StarlightEngine
 			}
 		}
 
-		public void BindComponent(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets)
+		public void BindComponent(CommandBuffer commandBuffer, int swapchainIndex)
 		{
-			if (!boundSets.Contains(m_setIndex))
-			{
-				commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, boundPipeline.GetPipelineLayout(), m_setIndex, new[] { m_descriptorSet });
-				boundSets.Add(m_setIndex);
-			}
+			commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, m_pipeline.GetPipelineLayout(), m_descriptorSet.GetSetIndex(), new[] { m_descriptorSet.GetSet(swapchainIndex) });
 		}
 	}
 }
