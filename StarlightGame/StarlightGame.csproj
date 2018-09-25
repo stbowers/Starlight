@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Graphics\Scenes\TitleScene.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\Arial.fnt">
@@ -107,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Graphics\Objects\" />
+    <Folder Include="Graphics\Scenes\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="assets\Indicator.png">

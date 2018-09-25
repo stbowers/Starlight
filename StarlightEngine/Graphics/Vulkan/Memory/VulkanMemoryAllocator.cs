@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using VulkanCore;
 
-namespace StarlightEngine.Graphics.Vulkan
+namespace StarlightEngine.Graphics.Vulkan.Memory
 {
 	public enum VmaMemoryUsage
 	{
@@ -16,11 +16,12 @@ namespace StarlightEngine.Graphics.Vulkan
 		public MemoryProperties preferredFlags;
 	}
 
-	public struct VmaAllocation
+	public class VmaAllocation
 	{
 		public DeviceMemory memory;
 		public long offset;
 		public long size;
+		public bool isImage; // is this memory used to back an image
 	}
 
 	// Helper class for managing Vulkan memory allocations, based roughly on a c library by the same name (https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/blob/master/src/vk_mem_alloc.h)
@@ -33,18 +34,19 @@ namespace StarlightEngine.Graphics.Vulkan
 			public uint memoryTypeIndex;
 			public ulong blockSize;
 			public ulong freeSpace;
-			public ulong newAllocOffset = 0;
 			private PhysicalDevice physicalDevice;
 			private Device device;
 			private List<VmaAllocation> allocations = new List<VmaAllocation>();
+			private VmaHeap parent;
 
-			public unsafe VmaDeviceMemoryBlock(PhysicalDevice physicalDevice, Device device, uint memoryTypeIndex, ulong blockSize)
+			public unsafe VmaDeviceMemoryBlock(VmaHeap parent, PhysicalDevice physicalDevice, Device device, uint memoryTypeIndex, ulong blockSize)
 			{
 				this.physicalDevice = physicalDevice;
 				this.device = device;
 				this.memoryTypeIndex = memoryTypeIndex;
 				this.blockSize = blockSize;
 				this.freeSpace = blockSize;
+				this.parent = parent;
 
 				MemoryAllocateInfo allocInfo = new MemoryAllocateInfo();
 				allocInfo.AllocationSize = (long)blockSize;
@@ -53,25 +55,105 @@ namespace StarlightEngine.Graphics.Vulkan
 				memoryBlock = device.AllocateMemory(allocInfo);
 			}
 
-			public unsafe Result AllocateMemory(MemoryAllocateInfo allocInfo, out VmaAllocation allocation, long alignment)
+			public unsafe Result AllocateMemory(MemoryAllocateInfo allocInfo, out VmaAllocation allocation, long alignment, bool isImage)
 			{
-				ulong padding = (ulong)(alignment - ((long)newAllocOffset % alignment));
-				if (!((ulong)allocInfo.AllocationSize + padding <= freeSpace))
+				// Check if we have enough free space
+				if (freeSpace < (ulong)allocInfo.AllocationSize)
 				{
 					allocation = new VmaAllocation();
 					return Result.ErrorOutOfDeviceMemory;
 				}
 
+				// get minimum distance needed between images and buffers
+				long bufferImageGranularity = physicalDevice.GetProperties().Limits.BufferImageGranularity;
+
+				// if we have enough free space try to find a big enough contiguous block with the right padding
+				// start at begining
+				long offset = 0;
+				foreach (VmaAllocation alloc in allocations)
+				{
+					// if this allocation overlaps with the proposed new allocation, move to after this allocation
+					if (
+						(offset >= alloc.offset && offset <= alloc.offset + alloc.size) || // start is within this allocation
+						(offset + allocInfo.AllocationSize > alloc.offset) || // end is after this allocation (allocations overlap)
+						(alloc.offset - (offset + allocInfo.AllocationSize) < ((isImage != alloc.isImage) ? bufferImageGranularity : 0)) // allocations are not seperated by enough space for image/buffer granularity
+					   )
+					{
+						offset = alloc.offset + alloc.size;
+						// add padding for buffer/image granularity if they're are different types
+						if (isImage != alloc.isImage)
+						{
+							offset += bufferImageGranularity;
+						}
+
+						// calculate padding for the given offset
+						long padding = alignment - (offset % alignment);
+
+						// add padding to offset
+						offset += padding;
+					}
+				}
+
+				// if the resulting memory location is within the bounds of this block, use it, otherwise report out of memory
+				if ((ulong)(offset + allocInfo.AllocationSize) > blockSize)
+				{
+					allocation = new VmaAllocation();
+					return Result.ErrorOutOfDeviceMemory;
+				}
+
+				// otherwise use the given offset
 				allocation = new VmaAllocation();
 				allocation.memory = memoryBlock;
-				allocation.offset = (long)(newAllocOffset + padding);
+				allocation.offset = offset;
 				allocation.size = allocInfo.AllocationSize;
-				allocations.Add(allocation);
+				allocation.isImage = isImage;
 
-				newAllocOffset += (uint)(allocInfo.AllocationSize + (long)padding);
-				freeSpace -= (uint)(allocInfo.AllocationSize + (long)padding);
+				// add allocation
+				// try to insert at correct position
+				for (int i = 0; i < allocations.Count; i++)
+				{
+					// if allocation at i comes before this allocation, continue
+					if (allocations[i].offset < allocation.offset)
+					{
+						continue;
+					}
+
+					// otherwise, insert here and break
+					allocations.Insert(i, allocation);
+					break;
+				}
+				// if allocation wasn't inserted, add it to end
+				if (!allocations.Contains(allocation))
+				{
+					allocations.Add(allocation);
+				}
+
+				freeSpace -= (uint)allocInfo.AllocationSize;
 
 				return Result.Success;
+			}
+
+			public bool FreeMemory(VmaAllocation allocation)
+			{
+				// if allocation is in our list of allocations, then free it
+				if (allocations.Contains(allocation))
+				{
+					allocations.Remove(allocation);
+					freeSpace += (ulong)(allocation.size);
+
+					// if we don't have any more allocations, delete this block
+					if (allocations.Count == 0)
+					{
+						parent.FreeBlock(this);
+						memoryBlock.Dispose();
+					}
+
+					return true;
+				}
+				else
+				{
+					return false;
+				}
 			}
 		}
 
@@ -102,12 +184,12 @@ namespace StarlightEngine.Graphics.Vulkan
 				preferredBlockSize = isSmallHeap ? (heapSize / 8) : LARGE_HEAP_BLOCK_SIZE;
 			}
 
-			public unsafe Result AllocateMemory(MemoryAllocateInfo allocInfo, out VmaAllocation allocation, long alignment)
+			public unsafe Result AllocateMemory(MemoryAllocateInfo allocInfo, out VmaAllocation allocation, long alignment, bool isImage)
 			{
 				// check any blocks which have already been allocated to see if they have enough space for the new allocation
 				foreach (VmaDeviceMemoryBlock block in blocks)
 				{
-					Result result = block.AllocateMemory(allocInfo, out allocation, alignment);
+					Result result = block.AllocateMemory(allocInfo, out allocation, alignment, isImage);
 					if (result == Result.Success)
 					{
 						return result;
@@ -121,9 +203,33 @@ namespace StarlightEngine.Graphics.Vulkan
 					allocation = new VmaAllocation();
 					return Result.ErrorOutOfDeviceMemory;
 				}
-				VmaDeviceMemoryBlock newBlock = new VmaDeviceMemoryBlock(physicalDevice, device, memoryTypeIndex, newBlockSize);
+				VmaDeviceMemoryBlock newBlock = new VmaDeviceMemoryBlock(this, physicalDevice, device, memoryTypeIndex, newBlockSize);
 				blocks.Add(newBlock);
-				return newBlock.AllocateMemory(allocInfo, out allocation, alignment);
+				return newBlock.AllocateMemory(allocInfo, out allocation, alignment, isImage);
+			}
+
+			public bool FreeMemory(VmaAllocation allocation)
+			{
+				// go through blocks attempting to free the memory
+				foreach (VmaDeviceMemoryBlock block in blocks)
+				{
+					if (block.FreeMemory(allocation))
+					{
+						return true;
+					}
+				}
+
+				// If none of our blocks could free it, return false
+				return false;
+			}
+
+			public void FreeBlock(VmaDeviceMemoryBlock block)
+			{
+				// free the block if we own it
+				if (blocks.Contains(block))
+				{
+					blocks.Remove(block);
+				}
 			}
 		}
 
@@ -207,7 +313,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			}
 			allocInfo.MemoryTypeIndex = memoryTypeIndex;
 
-			Result result = AllocateMemory(allocInfo, out allocation, memoryRequirements.Alignment);
+			Result result = AllocateMemory(allocInfo, out allocation, memoryRequirements.Alignment, true);
 			if (result != Result.Success)
 			{
 				return result;
@@ -246,7 +352,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			}
 			allocInfo.MemoryTypeIndex = memoryTypeIndex;
 
-			Result result = AllocateMemory(allocInfo, out allocation, memoryRequirements.Alignment);
+			Result result = AllocateMemory(allocInfo, out allocation, memoryRequirements.Alignment, false);
 			if (result != Result.Success)
 			{
 				return result;
@@ -256,7 +362,23 @@ namespace StarlightEngine.Graphics.Vulkan
 			return Result.Success;
 		}
 
-		private unsafe Result AllocateMemory(MemoryAllocateInfo allocInfo, out VmaAllocation allocation, long alignment)
+		public void FreeAllocation(VmaAllocation allocation)
+		{
+			foreach (var heap in heaps)
+			{
+				if (heap.Value.FreeMemory(allocation))
+				{
+					// free was sucessful, we can return
+					return;
+				}
+				// else that heap didn't allocate the memory, keep trying
+			}
+
+			// if no heap was found that allocated the memory throw an exception
+			throw new Exception("Could not free memory, heap not found");
+		}
+
+		private unsafe Result AllocateMemory(MemoryAllocateInfo allocInfo, out VmaAllocation allocation, long alignment, bool isImage)
 		{
             int heapIndex = HeapIndexForMemoryTypeIndex(allocInfo.MemoryTypeIndex);
 			if (!heaps.ContainsKey(allocInfo.MemoryTypeIndex))
@@ -265,7 +387,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			}
 			VmaHeap heap = heaps[allocInfo.MemoryTypeIndex];
 
-			return heap.AllocateMemory(allocInfo, out allocation, alignment);
+			return heap.AllocateMemory(allocInfo, out allocation, alignment, isImage);
 		}
 
 		// Returns the memory type index of a heap which supports all types and flags required

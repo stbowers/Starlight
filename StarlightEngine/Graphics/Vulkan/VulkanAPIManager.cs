@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using VulkanCore;
 using VulkanCore.Khr;
 using VulkanCore.Ext;
+using StarlightEngine.Graphics.Vulkan.Memory;
 
 namespace StarlightEngine.Graphics.Vulkan
 {
@@ -819,6 +820,20 @@ namespace StarlightEngine.Graphics.Vulkan
 			m_device.WaitIdle();
 		}
 
+		public void CopyBufferToBuffer(VulkanCore.Buffer srcBuffer, long srcOffset, VulkanCore.Buffer dstBuffer, long dstOffset, long size)
+		{
+			CommandBuffer commandBuffer = BeginSingleTimeCommands(m_device, m_transferCommandPool);
+
+			BufferCopy region = new BufferCopy();
+			region.SrcOffset = srcOffset;
+			region.DstOffset = dstOffset;
+			region.Size = size;
+
+			commandBuffer.CmdCopyBuffer(srcBuffer, dstBuffer, new[] { region });
+
+			EndSingleTimeCommands(commandBuffer, m_transferCommandPool, m_transferQueue);
+		}
+
 		public void CopyBufferToImage(VulkanCore.Buffer buffer, Image image, int width, int height)
 		{
 			CommandBuffer commandBuffer = BeginSingleTimeCommands(m_device, m_transferCommandPool);
@@ -933,22 +948,11 @@ namespace StarlightEngine.Graphics.Vulkan
 			}
 		}
 
-		/* Creates a buffer with enough space for each section, plus padding to keep each section aligned, returns the buffer & allocation along with an array of offsets into the buffer for each entry of sizes
+		/* Free a buffer
 		 */
-		public void CreateSectionedBuffer(int[] sizes, int alignment, BufferUsages usage, MemoryProperties requiredFlags, MemoryProperties preferredFlags, out VulkanCore.Buffer buffer, out VmaAllocation allocation, out int[] offsets)
+		public void FreeAllocation(VmaAllocation allocation)
 		{
-			offsets = new int[sizes.Length];
-
-			int bufferSize = 0;
-			for (int i = 0; i < sizes.Length; i++)
-			{
-				int padding = alignment - (bufferSize % alignment);
-
-				offsets[i] = bufferSize + padding;
-				bufferSize += sizes[i] + padding;
-			}
-
-			CreateBuffer(bufferSize, usage, requiredFlags, preferredFlags, out buffer, out allocation);
+			m_memoryAllocator.FreeAllocation(allocation);
 		}
 
 		public void CreateImage2D(

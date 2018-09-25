@@ -1,5 +1,6 @@
 ﻿using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Graphics.Vulkan.Objects.Components;
+using StarlightEngine.Graphics.Vulkan.Memory;
 using StarlightEngine.Graphics.Math;
 using System.Collections.Generic;
 using VulkanCore;
@@ -22,10 +23,13 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		byte[] m_mvpData;
 		int m_numIndices;
 
+		/*
 		VulkanCore.Buffer m_objectBuffer;
 		VmaAllocation m_objectBufferAllocation;
 		int m_meshDataOffset;
 		int m_mvpDataOffset;
+		*/
+		VulkanManagedBuffer m_objectBuffer;
 
 		DescriptorSet m_mvpDescriptorSet;
 
@@ -74,40 +78,22 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, 4 * 4 * 4);
 			System.Buffer.BlockCopy(new[] { depth }, 0, m_mvpData, 4 * 4 * 4, 4);
 
-			// Create buffer
-			AllocateObjectBuffer(m_objectBuffer, m_objectBufferAllocation, 0);
+			// Create object buffer
+			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
+			m_objectBuffer = new VulkanManagedBuffer(m_apiManager, bufferAlignment, BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer, MemoryProperties.None, MemoryProperties.DeviceLocal);
 
 			// Allocate descriptor sets
 			m_mvpDescriptorSet = m_pipeline.GetShader().AllocateDescriptorSets(0, 1)[0];
 
 			// Create mesh component
-			m_mesh = new VulkanMeshComponent(apiManager, m_pipeline, AllocateObjectBuffer, m_meshData, 0, m_meshData.Length - (6 * 4), m_objectBuffer, m_objectBufferAllocation, m_meshDataOffset);
+			m_mesh = new VulkanMeshComponent(apiManager, m_pipeline, m_meshData, 0, m_meshData.Length - (6 * 4), m_objectBuffer);
 
 			// Create mvp uniform component
-			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_objectBufferAllocation, m_mvpDataOffset, m_mvpDescriptorSet, 0, 0);
+			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_mvpDescriptorSet, 0, 0);
+
+			m_objectBuffer.WriteBuffer();
 
 			m_components = new[] { new IVulkanBindableComponent[] { m_mesh, m_mvpUniform } };
-		}
-
-		public void AllocateObjectBuffer(VulkanCore.Buffer buffer, VmaAllocation bufferAllocation, int size)
-		{
-			// Create buffer
-			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
-			int meshDataSize = m_meshData.Length;
-			int mvpDataSize = m_mvpData.Length;
-			int[] objectBufferOffsets;
-			m_apiManager.CreateSectionedBuffer(
-				new int[] { meshDataSize, mvpDataSize },
-				bufferAlignment,
-				BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer,
-				MemoryProperties.HostVisible,
-				MemoryProperties.DeviceLocal,
-				out m_objectBuffer,
-				out m_objectBufferAllocation,
-				out objectBufferOffsets
-			);
-			m_meshDataOffset = objectBufferOffsets[0];
-			m_mvpDataOffset = objectBufferOffsets[1];
 		}
 
 		public void Update()
@@ -116,6 +102,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		public void UpdateSize(FVec2 newSize)
 		{
+			m_size = newSize;
+
 			// Create mesh data
 			FVec2 topLeft = new FVec2(m_position.X, m_position.Y);
 			FVec2 topRight = new FVec2(m_position.X + m_size.X, m_position.Y);

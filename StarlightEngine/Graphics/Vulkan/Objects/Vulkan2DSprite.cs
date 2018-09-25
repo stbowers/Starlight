@@ -1,4 +1,5 @@
 ﻿using StarlightEngine.Graphics.Math;
+using StarlightEngine.Graphics.Vulkan.Memory;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Graphics.Vulkan.Objects.Components;
 using System.Collections.Generic;
@@ -15,10 +16,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		byte[] m_mvpData;
 		int m_numIndices;
 
-		VulkanCore.Buffer m_objectBuffer;
-		VmaAllocation m_objectBufferAllocation;
-		int m_meshDataOffset;
-		int m_mvpDataOffset;
+		VulkanManagedBuffer m_objectBuffer;
 
 		DescriptorSet m_meshDescriptorSet;
 		DescriptorSet m_materialDescriptorSet;
@@ -46,9 +44,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_meshData = new byte[(4 * 4 * 4) + (6 * 4)];
 			System.Buffer.BlockCopy(topLeft.Bytes, 0, m_meshData, 0, (int)topLeft.PrimativeSizeOf);
 			System.Buffer.BlockCopy(topRight.Bytes, 0, m_meshData, (int)topLeft.PrimativeSizeOf, (int)topLeft.PrimativeSizeOf);
-			System.Buffer.BlockCopy(bottomLeft.Bytes, 0, m_meshData, 2*(int)topLeft.PrimativeSizeOf, (int)topLeft.PrimativeSizeOf);
-			System.Buffer.BlockCopy(bottomRight.Bytes, 0, m_meshData, 3*(int)topLeft.PrimativeSizeOf, (int)topLeft.PrimativeSizeOf);
-			System.Buffer.BlockCopy(indices, 0, m_meshData, 4*(int)topLeft.PrimativeSizeOf, 6 * 4);
+			System.Buffer.BlockCopy(bottomLeft.Bytes, 0, m_meshData, 2 * (int)topLeft.PrimativeSizeOf, (int)topLeft.PrimativeSizeOf);
+			System.Buffer.BlockCopy(bottomRight.Bytes, 0, m_meshData, 3 * (int)topLeft.PrimativeSizeOf, (int)topLeft.PrimativeSizeOf);
+			System.Buffer.BlockCopy(indices, 0, m_meshData, 4 * (int)topLeft.PrimativeSizeOf, 6 * 4);
 
 			// Create mvp data
 			FMat4 mvp = new FMat4(1.0f);
@@ -60,56 +58,24 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 			// Create object buffer
 			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
-			int meshDataSize = m_meshData.Length;
-			int mvpDataSize = m_mvpData.Length;
-			int[] objectBufferOffsets;
-			m_apiManager.CreateSectionedBuffer(
-				new int[] { meshDataSize, mvpDataSize },
-				bufferAlignment,
-				BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer,
-				MemoryProperties.HostVisible,
-				MemoryProperties.DeviceLocal,
-				out m_objectBuffer,
-				out m_objectBufferAllocation,
-				out objectBufferOffsets
-			);
-			m_meshDataOffset = objectBufferOffsets[0];
-			m_mvpDataOffset = objectBufferOffsets[1];
+			m_objectBuffer = new VulkanManagedBuffer(m_apiManager, bufferAlignment, BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer, MemoryProperties.None, MemoryProperties.DeviceLocal);
 
 			// Create descriptor sets
 			m_meshDescriptorSet = m_pipeline.GetShader().AllocateDescriptorSets(0, 1)[0];
 			m_materialDescriptorSet = m_pipeline.GetShader().AllocateDescriptorSets(1, 1)[0];
 
 			// Create mesh component
-			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, ReallocateObjectBuffer, m_meshData, 0, 4 * 4 * 4, m_objectBuffer, m_objectBufferAllocation, m_meshDataOffset);
+			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, m_meshData, 0, 4 * 4 * 4, m_objectBuffer);
 
 			// Create texture component
 			m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, textureFile, true, Filter.Linear, Filter.Linear, m_materialDescriptorSet, 1, 1);
 
 			// Create mvp uniform buffer
-			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_objectBufferAllocation, m_mvpDataOffset, m_meshDescriptorSet, 0, 0);
+			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_meshDescriptorSet, 0, 0);
+
+			m_objectBuffer.WriteBuffer();
 
 			m_bindableComponents = new IVulkanBindableComponent[] { m_mesh, m_texture, m_mvpUniform };
-		}
-
-		public void ReallocateObjectBuffer(VulkanCore.Buffer buffer, VmaAllocation bufferAllocation, int newSize)
-		{
-			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
-			int meshDataSize = m_meshData.Length;
-			int mvpDataSize = m_mvpData.Length;
-			int[] objectBufferOffsets;
-			m_apiManager.CreateSectionedBuffer(
-				new int[] { meshDataSize, mvpDataSize },
-				bufferAlignment,
-				BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer,
-				MemoryProperties.HostVisible,
-				MemoryProperties.DeviceLocal,
-				out m_objectBuffer,
-				out m_objectBufferAllocation,
-				out objectBufferOffsets
-			);
-			m_meshDataOffset = objectBufferOffsets[0];
-			m_mvpDataOffset = objectBufferOffsets[1];
 		}
 
 		public void Update()

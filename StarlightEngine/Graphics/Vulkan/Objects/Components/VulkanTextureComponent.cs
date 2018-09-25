@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using VulkanCore;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
+using StarlightEngine.Graphics.Vulkan.Memory;
 using System.Collections.Generic;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects.Components

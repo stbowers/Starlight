@@ -1,12 +1,15 @@
 ﻿<Properties StartupConfiguration="{DED3B137-5B9B-4132-AB1B-21B466535E2C}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
-  <MonoDevelop.Ide.Workbench ActiveDocument="StarlightEngine/Graphics/Vulkan/Objects/VulkanUIButton.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="StarlightEngine/Graphics/Vulkan/Objects/Vulkan2DSprite.cs">
     <Files>
-      <File FileName="StarlightGame/Program.cs" Line="132" Column="37" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/SimpleVulkanRenderer.cs" Line="66" Column="15" />
-      <File FileName="StarlightEngine/Graphics/Scenes/Scene.cs" Line="36" Column="1" />
-      <File FileName="StarlightEngine/Graphics/Scenes/SceneManager.cs" Line="11" Column="95" />
-      <File FileName="StarlightEngine/Graphics/IRenderer.cs" Line="10" Column="1" />
-      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/VulkanUIButton.cs" Line="20" Column="1" />
+      <File FileName="StarlightGame/Program.cs" Line="49" Column="1" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Memory/VulkanManagedBuffer.cs" Line="221" Column="33" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/VulkanAPIManager.cs" Line="834" Column="81" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Memory/VulkanMemoryAllocator.cs" Line="360" Column="1" />
+      <File FileName="StarlightGame/Graphics/Scenes/TitleScene.cs" Line="45" Column="6" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Vulkan2DRect.cs" Line="94" Column="32" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Components/VulkanMeshComponent.cs" Line="43" Column="22" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/VulkanTextObject.cs" Line="105" Column="4" />
+      <File FileName="StarlightEngine/Graphics/Vulkan/Objects/Vulkan2DSprite.cs" Line="77" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
