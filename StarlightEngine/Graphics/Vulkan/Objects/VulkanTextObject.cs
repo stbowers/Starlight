@@ -34,12 +34,16 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		VulkanUniformBufferComponent m_fontSettingsUniform;
 		IVulkanBindableComponent[] m_bindableComponents;
 
-		public VulkanTextObject(VulkanAPIManager apiManager, AngelcodeFont font, string text, int size, FVec2 location, float width)
+		// set if the text will be updated often, so the memory should be made transient
+		bool m_transient;
+
+		public VulkanTextObject(VulkanAPIManager apiManager, AngelcodeFont font, string text, int size, FVec2 location, float width, bool transient = false)
 		{
 			m_apiManager = apiManager;
 			m_pipeline = StaticPipelines.pipeline_distanceFieldFont;
 
 			this.Visible = true;
+			m_transient = transient;
 
 			// Create text mesh
 			m_position = new FVec2(location.X * (apiManager.GetSwapchainImageExtent().Width / 2.0f), location.Y * (apiManager.GetSwapchainImageExtent().Height / 2.0f));
@@ -49,7 +53,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 			// Create object buffer
 			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
-			m_objectBuffer = new VulkanManagedBuffer(m_apiManager, bufferAlignment, BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer, MemoryProperties.None, MemoryProperties.DeviceLocal);
+			m_objectBuffer = new VulkanManagedBuffer(m_apiManager, bufferAlignment, BufferUsages.VertexBuffer | BufferUsages.IndexBuffer | BufferUsages.UniformBuffer, MemoryProperties.None, MemoryProperties.DeviceLocal, m_transient);
 
 			// Create descriptor sets
 			m_meshDescriptorSet = m_pipeline.CreateDescriptorSet(0);
@@ -89,7 +93,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			System.Buffer.BlockCopy(new[] { edge }, 0, m_fontSettingsData, 12 * 4, 1 * 4);
 			m_fontSettingsUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_fontSettingsData, m_objectBuffer, m_materialDescriptorSet, 1);
 
-			m_objectBuffer.WriteBuffer();
+			m_objectBuffer.WriteAllBuffers(true);
 
 			m_bindableComponents = new IVulkanBindableComponent[] { m_mesh, m_texture, m_mvpUniform, m_fontSettingsUniform };
 		}

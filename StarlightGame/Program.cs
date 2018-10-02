@@ -10,6 +10,7 @@ using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Events;
 using glfw3;
 
+using StarlightGame.Graphics;
 using StarlightGame.Graphics.Scenes;
 
 namespace StarlightGame
@@ -60,11 +61,10 @@ namespace StarlightGame
 			SceneManager sceneManager = new SceneManager(renderer);
 
 			// create fps counter
-			AngelcodeFont arialFont = AngelcodeFontLoader.LoadFile("./assets/Arial.fnt");
-			VulkanTextObject fpsText = new VulkanTextObject(apiManager, arialFont, "FPS: 00.00", 20, new FVec2(-.99f, -.99f), 1.0f);
+			VulkanTextObject fpsText = new VulkanTextObject(apiManager, StaticFonts.Font_Arial, "FPS: 00.00", 20, new FVec2(-.99f, -.99f), 1.0f, true);
 
 			// create mouse position indicator
-			VulkanTextObject mousePosText = new VulkanTextObject(apiManager, arialFont, "Mouse: (0.00, 0.00)", 20, new FVec2(-.99f, -.9f), 1.0f);
+			VulkanTextObject mousePosText = new VulkanTextObject(apiManager, StaticFonts.Font_Arial, "Mouse: (0.00, 0.00)", 20, new FVec2(-.99f, -.9f), 1.0f, true);
 
 			// set special objects for renderer
 			IRendererSpecialObjectRefs specialObjectRefs = new IRendererSpecialObjectRefs();
@@ -74,7 +74,7 @@ namespace StarlightGame
 			renderer.SetSpecialObjectsFlags(IRendererSpecialObjectFlags.RenderFPSCounter | IRendererSpecialObjectFlags.RenderMousePositionCounter);
 
 			// Set up title scene
-			Scene titleScene = new TitleScene(apiManager);
+			Scene titleScene = new TitleScene(apiManager, sceneManager);
 			sceneManager.PushScene(titleScene);
 
 			// Run game loop
@@ -91,13 +91,13 @@ namespace StarlightGame
                     framesDrawn++;
 
 					FVec2 mousePos = window.GetMousePosition();
-					mousePosText.UpdateText(arialFont, string.Format("Mouse: ({0:0.##}, {1:0.##})", mousePos.X, mousePos.Y), 20);
+					mousePosText.UpdateText(StaticFonts.Font_Arial, string.Format("Mouse: ({0:0.##}, {1:0.##})", mousePos.X, mousePos.Y), 20);
 
                     if (sw.ElapsedMilliseconds > 1000)
                     {
 						long msElapsed = sw.ElapsedMilliseconds;
                         sw.Restart();
-						fpsText.UpdateText(arialFont, string.Format("FPS: {0:0.##}", ((framesDrawn * 1000L) / (float)msElapsed)), 20);
+						fpsText.UpdateText(StaticFonts.Font_Arial, string.Format("FPS: {0:0.##}", ((framesDrawn * 1000L) / (float)msElapsed)), 20);
                         framesDrawn = 0;
                     }
                 }

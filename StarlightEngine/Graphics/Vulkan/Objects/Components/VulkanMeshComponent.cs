@@ -43,7 +43,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 			m_buffer.UpdateSection(m_meshSection, newMeshData.Length, newMeshData);
 
 			// Write changes to buffer
-			m_buffer.WriteBuffer();
+			m_buffer.WriteAllBuffers(false);
 
 			// update offsets
 			m_vboOffset = newVBOOffset;
@@ -68,8 +68,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 
         public void BindComponent(CommandBuffer commandBuffer, int swapchainIndex)
         {
-			commandBuffer.CmdBindVertexBuffer(m_buffer.GetBuffer(), m_meshSection.Offset + m_vboOffset);
-			commandBuffer.CmdBindIndexBuffer(m_buffer.GetBuffer(), m_meshSection.Offset + m_iboOffset);
+			commandBuffer.CmdBindVertexBuffer(m_buffer.GetBuffer(swapchainIndex), m_meshSection.Offset + m_vboOffset);
+			commandBuffer.CmdBindIndexBuffer(m_buffer.GetBuffer(swapchainIndex), m_meshSection.Offset + m_iboOffset);
         }
     }
 }

@@ -1,18 +1,20 @@
 ﻿using System;
-using glfw3;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using StarlightEngine.Graphics.Math;
+using glfw3; 
 
-namespace StarlightEngine.Graphics.GLFW
-{
+namespace StarlightEngine.Graphics.GLFW 
+ {
 	public class GraphicsWindowGLFW : IWindowManager
 	{
-		private GLFWwindow m_window;
+		GLFWwindow m_window;
 		int m_width, m_height;
 
 		// event delegate for GLFW window pointer
 		static Dictionary<IntPtr, WindowManagerCallbacks.KeyboardEventDelegate> m_keyboardEventDelegate = new Dictionary<IntPtr, WindowManagerCallbacks.KeyboardEventDelegate>();
+
+		GLFWkeyfun m_keyCallbackDelegate;
 
 		public GraphicsWindowGLFW(int width, int height, string name)
 		{
@@ -25,7 +27,8 @@ namespace StarlightEngine.Graphics.GLFW
 			Glfw.WindowHint((int)State.Resizable, (int)State.False);
 
 			m_window = Glfw.CreateWindow(width, height, name, null, null);
-			Glfw.SetKeyCallback(m_window, KeyCallback);
+			m_keyCallbackDelegate = KeyCallback;
+			Glfw.SetKeyCallback(m_window, m_keyCallbackDelegate);
 		}
 
 		public void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)

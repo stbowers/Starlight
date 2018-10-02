@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using VulkanCore;
 using VulkanCore.Khr;
 using VulkanCore.Ext;
@@ -38,8 +39,13 @@ namespace StarlightEngine.Graphics.Vulkan
 		private Queue m_graphicsQueue;
 		private Queue m_transferQueue;
 		private Queue m_presentQueue;
+
+		Dictionary<IntPtr, Mutex> queueLocks = new Dictionary<IntPtr, Mutex>();
+
 		private CommandPool m_graphicsCommandPool;
 		private CommandPool m_transferCommandPool;
+
+		Dictionary<CommandPool, Mutex> poolLocks = new Dictionary<CommandPool, Mutex>();
 
 		// Swapchain info
 		private SwapchainKhr m_swapchain;
@@ -52,9 +58,10 @@ namespace StarlightEngine.Graphics.Vulkan
 		private VmaAllocation m_depthImageAllocation;
 		private ImageView m_depthImageView;
 		private CommandBuffer[] m_swapchainCommandBuffers;
-		private Semaphore[] m_imageAvailableSemaphores;
-		private Semaphore[] m_renderFinishedSemaphores;
+		private VulkanCore.Semaphore[] m_imageAvailableSemaphores;
+		private VulkanCore.Semaphore[] m_renderFinishedSemaphores;
 		private Fence[] m_inFlightFences;
+		private Mutex[] m_swapchainBufferLock;
 		private int m_currentFrame;
 		private int m_frameIndex;
 
@@ -201,7 +208,11 @@ namespace StarlightEngine.Graphics.Vulkan
 
 			if ((reportInfo.Flags & printFlags) != 0)
 			{
-				Console.WriteLine("Vulkan debug report ({0}): {1}", reportInfo.LayerPrefix, reportInfo.Message);
+				Console.WriteLine("Vulkan debug report ({0}): {1}", reportInfo.Flags.ToString(), reportInfo.Message);
+			}
+
+			if (reportInfo.Flags.HasFlag(DebugReportFlagsExt.Error)){
+				throw new Exception(reportInfo.Message);
 			}
 
 			return false;
@@ -340,6 +351,15 @@ namespace StarlightEngine.Graphics.Vulkan
 			m_transferQueue = m_device.GetQueue((int)m_deviceQueueFamilies.transferFamily);
 			m_presentQueue = m_device.GetQueue((int)m_deviceQueueFamilies.presentFamily);
 
+			/* Create queue locks */
+			queueLocks.Add(m_graphicsQueue.Handle, new Mutex());
+			if (!queueLocks.ContainsKey(m_transferQueue.Handle)){
+				queueLocks.Add(m_transferQueue.Handle, new Mutex());
+			}
+			if (!queueLocks.ContainsKey(m_presentQueue.Handle)){
+				queueLocks.Add(m_presentQueue.Handle, new Mutex());
+			}
+
 			/* Create allocator */
 			m_memoryAllocator = new VulkanMemoryAllocator(m_physicalDevice, m_device);
 
@@ -349,6 +369,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			graphicsPoolInfo.QueueFamilyIndex = (int)m_deviceQueueFamilies.graphicsFamily;
 
 			m_graphicsCommandPool = m_device.CreateCommandPool(graphicsPoolInfo);
+			poolLocks.Add(m_graphicsCommandPool, new Mutex());
 
 			// Even though the graphics queue and transfer queue might be the same, and therefore we could
 			// use the graphics command pool, we'll make a new one so that it can be optimized for transfer
@@ -358,6 +379,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			transferPoolInfo.QueueFamilyIndex = (int)m_deviceQueueFamilies.transferFamily;
 
 			m_transferCommandPool = m_device.CreateCommandPool(transferPoolInfo);
+			poolLocks.Add(m_transferCommandPool, new Mutex());
 		}
 
 		private void CreateSwapchain(bool recreate = false)
@@ -414,6 +436,12 @@ namespace StarlightEngine.Graphics.Vulkan
 
 			/* Get swap chain images */
 			m_swapchainImages = m_swapchain.GetImages();
+
+			// create mutexes
+			m_swapchainBufferLock = new Mutex[m_swapchainImages.Length];
+			for (int i = 0; i < m_swapchainImages.Length; i++){
+				m_swapchainBufferLock[i] = new Mutex();
+			}
 
 			imageCount = m_swapchainImages.Length;
 			Console.WriteLine("Swap chain created with {0} images", imageCount);
@@ -494,15 +522,17 @@ namespace StarlightEngine.Graphics.Vulkan
 			allocInfo.Level = CommandBufferLevel.Primary;
 			allocInfo.CommandBufferCount = imageCount;
 
+			poolLocks[m_graphicsCommandPool].WaitOne();
 			m_swapchainCommandBuffers = m_graphicsCommandPool.AllocateBuffers(allocInfo);
+			poolLocks[m_graphicsCommandPool].ReleaseMutex();
 
 			/* Create semaphores and fences */
 			FenceCreateInfo fenceInfo = new FenceCreateInfo();
 			fenceInfo.Flags = FenceCreateFlags.Signaled;
 
 			// make imageCount - 1 sync objects; all frames not being presented can be 'in flight'
-			m_imageAvailableSemaphores = new Semaphore[imageCount];
-			m_renderFinishedSemaphores = new Semaphore[imageCount];
+			m_imageAvailableSemaphores = new VulkanCore.Semaphore[imageCount];
+			m_renderFinishedSemaphores = new VulkanCore.Semaphore[imageCount];
 			m_inFlightFences = new Fence[imageCount];
 			for (int j = 0; j < imageCount; j++)
 			{
@@ -867,6 +897,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			allocInfo.Level = CommandBufferLevel.Primary;
 			allocInfo.CommandBufferCount = 1;
 
+			poolLocks[pool].WaitOne();
 			CommandBuffer commandBuffer = pool.AllocateBuffers(allocInfo)[0];
 
 			CommandBufferBeginInfo beginInfo = new CommandBufferBeginInfo();
@@ -889,7 +920,10 @@ namespace StarlightEngine.Graphics.Vulkan
 			// submit
 			SubmitInfo submitInfo = new SubmitInfo();
 			submitInfo.CommandBuffers = new[] { commandBuffer.Handle };
+			queueLocks[submitQueue.Handle].WaitOne();
 			submitQueue.Submit(submitInfo, transferDone);
+			poolLocks[pool].ReleaseMutex();
+			queueLocks[submitQueue.Handle].ReleaseMutex();
 
 			/* Wait for command buffer to finish */
 			m_device.WaitFences(new[] { transferDone }, true);
@@ -1011,13 +1045,37 @@ namespace StarlightEngine.Graphics.Vulkan
 			}
 		}
 
-		/* Block until the command buffer and swapchain image at index are idle
+		/* Block until the command buffer and swapchain image at index are idle,
+		 * and get the lock to avoid submitting the buffer for now
 		 */
-		public void WaitForSwapchainBufferIdle(int index)
+		public void WaitForSwapchainBufferIdleAndLock(int index)
 		{
-			m_device.WaitFences(new[] { m_inFlightFences[index] }, true);
+			m_swapchainBufferLock[index].WaitOne();
 		}
 
+		public void ReleaseSwapchainBufferLock(int index)
+		{
+			m_swapchainBufferLock[index].ReleaseMutex();
+		}
+
+		/* Waits for the whole graphics pipeline to be idle, and prevents
+		 * further commands from being submitted to pipeline (same as calling
+		 * WaitForSwapchainBufferIdleAndLock() on every swapchain index)
+		 */
+		public void WaitForDeviceIdleAndLock(){
+			for (int swapchainIndex=0; swapchainIndex < m_swapchainImages.Length; swapchainIndex++){
+				WaitForSwapchainBufferIdleAndLock(swapchainIndex);
+			}
+		}
+
+		public void ReleaseDeviceIdleLock(){
+			for (int swapchainIndex=0; swapchainIndex < m_swapchainImages.Length; swapchainIndex++){
+				ReleaseSwapchainBufferLock(swapchainIndex);
+			}
+		}
+
+		/* Submit the command buffer to the graphics queue
+		 */
 		public void Draw()
 		{
 			SubmitInfo submitInfo = new SubmitInfo();
@@ -1026,7 +1084,10 @@ namespace StarlightEngine.Graphics.Vulkan
 			submitInfo.CommandBuffers = new[] { m_swapchainCommandBuffers[m_currentFrame].Handle };
 			submitInfo.SignalSemaphores = new[] { m_renderFinishedSemaphores[m_currentFrame].Handle };
 
+			// get lock for queue
+			queueLocks[m_graphicsQueue.Handle].WaitOne();
 			m_graphicsQueue.Submit(submitInfo, m_inFlightFences[m_currentFrame]);
+			queueLocks[m_graphicsQueue.Handle].ReleaseMutex();
 		}
 
 		public void Present()
@@ -1039,9 +1100,15 @@ namespace StarlightEngine.Graphics.Vulkan
 
 			m_presentQueue.PresentKhr(presentInfo);
 
+			// wait for frame to finish rendering
+			m_inFlightFences[m_currentFrame].Wait();
+			// unlock mutex
+			m_swapchainBufferLock[m_currentFrame].ReleaseMutex();
+
 			m_currentFrame = (m_currentFrame + 1) % m_swapchainImages.Length;
-			m_frameIndex= m_swapchain.AcquireNextImage(-1, m_imageAvailableSemaphores[m_currentFrame]);
+			m_frameIndex = m_swapchain.AcquireNextImage(-1, m_imageAvailableSemaphores[m_currentFrame]);
 		}
+
 
 		public VulkanPipeline CreatePipeline(VulkanPipeline.VulkanPipelineCreateInfo createInfo)
 		{
@@ -1055,6 +1122,9 @@ namespace StarlightEngine.Graphics.Vulkan
 
 		public CommandBuffer StartRecordingSwapchainCommandBuffer(out int currentFrame)
 		{
+			// get lock
+			m_swapchainBufferLock[m_currentFrame].WaitOne();
+
 			m_inFlightFences[m_currentFrame].Wait();
 			m_inFlightFences[m_currentFrame].Reset();
 			CommandBuffer currentBuffer = m_swapchainCommandBuffers[m_currentFrame];
@@ -1068,6 +1138,9 @@ namespace StarlightEngine.Graphics.Vulkan
 		public void FinalizeSwapchainCommandBuffer(CommandBuffer swapchainBuffer)
 		{
 			swapchainBuffer.End();
+
+			// release lock
+			//m_swapchainBufferLock[m_currentFrame].ReleaseMutex();
 		}
 
 		public Extent2D GetSwapchainImageExtent()

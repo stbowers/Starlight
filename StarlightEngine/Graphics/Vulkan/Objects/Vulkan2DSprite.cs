@@ -73,7 +73,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			// Create mvp uniform buffer
 			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_meshDescriptorSet, 0);
 
-			m_objectBuffer.WriteBuffer();
+			m_objectBuffer.WriteAllBuffers(true);
 
 			m_bindableComponents = new IVulkanBindableComponent[] { m_mesh, m_texture, m_mvpUniform };
 		}

@@ -43,12 +43,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 
 			apiManager.CreateBuffer(imageSize, BufferUsages.TransferSrc, MemoryProperties.HostVisible, MemoryProperties.HostCoherent, out stagingBuffer, out stagingBufferAllocation);
 
-			IntPtr stagingBufferData = stagingBufferAllocation.memory.Map(stagingBufferAllocation.offset, stagingBufferAllocation.size);
+			IntPtr stagingBufferData = stagingBufferAllocation.MapAllocation();
 			unsafe
 			{
 				System.Buffer.MemoryCopy(imageData.Scan0.ToPointer(), stagingBufferData.ToPointer(), imageSize, imageSize);
 			}
-			stagingBufferAllocation.memory.Unmap();
+			stagingBufferAllocation.UnmapAllocation();
 
 			apiManager.CreateImage2D(imageData.Width, imageData.Height, mipLevels, Format.B8G8R8A8UNorm, ImageTiling.Optimal, ImageUsages.TransferSrc | ImageUsages.TransferDst | ImageUsages.Sampled, MemoryProperties.None, MemoryProperties.DeviceLocal, out m_textureImage, out m_textureImageAllocation);
 

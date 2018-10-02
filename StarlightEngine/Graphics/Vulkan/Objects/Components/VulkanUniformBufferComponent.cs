@@ -41,6 +41,8 @@ namespace StarlightEngine
 		public void UpdateUniformBuffer(byte[] newData)
 		{
 			m_buffer.UpdateSection(m_uniformBufferSection, newData.Length, newData);
+
+			m_buffer.WriteAllBuffers(false);
 		}
 
 		public VulkanPipeline Pipeline

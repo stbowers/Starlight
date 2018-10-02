@@ -8,12 +8,17 @@ namespace StarlightEngine.Graphics.Vulkan
 	{
 		VulkanAPIManager m_apiManager;
 		DescriptorSet[] m_sets;
+		Mutex[] m_setLocks;
 		int m_setIndex;
 
 		public VulkanDescriptorSet(VulkanAPIManager apiManager, DescriptorSet[] sets, int setIndex)
 		{
 			m_apiManager = apiManager;
 			m_sets = sets;
+			m_setLocks = new Mutex[sets.Length];
+			for (int i = 0; i < m_sets.Length; i++){
+				m_setLocks[i] = new Mutex();
+			}
 			m_setIndex = setIndex;
 		}
 
@@ -37,6 +42,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			{
 				updateThreads[i] = new Thread(UpdateBuffer);
 				updateThreads[i].Start(new ValueTuple<int, DescriptorBufferInfo, DescriptorType, int>(binding, bufferInfo, type, i));
+				updateThreads[i].Join();
 			}
 
 			if (block)
@@ -46,6 +52,13 @@ namespace StarlightEngine.Graphics.Vulkan
 					thread.Join();
 				}
 			}
+		}
+
+		/* Update the buffer for the given index
+		 */
+		public void UpdateBuffer(int binding, DescriptorBufferInfo bufferInfo, DescriptorType type, int swapchainIndex)
+		{
+			UpdateBuffer(new ValueTuple<int, DescriptorBufferInfo, DescriptorType, int>(binding, bufferInfo, type, swapchainIndex));
 		}
 
 		/* Updates all sets to use the new image info, if block is true blocks until all descriptors are updated
@@ -69,6 +82,13 @@ namespace StarlightEngine.Graphics.Vulkan
 			}
 		}
 
+		/* Update the image for the given index
+		 */
+		public void UpdateImage(int binding, DescriptorImageInfo imageInfo, DescriptorType type, int swapchainIndex)
+		{
+			UpdateImage(new ValueTuple<int, DescriptorImageInfo, DescriptorType, int>(binding, imageInfo, type, swapchainIndex));
+		}
+
 		/* Updates buffer info for a set at a given index (blocks until set is not being used before updating)
 		 */
 		private void UpdateBuffer(Object obj)
@@ -87,8 +107,11 @@ namespace StarlightEngine.Graphics.Vulkan
 			descriptorWrite.DescriptorType = type;
 			descriptorWrite.BufferInfo = new[] { bufferInfo };
 
-			m_apiManager.WaitForSwapchainBufferIdle(index);
+			m_apiManager.WaitForSwapchainBufferIdleAndLock(index);
+			m_setLocks[index].WaitOne();
 			m_sets[index].Parent.UpdateSets(new[] { descriptorWrite });
+			m_setLocks[index].ReleaseMutex();
+			m_apiManager.ReleaseSwapchainBufferLock(index);
 		}
 
 		/* Updates image info for a set at a given index (blocks until set is not being used before updating)
@@ -109,8 +132,11 @@ namespace StarlightEngine.Graphics.Vulkan
 			descriptorWrite.DescriptorType = type;
 			descriptorWrite.ImageInfo = new[] { imageInfo };
 
-			m_apiManager.WaitForSwapchainBufferIdle(index);
+			m_apiManager.WaitForSwapchainBufferIdleAndLock(index);
+			m_setLocks[index].WaitOne();
 			m_sets[index].Parent.UpdateSets(new[] { descriptorWrite });
+			m_setLocks[index].ReleaseMutex();
+			m_apiManager.ReleaseSwapchainBufferLock(index);
 		}
 	}
 }

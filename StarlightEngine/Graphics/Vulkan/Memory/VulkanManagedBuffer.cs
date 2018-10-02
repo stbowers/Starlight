@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using VulkanCore;
@@ -23,9 +24,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			public VulkanDescriptorSet DescriptorSet;
 			public DescriptorType DescriptorType;
 			public int DescriptorSetBinding;
-
-			// Has this section changed since the last write?
-			public bool HasChanged;
 		}
 
 		VulkanAPIManager m_apiManager;
@@ -37,10 +35,13 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 		List<VulkanManagedBufferSection> m_sections = new List<VulkanManagedBufferSection>();
 		int m_usedSpace;
 
-		VulkanCore.Buffer m_buffer;
-		VmaAllocation m_bufferAllocation;
+		int m_numBuffers;
+		VulkanCore.Buffer[] m_buffers;
+		VmaAllocation[] m_bufferAllocations;
 
-		public VulkanManagedBuffer(VulkanAPIManager apiManager, int sectionAlignment, BufferUsages usage, MemoryProperties requiredFlags, MemoryProperties preferredFlags)
+		bool m_transient;
+
+		public VulkanManagedBuffer(VulkanAPIManager apiManager, int sectionAlignment, BufferUsages usage, MemoryProperties requiredFlags, MemoryProperties preferredFlags, bool transient = false)
 		{
 			m_apiManager = apiManager;
 			m_sectionAlignment = sectionAlignment;
@@ -49,11 +50,29 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			m_preferredFlags = preferredFlags;
 
 			m_usedSpace = 0;
+
+			m_transient = transient;
+
+			if (m_transient){
+				// if this buffer is transient, we will need buffers for each swapchain image (so it can be updated quickly)
+				m_numBuffers = m_apiManager.GetSwapchainImageCount();
+				m_buffers = new VulkanCore.Buffer[m_numBuffers];
+				m_bufferAllocations = new VmaAllocation[m_numBuffers];
+			}else{
+				// if buffer is not transient (won't be updated often if at all, it can be allocated on just one buffer)
+				m_numBuffers = 1;
+				m_buffers = new VulkanCore.Buffer[m_numBuffers];
+				m_bufferAllocations = new VmaAllocation[m_numBuffers];
+			}
 		}
 
-		public VulkanCore.Buffer GetBuffer()
+		public VulkanCore.Buffer GetBuffer(int swapchainIndex)
 		{
-			return m_buffer;
+			if (m_transient){
+				return m_buffers[swapchainIndex];
+			}else{
+				return m_buffers[0];
+			}
 		}
 
 		/* Creates a new section in the buffer, with a given size, filled with data.
@@ -66,7 +85,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			newSection.Offset = m_usedSpace + padding;
 			newSection.Size = size;
 			newSection.Data = data;
-			newSection.HasChanged = true;
 
 			m_usedSpace += size + padding;
 
@@ -92,9 +110,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 		{
 			// call the override with 0 offset
 			UpdateSection(section, size, data, 0);
-
-			// Write the buffer after updating
-			WriteBuffer();
 		}
 
 		/* Update a section's data, and move it by the given offset
@@ -111,9 +126,8 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			section.Offset += offset;
 			int padding = (m_sectionAlignment - (section.Offset % m_sectionAlignment)) % m_sectionAlignment;
 			section.Offset += padding;
-			section.HasChanged = true;
 			int newEnd = section.Offset + section.Size; // new last index of this section
-			m_usedSpace += (newEnd - oldEnd) - offset;
+			m_usedSpace += (newEnd - oldEnd);
 			memoryFootprintChanged |= oldEnd != newEnd;
 
 			// update any following section if our memory footprint has changed
@@ -134,36 +148,68 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			}
 		}
 
-		/* Writes the sections to a Vulkan buffer (or updates the buffer if changes were made)
+		/* Write data to all buffers; if block is true waits until all buffers are written
 		 */
-		public void WriteBuffer()
+		public void WriteAllBuffers(bool block)
 		{
-			m_apiManager.GetDevice().WaitIdle();
+			// Spawn threads for each buffer
+			Thread[] writeBufferThreads = new Thread[m_numBuffers];
+			for (int i = 0; i < m_numBuffers; i++)
+			{
+				writeBufferThreads[i] = new Thread(WriteBufferThreadStart);
+				writeBufferThreads[i].Start(i);
+			}
+
+			if (block || !m_transient)
+			{
+				foreach (Thread thread in writeBufferThreads)
+				{
+					thread.Join();
+				}
+			}
+		}
+
+		public void WriteBufferThreadStart(Object obj)
+		{
+			int swapchainIndex = (int)obj;
+			WriteBuffer(swapchainIndex);
+		}
+
+		/* Writes the sections to a Vulkan buffer (or updates the buffer if changes were made), blocks until buffer is written
+		 */
+		public void WriteBuffer(int swapchainIndex)
+		{
+			if (m_transient){
+				m_apiManager.WaitForSwapchainBufferIdleAndLock(swapchainIndex);
+			}else{
+				m_apiManager.WaitForDeviceIdleAndLock();
+			}
+
 			// Get buffer
-			if (m_buffer == null)
+			if (m_buffers[swapchainIndex] == null)
 			{
 				// Create new buffer if we don't already have one
 				// if this buffer is not host visible, we'll need to make sure the buffer can be a transfer destination
 				if (!m_requiredFlags.HasFlag(MemoryProperties.HostVisible))
 				{
-					m_apiManager.CreateBuffer(m_usedSpace, m_usage | BufferUsages.TransferDst, m_requiredFlags, m_preferredFlags, out m_buffer, out m_bufferAllocation);
+					m_apiManager.CreateBuffer(m_usedSpace, m_usage | BufferUsages.TransferDst, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
 				}
 			}
 			else
 			{
 				// If we already have a buffer, check if there is enough space for our usage
-				if (m_bufferAllocation.size <= m_usedSpace)
+				if (m_bufferAllocations[swapchainIndex].size <= m_usedSpace)
 				{
 					// If there isn't create a new buffer
 					// free old buffer
-					m_apiManager.FreeAllocation(m_bufferAllocation);
-					m_buffer.Dispose();
+					m_apiManager.FreeAllocation(m_bufferAllocations[swapchainIndex]);
+					m_buffers[swapchainIndex].Dispose();
 
 					// make new buffer
 					// if this buffer is not host visible, we'll need to make sure the buffer can be a transfer destination
 					if (!m_requiredFlags.HasFlag(MemoryProperties.HostVisible))
 					{
-						m_apiManager.CreateBuffer(m_usedSpace, m_usage | BufferUsages.TransferDst, m_requiredFlags, m_preferredFlags, out m_buffer, out m_bufferAllocation);
+						m_apiManager.CreateBuffer(m_usedSpace, m_usage | BufferUsages.TransferDst, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
 					}
 				}
 			}
@@ -175,37 +221,33 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			VmaAllocation stagingBufferAllocation = null; // may not be used
 			if (m_requiredFlags.HasFlag(MemoryProperties.HostVisible))
 			{
-				mappedMemory = m_bufferAllocation.memory.Map(m_bufferAllocation.offset, m_bufferAllocation.size);
+				mappedMemory = m_bufferAllocations[swapchainIndex].MapAllocation();
 			}
 			else
 			{
 				m_apiManager.CreateBuffer(m_usedSpace, BufferUsages.TransferSrc, MemoryProperties.HostVisible, MemoryProperties.None, out stagingBuffer, out stagingBufferAllocation);
-				mappedMemory = stagingBufferAllocation.memory.Map(stagingBufferAllocation.offset, stagingBufferAllocation.size);
+				mappedMemory = stagingBufferAllocation.MapAllocation();
 			}
 
 			foreach (VulkanManagedBufferSection section in m_sections)
 			{
 				// Write section to mapped memory
-				if (section.HasChanged)
-				{
-					Marshal.Copy(section.Data, 0, mappedMemory + section.Offset, section.Data.Length);
-					section.HasChanged = false;
-				}
+				Marshal.Copy(section.Data, 0, mappedMemory + section.Offset, section.Data.Length);
 			}
 
 			// Unmap memory and copy staging buffer if used
 			if (m_requiredFlags.HasFlag(MemoryProperties.HostVisible))
 			{
 				// unmap buffer
-				m_bufferAllocation.memory.Unmap();
+				m_bufferAllocations[swapchainIndex].UnmapAllocation();
 			}
 			else
 			{
 				// unmap staging buffer
-				stagingBufferAllocation.memory.Unmap();
+				stagingBufferAllocation.UnmapAllocation();
 
 				// copy staging buffer
-				m_apiManager.CopyBufferToBuffer(stagingBuffer, 0, m_buffer, 0, m_usedSpace);
+				m_apiManager.CopyBufferToBuffer(stagingBuffer, 0, m_buffers[swapchainIndex], 0, m_usedSpace);
 
 				// free staging buffer
 				m_apiManager.FreeAllocation(stagingBufferAllocation);
@@ -218,12 +260,27 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 				if (section.DescriptorSet != null)
 				{
 					DescriptorBufferInfo bufferInfo = new DescriptorBufferInfo();
-					bufferInfo.Buffer = m_buffer;
+					bufferInfo.Buffer = m_buffers[swapchainIndex];
 					bufferInfo.Offset = section.Offset;
 					bufferInfo.Range = section.Size;
 
-					section.DescriptorSet.UpdateBuffer(section.DescriptorSetBinding, bufferInfo, section.DescriptorType, true);
+					if (m_transient){
+						// if this is a transient buffer, update just the one set
+						section.DescriptorSet.UpdateBuffer(section.DescriptorSetBinding, bufferInfo, section.DescriptorType, swapchainIndex);
+					}else{
+						// Otherwise update all sets
+						for (int index = 0; index < m_apiManager.GetSwapchainImageCount(); index++){
+							section.DescriptorSet.UpdateBuffer(section.DescriptorSetBinding, bufferInfo, section.DescriptorType, index);
+						}
+					}
 				}
+			}
+
+			// release buffer lock
+			if (m_transient){
+				m_apiManager.ReleaseSwapchainBufferLock(swapchainIndex);
+			}else{
+				m_apiManager.ReleaseDeviceIdleLock();
 			}
 		}
 	}

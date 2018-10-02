@@ -77,7 +77,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			System.Buffer.BlockCopy(new[] { reflectivity }, 0, m_lightingData, 2 * 4 * 4 + (8), 4);
 			m_lightingUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_lightingData, m_objectBuffer, m_materialDescriptorSet, 1);
 
-			m_objectBuffer.WriteBuffer();
+			m_objectBuffer.WriteAllBuffers(true);
         }
 
 		public virtual void Update()

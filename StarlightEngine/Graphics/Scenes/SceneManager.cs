@@ -30,5 +30,13 @@ namespace StarlightEngine.Graphics.Scenes
 			m_scenes.Pop();
 			m_renderer.DisplayScene(m_scenes.Peek());
 		}
+
+		/// <summary>
+		/// Returns the scene currently being displayed
+		/// </summary>
+		public Scene PeekScene()
+		{
+			return m_scenes.Peek();
+		}
 	}
 }

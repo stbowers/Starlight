@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using VulkanCore;
 
 namespace StarlightEngine.Graphics.Vulkan.Memory
@@ -18,10 +19,47 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 
 	public class VmaAllocation
 	{
-		public DeviceMemory memory;
+		private DeviceMemory memory;
 		public long offset;
 		public long size;
 		public bool isImage; // is this memory used to back an image
+
+		// Thread safe functions for managing the alloction
+		public Mutex memoryLock;
+
+		public VmaAllocation(){
+			memory = null;
+		}
+		public VmaAllocation(DeviceMemory memory){
+			this.memory = memory;
+		}
+
+		public IntPtr MapAllocation(){
+			// get memory lock
+			if(memoryLock.WaitOne()){
+				IntPtr mappedPtr = memory.Map(offset, size);
+				return mappedPtr;
+			}else{
+			}
+			return (IntPtr)0;
+		}
+
+		public void UnmapAllocation(){
+			memory.Unmap();
+			memoryLock.ReleaseMutex();
+		}
+
+		public void LockMemory(){
+			memoryLock.WaitOne();
+		}
+
+		public void UnlockMemory(){
+			memoryLock.ReleaseMutex();
+		}
+
+		public DeviceMemory GetMemory(){
+			return memory;
+		}
 	}
 
 	// Helper class for managing Vulkan memory allocations, based roughly on a c library by the same name (https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/blob/master/src/vk_mem_alloc.h)
@@ -38,6 +76,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			private Device device;
 			private List<VmaAllocation> allocations = new List<VmaAllocation>();
 			private VmaHeap parent;
+			Mutex memoryLock = new Mutex();
 
 			public unsafe VmaDeviceMemoryBlock(VmaHeap parent, PhysicalDevice physicalDevice, Device device, uint memoryTypeIndex, ulong blockSize)
 			{
@@ -57,10 +96,14 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 
 			public unsafe Result AllocateMemory(MemoryAllocateInfo allocInfo, out VmaAllocation allocation, long alignment, bool isImage)
 			{
+				// get allocation lock for read/write access
+				memoryLock.WaitOne();
+
 				// Check if we have enough free space
 				if (freeSpace < (ulong)allocInfo.AllocationSize)
 				{
 					allocation = new VmaAllocation();
+					memoryLock.ReleaseMutex();
 					return Result.ErrorOutOfDeviceMemory;
 				}
 
@@ -98,17 +141,19 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 				if ((ulong)(offset + allocInfo.AllocationSize) > blockSize)
 				{
 					allocation = new VmaAllocation();
+					memoryLock.ReleaseMutex();
 					return Result.ErrorOutOfDeviceMemory;
 				}
 
 				// otherwise use the given offset
-				allocation = new VmaAllocation();
-				allocation.memory = memoryBlock;
+				allocation = new VmaAllocation(memoryBlock);
+				//allocation.memory = memoryBlock;
 				allocation.offset = offset;
 				allocation.size = allocInfo.AllocationSize;
 				allocation.isImage = isImage;
+				allocation.memoryLock = memoryLock;
 
-				// add allocation
+				/* Add allocation */
 				// try to insert at correct position
 				for (int i = 0; i < allocations.Count; i++)
 				{
@@ -130,11 +175,15 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 
 				freeSpace -= (uint)allocInfo.AllocationSize;
 
+				memoryLock.ReleaseMutex();
 				return Result.Success;
 			}
 
 			public bool FreeMemory(VmaAllocation allocation)
 			{
+				// Get read/write access to allocations
+				memoryLock.WaitOne();
+
 				// if allocation is in our list of allocations, then free it
 				if (allocations.Contains(allocation))
 				{
@@ -148,10 +197,12 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 						memoryBlock.Dispose();
 					}
 
+					memoryLock.ReleaseMutex();
 					return true;
 				}
 				else
 				{
+					memoryLock.ReleaseMutex();
 					return false;
 				}
 			}
@@ -211,7 +262,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 			public bool FreeMemory(VmaAllocation allocation)
 			{
 				// go through blocks attempting to free the memory
-				foreach (VmaDeviceMemoryBlock block in blocks)
+				foreach (VmaDeviceMemoryBlock block in blocks.ToArray())
 				{
 					if (block.FreeMemory(allocation))
 					{
@@ -319,7 +370,9 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 				return result;
 			}
 
-			image.BindMemory(allocation.memory, (long)allocation.offset);
+			allocation.LockMemory();
+			image.BindMemory(allocation.GetMemory(), (long)allocation.offset);
+			allocation.UnlockMemory();
 			return Result.Success;
 		}
 
@@ -358,7 +411,9 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 				return result;
 			}
 
-			buffer.BindMemory(allocation.memory, (long)allocation.offset);
+			allocation.LockMemory();
+			buffer.BindMemory(allocation.GetMemory(), (long)allocation.offset);
+			allocation.UnlockMemory();
 			return Result.Success;
 		}
 
