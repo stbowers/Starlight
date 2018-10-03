@@ -39,15 +39,15 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 
 		public void UpdateMesh(byte[] newMeshData, int newVBOOffset, int newIBOOffset)
 		{
+            m_meshData = newMeshData;
+            m_vboOffset = newVBOOffset;
+            m_iboOffset = newIBOOffset;
+
 			// Update the mesh section of the buffer
-			m_buffer.UpdateSection(m_meshSection, newMeshData.Length, newMeshData);
+			m_buffer.UpdateSection(m_meshSection, m_meshData.Length, m_meshData);
 
 			// Write changes to buffer
 			m_buffer.WriteAllBuffers(false);
-
-			// update offsets
-			m_vboOffset = newVBOOffset;
-			m_iboOffset = newIBOOffset;
 		}
 
         public VulkanPipeline Pipeline
@@ -68,8 +68,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 
         public void BindComponent(CommandBuffer commandBuffer, int swapchainIndex)
         {
-			commandBuffer.CmdBindVertexBuffer(m_buffer.GetBuffer(swapchainIndex), m_meshSection.Offset + m_vboOffset);
-			commandBuffer.CmdBindIndexBuffer(m_buffer.GetBuffer(swapchainIndex), m_meshSection.Offset + m_iboOffset);
+            m_meshSection.SectionLock.EnterReadLock();
+			commandBuffer.CmdBindVertexBuffer(m_buffer.GetBuffer(swapchainIndex), m_meshSection.Offsets[(swapchainIndex) % m_meshSection.Offsets.Length] + m_vboOffset);
+			commandBuffer.CmdBindIndexBuffer(m_buffer.GetBuffer(swapchainIndex), m_meshSection.Offsets[(swapchainIndex) % m_meshSection.Offsets.Length] + m_iboOffset);
+            m_meshSection.SectionLock.ExitReadLock();
         }
     }
 }

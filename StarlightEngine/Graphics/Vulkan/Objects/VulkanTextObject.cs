@@ -100,12 +100,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		public void UpdateText(AngelcodeFont font, string newText, int size)
 		{
-			TextMesh textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, newText, m_position, m_width);
-			m_textMesh = textMesh;
-			m_numIndices = textMesh.numVertices;
+			m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, newText, m_position, m_width);
+			m_numIndices = m_textMesh.numVertices;
 			int meshDataSize = m_textMesh.meshBufferData.Length;
-			m_meshData = new byte[meshDataSize];
-			System.Buffer.BlockCopy(m_textMesh.meshBufferData, 0, m_meshData, 0, m_textMesh.meshBufferData.Length);
+			System.Array.Resize(ref m_meshData, meshDataSize);
+			System.Buffer.BlockCopy(m_textMesh.meshBufferData, 0, m_meshData, 0, meshDataSize);
 			m_mesh.UpdateMesh(m_meshData, m_textMesh.vboOffset, m_textMesh.iboOffset);
 		}
 
