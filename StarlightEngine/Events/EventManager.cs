@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Threading;
 using StarlightEngine.Graphics;
+using StarlightEngine.Graphics.Math;
 
 namespace StarlightEngine.Events
 {
@@ -74,6 +75,7 @@ namespace StarlightEngine.Events
         {
             m_windowManager = windowManager;
             m_windowManager.SetKeyboardEventDelegate(KeyboardEventHandler);
+            m_windowManager.SetMouseEventDelegate(MouseEventHandler);
 
             // create thread
             m_eventThread = new Thread(EventThread);
@@ -200,6 +202,18 @@ namespace StarlightEngine.Events
             // Create new key event, and push onto the event queue
             KeyboardEvent keyEvent = new KeyboardEvent(key, action, modifiers);
             m_queuedEvents.Enqueue(keyEvent);
+
+            // Unlock event queue
+            m_eventManagerSettingsLock.ReleaseWriterLock();
+        }
+
+        private void MouseEventHandler(MouseButton button, MouseAction action, KeyModifiers modifiers, FVec2 mousePosition, float scrollX, float scrollY){
+            // Lock event queue
+            m_eventManagerSettingsLock.AcquireWriterLock(-1);
+
+            // Create new mouse event, and push onto the event queue
+            MouseEvent mouseEvent = new MouseEvent(button, action, modifiers, mousePosition, scrollX, scrollY);
+            m_queuedEvents.Enqueue(mouseEvent);
 
             // Unlock event queue
             m_eventManagerSettingsLock.ReleaseWriterLock();

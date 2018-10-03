@@ -3,6 +3,7 @@ using StarlightEngine.Graphics.Math;
 using StarlightEngine.Graphics.Fonts;
 using StarlightEngine.Graphics.Objects;
 using System.Collections.Generic;
+using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
@@ -46,7 +47,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		public void Update()
 		{
 			FVec2 mouseVector = m_apiManager.GetWindowManager().GetMousePosition();
-			bool isClicked = m_apiManager.GetWindowManager().IsMouseButtonPressed(MouseButton.Primary);
+			bool isClicked = m_apiManager.GetWindowManager().IsMouseButtonPressed(MouseButton.Left);
 			if (m_collider.IsCollision(new FVec3(mouseVector.X(), mouseVector.Y(), 0.0f)))
 			{
 				if (isClicked)

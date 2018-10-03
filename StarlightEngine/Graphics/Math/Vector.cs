@@ -278,36 +278,45 @@ namespace StarlightEngine.Graphics.Math
         private static void SetW<T, U>(this T vector, U value) where T : BasicVector<U> { vector[3] = value; }
 
 		// 2D
-		private static BasicVector<U> Swizzle2D<T, U>(this T vector, Swizzle1D<T, U> x, Swizzle1D<T, U> y)
+		private static R Swizzle2D<T, U, R>(this T vector, Swizzle1D<T, U> x, Swizzle1D<T, U> y)
 		where T: BasicVector<U>
+        where R: BasicVector<U>, new()
 		{
-			return new BasicVector<U>(
-				vector.Dimension,
-				new[] {x(vector), y(vector)},
-				vector.SimpleOperations
-			);
+            R newVector = new R();
+
+            newVector.SetX(x(vector));
+            newVector.SetY(y(vector));
+
+            return newVector;
 		}
 
 		// 3D
-		private static BasicVector<U> Swizzle3D<T, U>(this T vector, Swizzle1D<T, U> x, Swizzle1D<T, U> y, Swizzle1D<T, U> z)
+		private static BasicVector<U> Swizzle3D<T, U, R>(this T vector, Swizzle1D<T, U> x, Swizzle1D<T, U> y, Swizzle1D<T, U> z)
 		where T: BasicVector<U>
+        where R: BasicVector<U>, new()
 		{
-			return new BasicVector<U>(
-				vector.Dimension,
-				new[] {x(vector), y(vector), z(vector)},
-				vector.SimpleOperations
-			);
+            R newVector = new R();
+
+            newVector.SetX(x(vector));
+            newVector.SetY(y(vector));
+            newVector.SetZ(z(vector));
+
+            return newVector;
 		}
 
 		// 4D
-		private static BasicVector<U> Swizzle4D<T, U>(this T vector, Swizzle1D<T, U> x, Swizzle1D<T, U> y, Swizzle1D<T, U> z, Swizzle1D<T, U> w)
+		private static BasicVector<U> Swizzle4D<T, U, R>(this T vector, Swizzle1D<T, U> x, Swizzle1D<T, U> y, Swizzle1D<T, U> z, Swizzle1D<T, U> w)
 		where T: BasicVector<U>
+        where R: BasicVector<U>, new()
 		{
-			return new BasicVector<U>(
-				vector.Dimension,
-				new[] {x(vector), y(vector), z(vector), w(vector)},
-				vector.SimpleOperations
-			);
+            R newVector = new R();
+
+            newVector.SetX(x(vector));
+            newVector.SetY(y(vector));
+            newVector.SetZ(z(vector));
+            newVector.SetW(w(vector));
+
+            return newVector;
 		}
         #endregion
 
@@ -317,8 +326,8 @@ namespace StarlightEngine.Graphics.Math
         public static void SetX(this FVec2 vector, float value) { vector.SetX<FVec2, float>(value); }
         public static void SetY(this FVec2 vector, float value) { vector.SetY<FVec2, float>(value); }
 
-		public static FVec2 XY(this FVec2 vector) { return (FVec2)Swizzle2D<FVec2, float>(vector, X, Y); }
-		public static FVec2 YX(this FVec2 vector) { return (FVec2)Swizzle2D<FVec2, float>(vector, Y, X); }
+		public static FVec2 XY(this FVec2 vector) { return (FVec2)Swizzle2D<FVec2, float, FVec2>(vector, X, Y); }
+		public static FVec2 YX(this FVec2 vector) { return (FVec2)Swizzle2D<FVec2, float, FVec2>(vector, Y, X); }
         #endregion
 
         #region FVec3 Swizzles
@@ -329,19 +338,19 @@ namespace StarlightEngine.Graphics.Math
         public static void SetY(this FVec3 vector, float value) { vector.SetY<FVec3, float>(value); }
         public static void SetZ(this FVec3 vector, float value) { vector.SetZ<FVec3, float>(value); }
 
-		public static FVec2 XY(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float>(vector, X, Y); }
-		public static FVec2 YX(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float>(vector, Y, X); }
-		public static FVec2 XZ(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float>(vector, X, Z); }
-		public static FVec2 ZX(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float>(vector, Z, X); }
-		public static FVec2 YZ(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float>(vector, Y, Z); }
-		public static FVec2 ZY(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float>(vector, Z, Y); }
+		public static FVec2 XY(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float, FVec2>(vector, X, Y); }
+		public static FVec2 YX(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float, FVec2>(vector, Y, X); }
+		public static FVec2 XZ(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float, FVec2>(vector, X, Z); }
+		public static FVec2 ZX(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float, FVec2>(vector, Z, X); }
+		public static FVec2 YZ(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float, FVec2>(vector, Y, Z); }
+		public static FVec2 ZY(this FVec3 vector) { return (FVec2)Swizzle2D<FVec3, float, FVec2>(vector, Z, Y); }
 
-		public static FVec3 XYZ(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float>(vector, X, Y, Z); }
-		public static FVec3 YXZ(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float>(vector, Y, X, Z); }
-		public static FVec3 XZY(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float>(vector, X, Z, Y); }
-		public static FVec3 YZX(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float>(vector, Y, Z, X); }
-		public static FVec3 ZXY(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float>(vector, Z, X, Y); }
-		public static FVec3 ZYX(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float>(vector, Z, Y, X); }
+		public static FVec3 XYZ(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float, FVec3>(vector, X, Y, Z); }
+		public static FVec3 YXZ(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float, FVec3>(vector, Y, X, Z); }
+		public static FVec3 XZY(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float, FVec3>(vector, X, Z, Y); }
+		public static FVec3 YZX(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float, FVec3>(vector, Y, Z, X); }
+		public static FVec3 ZXY(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float, FVec3>(vector, Z, X, Y); }
+		public static FVec3 ZYX(this FVec3 vector) { return (FVec3)Swizzle3D<FVec3, float, FVec3>(vector, Z, Y, X); }
         #endregion
 
         #region FVec4 Swizzles
@@ -354,37 +363,37 @@ namespace StarlightEngine.Graphics.Math
         public static void SetZ(this FVec4 vector, float value) { vector.SetZ<FVec4, float>(value); }
         public static void SetW(this FVec4 vector, float value) { vector.SetW<FVec4, float>(value); }
 
-		public static FVec2 XY(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, X, Y); }
-		public static FVec2 YX(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, Y, X); }
-		public static FVec2 XZ(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, X, Z); }
-		public static FVec2 ZX(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, Z, X); }
-		public static FVec2 YZ(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, Y, Z); }
-		public static FVec2 ZY(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, Z, Y); }
-		public static FVec2 XW(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, X, W); }
-		public static FVec2 WX(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, W, X); }
-		public static FVec2 WZ(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, W, Z); }
-		public static FVec2 ZW(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, Z, W); }
-		public static FVec2 YW(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, Y, W); }
-		public static FVec2 WY(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float>(vector, W, Y); }
+		public static FVec2 XY(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, X, Y); }
+		public static FVec2 YX(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, Y, X); }
+		public static FVec2 XZ(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, X, Z); }
+		public static FVec2 ZX(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, Z, X); }
+		public static FVec2 YZ(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, Y, Z); }
+		public static FVec2 ZY(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, Z, Y); }
+		public static FVec2 XW(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, X, W); }
+		public static FVec2 WX(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, W, X); }
+		public static FVec2 WZ(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, W, Z); }
+		public static FVec2 ZW(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, Z, W); }
+		public static FVec2 YW(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, Y, W); }
+		public static FVec2 WY(this FVec4 vector) { return (FVec2)Swizzle2D<FVec4, float, FVec2>(vector, W, Y); }
 
-		public static FVec3 XYZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, X, Y, Z); }
-		public static FVec3 YXZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Y, X, Z); }
-		public static FVec3 XZY(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, X, Z, Y); }
-		public static FVec3 YZX(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Y, Z, X); }
-		public static FVec3 ZXY(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Z, X, Y); }
-		public static FVec3 ZYX(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Z, Y, X); }
-		public static FVec3 XWZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, X, W, Z); }
-		public static FVec3 WXZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, W, X, Z); }
-		public static FVec3 XZW(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, X, Z, W); }
-		public static FVec3 WZX(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, W, Z, X); }
-		public static FVec3 ZXW(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Z, X, W); }
-		public static FVec3 ZWX(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Z, W, X); }
-		public static FVec3 YWZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Y, W, Z); }
-		public static FVec3 WYZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, W, Y, Z); }
-		public static FVec3 YZW(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Y, Z, W); }
-		public static FVec3 WZY(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, W, Z, Y); }
-		public static FVec3 ZYW(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Z, Y, W); }
-		public static FVec3 ZWY(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float>(vector, Z, W, Y); }
+		public static FVec3 XYZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, X, Y, Z); }
+		public static FVec3 YXZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Y, X, Z); }
+		public static FVec3 XZY(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, X, Z, Y); }
+		public static FVec3 YZX(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Y, Z, X); }
+		public static FVec3 ZXY(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Z, X, Y); }
+		public static FVec3 ZYX(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Z, Y, X); }
+		public static FVec3 XWZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, X, W, Z); }
+		public static FVec3 WXZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, W, X, Z); }
+		public static FVec3 XZW(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, X, Z, W); }
+		public static FVec3 WZX(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, W, Z, X); }
+		public static FVec3 ZXW(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Z, X, W); }
+		public static FVec3 ZWX(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Z, W, X); }
+		public static FVec3 YWZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Y, W, Z); }
+		public static FVec3 WYZ(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, W, Y, Z); }
+		public static FVec3 YZW(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Y, Z, W); }
+		public static FVec3 WZY(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, W, Z, Y); }
+		public static FVec3 ZYW(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Z, Y, W); }
+		public static FVec3 ZWY(this FVec4 vector) { return (FVec3)Swizzle3D<FVec4, float, FVec3>(vector, Z, W, Y); }
 
         #endregion
     }

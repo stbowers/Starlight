@@ -41,17 +41,21 @@ namespace StarlightEngine.Events
         #region Private Members
         MouseButton m_button;
         MouseAction m_action;
+        KeyModifiers m_modifiers;
         FVec2 m_position;
-        float m_scrollMotion;
+        float m_scrollX;
+        float m_scrollY;
         #endregion
 
         #region Constructors
-        public MouseEvent(MouseButton button, MouseAction action, FVec2 mousePosition, float scrollMotion)
+        public MouseEvent(MouseButton button, MouseAction action, KeyModifiers modifiers, FVec2 mousePosition, float scrollX, float scrollY)
         {
             m_button = button;
             m_action = action;
+            m_modifiers = modifiers;
             m_position = mousePosition;
-            m_scrollMotion = scrollMotion;
+            m_scrollX = scrollX;
+            m_scrollY = scrollY;
         }
         #endregion
 
@@ -89,6 +93,16 @@ namespace StarlightEngine.Events
         }
 
         /// <summary>
+        /// Modifier keys pressed during event
+        /// </summary>
+        public KeyModifiers KeyModifiers
+        {
+            get
+            {
+                return m_modifiers;
+            }
+        }
+        /// <summary>
         /// The mouse position
         /// </summary>
         public FVec2 MousePosition
@@ -100,13 +114,24 @@ namespace StarlightEngine.Events
         }
 
         /// <summary>
-        /// The mouse button action (up, down, or none if this is a motion event)
+        /// The scroll ammount in the x direction
         /// </summary>
-        public float ScrollMotion
+        public float ScrollX
         {
             get
             {
-                return m_scrollMotion;
+                return m_scrollX;
+            }
+        }
+
+        /// <summary>
+        /// The scroll ammount in the y direction
+        /// </summary>
+        public float ScrollY
+        {
+            get
+            {
+                return m_scrollY;
             }
         }
         #endregion

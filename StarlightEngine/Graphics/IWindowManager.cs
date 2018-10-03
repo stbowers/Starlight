@@ -5,17 +5,10 @@ using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics
 {
-	public enum MouseButton
-	{
-		Primary,
-		Secondary,
-		Middle
-	}
-
 	public struct WindowManagerCallbacks
 	{
 		public delegate void KeyboardEventDelegate(Key key, KeyAction action, KeyModifiers modifiers);
-		public delegate void MouseEventDelegate(MouseButton button, MouseAction action, KeyModifiers modifiers, FVec2 mousePosition, float scrollMotion);
+		public delegate void MouseEventDelegate(MouseButton button, MouseAction action, KeyModifiers modifiers, FVec2 mousePosition, float scrollX, float scrollY);
 	}
 
 	/* Interface that any window manager class should implement

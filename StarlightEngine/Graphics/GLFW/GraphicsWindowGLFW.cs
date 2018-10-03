@@ -44,8 +44,11 @@ namespace StarlightEngine.Graphics.GLFW
             m_keyCallbackDelegate = KeyCallback;
             Glfw.SetKeyCallback(m_window, m_keyCallbackDelegate);
 
+            m_mouseButtonDelegate = MouseButtonCallback;
             Glfw.SetMouseButtonCallback(m_window, m_mouseButtonDelegate);
+            m_cursorPosDelegate = CursorPosCallback;
             Glfw.SetCursorPosCallback(m_window, m_cursorPosDelegate);
+            m_scrollDelegate = ScrollCallback;
             Glfw.SetScrollCallback(m_window, m_scrollDelegate);
         }
 
@@ -62,7 +65,20 @@ namespace StarlightEngine.Graphics.GLFW
             double mouseYPos = 0.0f;
             Glfw.GetCursorPos(m_window, ref mouseXPos, ref mouseYPos);
             FVec2 mousePosition = (m_windowSpaceToScreenSpace * new FVec4((float)mouseXPos, (float)mouseYPos, 0.0f, 1.0f)).XY();
-            m_mouseEventDelegate[window](_button, _action, _modifiers, mousePosition, 0.0f);
+            m_mouseEventDelegate[window](_button, _action, _modifiers, mousePosition, 0.0f, 0.0f);
+        }
+
+        private void CursorPosCallback(IntPtr window, double xPos, double yPos){
+            FVec2 mousePosition = (m_windowSpaceToScreenSpace * new FVec4((float)xPos, (float)yPos, 0.0f, 1.0f)).XY();
+            m_mouseEventDelegate[window](MouseButton.None, MouseAction.None, KeyModifiers.None, mousePosition, 0.0f, 0.0f);
+        }
+
+        private void ScrollCallback(IntPtr window, double xOffset, double yOffset){
+            double mouseXPos = 0.0f;
+            double mouseYPos = 0.0f;
+            Glfw.GetCursorPos(m_window, ref mouseXPos, ref mouseYPos);
+            FVec2 mousePosition = (m_windowSpaceToScreenSpace * new FVec4((float)mouseXPos, (float)mouseYPos, 0.0f, 1.0f)).XY();
+            m_mouseEventDelegate[window](MouseButton.None, MouseAction.None, KeyModifiers.None, mousePosition, (float)xOffset, (float)yOffset);
         }
 
         ~GraphicsWindowGLFW()
@@ -137,10 +153,10 @@ namespace StarlightEngine.Graphics.GLFW
             int glfwButtonID = 0;
             switch (button)
             {
-                case MouseButton.Primary:
+                case MouseButton.Left:
                     glfwButtonID = (int)glfw3.Mouse._Left;
                     break;
-                case MouseButton.Secondary:
+                case MouseButton.Right:
                     glfwButtonID = (int)glfw3.Mouse._Right;
                     break;
                 case MouseButton.Middle:
