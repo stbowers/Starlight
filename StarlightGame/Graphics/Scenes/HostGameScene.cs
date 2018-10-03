@@ -4,6 +4,7 @@ using StarlightEngine.Graphics.Vulkan;
 using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Graphics.Vulkan.Objects;
 using StarlightEngine.Graphics.Math;
+using StarlightEngine.Events;
 
 namespace StarlightGame.Graphics.Scenes
 {
@@ -11,6 +12,7 @@ namespace StarlightGame.Graphics.Scenes
 	{
 		VulkanAPIManager m_apiManager;
         SceneManager m_sceneManager;
+		EventManager m_eventManager;
 
 		// Objects
         VulkanUIButton m_backButton;
@@ -18,7 +20,7 @@ namespace StarlightGame.Graphics.Scenes
 		// Animation thread
 		Thread m_animationThread;
 
-		public HostGameScene(VulkanAPIManager apiManager, SceneManager sceneManager)
+		public HostGameScene(VulkanAPIManager apiManager, SceneManager sceneManager, EventManager eventManager)
 		{
 			/* Layers:
 			 * 	1: background
@@ -26,9 +28,10 @@ namespace StarlightGame.Graphics.Scenes
 			 */
 			m_apiManager = apiManager;
             m_sceneManager = sceneManager;
+			m_eventManager = eventManager;
 
             // create back button
-			m_backButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Back", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), onBackClicked);
+			m_backButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Back", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), eventManager, onBackClicked);
             AddObject(2, m_backButton);
 		}
 

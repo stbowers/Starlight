@@ -63,18 +63,18 @@ namespace StarlightGame
 			// create fps counter
 			VulkanTextObject fpsText = new VulkanTextObject(apiManager, StaticFonts.Font_Arial, "FPS: 00.00", 20, new FVec2(-.99f, -.99f), 1.0f, true);
 
-			// create mouse position indicator
-			VulkanTextObject mousePosText = new VulkanTextObject(apiManager, StaticFonts.Font_Arial, "Mouse: (0.00, 0.00)", 20, new FVec2(-.99f, -.9f), 1.0f, true);
+			// Mouse position tracker
+			MousePositionWrapper mousePos = new MousePositionWrapper(apiManager, eventManager);
 
 			// set special objects for renderer
 			IRendererSpecialObjectRefs specialObjectRefs = new IRendererSpecialObjectRefs();
 			specialObjectRefs.fpsCounter = fpsText;
-			specialObjectRefs.mousePositionCounter = mousePosText;
+			specialObjectRefs.mousePositionCounter = mousePos.GetMousePosText();
 			renderer.SetSpecialObjectReferences(specialObjectRefs);
 			renderer.SetSpecialObjectsFlags(IRendererSpecialObjectFlags.RenderFPSCounter | IRendererSpecialObjectFlags.RenderMousePositionCounter);
 
 			// Set up title scene
-			Scene titleScene = new TitleScene(apiManager, sceneManager);
+			Scene titleScene = new TitleScene(apiManager, sceneManager, eventManager);
 			sceneManager.PushScene(titleScene);
 
 			// Run game loop
@@ -89,9 +89,6 @@ namespace StarlightGame
                     renderer.Render();
                     renderer.Present();
                     framesDrawn++;
-
-					FVec2 mousePos = window.GetMousePosition();
-					mousePosText.UpdateText(StaticFonts.Font_Arial, string.Format("Mouse: ({0:0.##}, {1:0.##})", mousePos.X(), mousePos.Y()), 20);
 
                     if (sw.ElapsedMilliseconds > 1000)
                     {
@@ -110,6 +107,27 @@ namespace StarlightGame
 			eventManager.TerminateEventManagerAndJoin();
 
             Console.WriteLine("Closing Application");
+		}
+
+
+		public class MousePositionWrapper{
+			VulkanAPIManager m_apiManager;
+			VulkanTextObject m_mousePosText;
+			public MousePositionWrapper(VulkanAPIManager apiManager, EventManager eventManager){
+				// create mouse position indicator
+				m_mousePosText = new VulkanTextObject(apiManager, StaticFonts.Font_Arial, "Mouse: (0.00, 0.00)", 20, new FVec2(-.99f, -.9f), 1.0f, true);
+
+				eventManager.AddListener(MouseEvent, EventType.Mouse);
+			}
+
+			public void MouseEvent(IEvent e){
+				FVec2 mousePos = (e as MouseEvent).MousePosition;
+				m_mousePosText.UpdateText(StaticFonts.Font_Arial, string.Format("Mouse: ({0:0.##}, {1:0.##})", mousePos.X(), mousePos.Y()), 20);
+			}
+
+			public VulkanTextObject GetMousePosText(){
+				return m_mousePosText;
+			}
 		}
 	}
 }

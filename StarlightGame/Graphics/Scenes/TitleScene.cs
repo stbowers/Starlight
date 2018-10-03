@@ -4,6 +4,7 @@ using StarlightEngine.Graphics.Vulkan;
 using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Graphics.Vulkan.Objects;
 using StarlightEngine.Graphics.Math;
+using StarlightEngine.Events;
 
 namespace StarlightGame.Graphics.Scenes
 {
@@ -11,6 +12,7 @@ namespace StarlightGame.Graphics.Scenes
 	{
 		VulkanAPIManager m_apiManager;
 		SceneManager m_sceneManager;
+		EventManager m_eventManager;
 
 		// Objects
 		Vulkan2DSprite m_title;
@@ -23,7 +25,7 @@ namespace StarlightGame.Graphics.Scenes
 		// Children scenes
 		Scene m_hostGameScene;
 
-		public TitleScene(VulkanAPIManager apiManager, SceneManager sceneManager)
+		public TitleScene(VulkanAPIManager apiManager, SceneManager sceneManager, EventManager eventManager)
 		{
 			/* Layers:
 			 * 	1: background
@@ -31,6 +33,7 @@ namespace StarlightGame.Graphics.Scenes
 			 */
 			m_apiManager = apiManager;
 			m_sceneManager = sceneManager;
+			m_eventManager = eventManager;
 
 			m_title = new Vulkan2DSprite(apiManager, "./assets/Title.png", new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f));
 			AddObject(1, m_title);
@@ -40,9 +43,9 @@ namespace StarlightGame.Graphics.Scenes
 			AddObject(2, m_loadingBar);
 
 			// Host Game
-			m_hostGameScene = new HostGameScene(m_apiManager, m_sceneManager);
+			m_hostGameScene = new HostGameScene(m_apiManager, m_sceneManager, m_eventManager);
 			//StartGameButtonWrapper button = new StartGameButtonWrapper(apiManager, titleScene, arialFont, sceneManager, newGameScene);
-			m_hostGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Host Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), onHostGameClicked);
+			m_hostGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Host Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), m_eventManager, onHostGameClicked);
 			AddObject(2, m_hostGameButton);
 
 			// Start animation on new thread

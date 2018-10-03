@@ -10,6 +10,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 	public class VulkanUIButton : ICollectionObject
 	{
 		VulkanAPIManager m_apiManager;
+		EventManager m_eventManager;
+
+		// Button state
+		bool m_selected = false;
+		bool m_clicked = false;
 
 		// objects
 		VulkanTextObject m_text;
@@ -22,12 +27,19 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		// delegates
 		public delegate void OnClickDelegate();
+		public delegate void OnSelectDelegate();
 		OnClickDelegate m_onClickDelegate;
+		OnSelectDelegate m_onSelectDelegate;
 
-		public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, OnClickDelegate onClickDelegate)
+		public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, EventManager eventManager, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null)
 		{
 			m_apiManager = apiManager;
+			m_eventManager = eventManager;
 			m_onClickDelegate = onClickDelegate;
+			m_onSelectDelegate = onSelectDelegate;
+
+			// Register mouse event listener
+			m_eventManager.AddListener(MouseEventListener, EventType.Mouse);
 
 			// center text
 			float textWidth = AngelcodeFontLoader.GetWidthOfString(font, fontSize, text) / 640.0f;
@@ -46,27 +58,40 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		public void Update()
 		{
-			FVec2 mouseVector = m_apiManager.GetWindowManager().GetMousePosition();
-			bool isClicked = m_apiManager.GetWindowManager().IsMouseButtonPressed(MouseButton.Left);
-			if (m_collider.IsCollision(new FVec3(mouseVector.X(), mouseVector.Y(), 0.0f)))
+			if (m_clicked)
 			{
-				if (isClicked)
-				{
-					m_mouseClickHighlight.Visible = true;
-					m_mouseOverHighlight.Visible = false;
-
-					m_onClickDelegate();
-				}
-				else
-				{
-					m_mouseClickHighlight.Visible = false;
-					m_mouseOverHighlight.Visible = true;
-				}
+				m_mouseClickHighlight.Visible = true;
 			}
 			else
 			{
 				m_mouseClickHighlight.Visible = false;
+			}
+			if (m_selected){
+				m_mouseOverHighlight.Visible = true;
+			}
+			else
+			{
 				m_mouseOverHighlight.Visible = false;
+			}
+		}
+
+		public void MouseEventListener(IEvent e){
+			// cast e to MouseEvent
+			MouseEvent mouseEvent = e as MouseEvent;
+
+			// Determine if mouse position is inside our collider, and select if it is
+			bool selected = m_collider.IsCollision(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
+			if (!m_selected && selected){
+				m_onSelectDelegate?.Invoke();
+			}
+			m_selected = selected;
+
+			// If this is a mouse click event, call the click delegate
+			if (m_selected && mouseEvent.Action == MouseAction.Down){
+				m_onClickDelegate?.Invoke();
+				m_clicked = true;
+			} else if (mouseEvent.Action == MouseAction.Up) {
+				m_clicked = false;
 			}
 		}
 

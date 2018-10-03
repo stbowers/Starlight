@@ -44,7 +44,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
         MemoryProperties m_preferredFlags;
 
         List<VulkanManagedBufferSection> m_sections = new List<VulkanManagedBufferSection>();
-        int m_usedSpace;
 
         int m_numBuffers;
         VulkanCore.Buffer[] m_buffers;
@@ -59,8 +58,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             m_usage = usage;
             m_requiredFlags = requiredFlags;
             m_preferredFlags = preferredFlags;
-
-            m_usedSpace = 0;
 
             m_transient = transient;
 
@@ -96,7 +93,14 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 		 */
         public VulkanManagedBufferSection AddSection(int size, byte[] data)
         {
-            int padding = m_sectionAlignment - (m_usedSpace % m_sectionAlignment);
+            int usedSpace = 0;
+            foreach (VulkanManagedBufferSection section in m_sections){
+                if (section.NewOffset + section.NewSize > usedSpace){
+                    usedSpace = section.NewOffset + section.NewSize;
+                }
+            }
+
+            int padding = m_sectionAlignment - (usedSpace % m_sectionAlignment);
 
             VulkanManagedBufferSection newSection = new VulkanManagedBufferSection();
             newSection.Offsets = new int[m_numBuffers];
@@ -106,14 +110,12 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             newSection.Data = data;
             for (int i = 0; i < m_numBuffers; i++)
             {
-                newSection.Offsets[i] = m_usedSpace + padding;
+                newSection.Offsets[i] = usedSpace + padding;
                 newSection.Sizes[i] = size;
                 newSection.HasChanged[i] = true;
             }
-            newSection.NewOffset = m_usedSpace + padding;
+            newSection.NewOffset = usedSpace + padding;
             newSection.NewSize = size;
-
-            m_usedSpace += size + padding;
 
             m_sections.Add(newSection);
             return newSection;
@@ -158,7 +160,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             int padding = (m_sectionAlignment - (section.NewOffset % m_sectionAlignment)) % m_sectionAlignment;
             section.NewOffset += padding;
             int newEnd = section.NewOffset + section.NewSize; // new last index of this section
-            m_usedSpace += (newEnd - oldEnd);
             memoryFootprintChanged |= oldEnd != newEnd;
 			for (int i = 0; i < m_numBuffers; i++){
 				section.HasChanged[i] = true;
@@ -226,6 +227,15 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                 m_apiManager.WaitForDeviceIdleAndLock();
             }
 
+            // Calculate how much space we need in our buffer, and lock each section
+            int spaceNeeded = 0;
+            foreach (VulkanManagedBufferSection section in m_sections){
+                section.SectionLock.EnterReadLock();
+                if (section.NewOffset + section.NewSize > spaceNeeded){
+                    spaceNeeded = section.NewOffset + section.NewSize;
+                }
+            }
+
             // Get buffer
             if (m_buffers[swapchainIndex] == null)
             {
@@ -233,13 +243,13 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                 // if this buffer is not host visible, we'll need to make sure the buffer can be a transfer destination
                 if (!m_requiredFlags.HasFlag(MemoryProperties.HostVisible))
                 {
-                    m_apiManager.CreateBuffer(m_usedSpace, m_usage | BufferUsages.TransferDst, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
+                    m_apiManager.CreateBuffer(spaceNeeded, m_usage | BufferUsages.TransferDst, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
                 }
             }
             else
             {
                 // If we already have a buffer, check if there is enough space for our usage
-                if (m_bufferAllocations[swapchainIndex].size <= m_usedSpace)
+                if (m_bufferAllocations[swapchainIndex].size <= spaceNeeded)
                 {
                     // If there isn't create a new buffer
                     // free old buffer
@@ -250,7 +260,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                     // if this buffer is not host visible, we'll need to make sure the buffer can be a transfer destination
                     if (!m_requiredFlags.HasFlag(MemoryProperties.HostVisible))
                     {
-                        m_apiManager.CreateBuffer(m_usedSpace, m_usage | BufferUsages.TransferDst, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
+                        m_apiManager.CreateBuffer(spaceNeeded, m_usage | BufferUsages.TransferDst, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
                     }
                 }
             }
@@ -266,15 +276,12 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             }
             else
             {
-                m_apiManager.CreateBuffer(m_usedSpace, BufferUsages.TransferSrc, MemoryProperties.HostVisible, MemoryProperties.None, out stagingBuffer, out stagingBufferAllocation);
+                m_apiManager.CreateBuffer(spaceNeeded, BufferUsages.TransferSrc, MemoryProperties.HostVisible, MemoryProperties.None, out stagingBuffer, out stagingBufferAllocation);
                 mappedMemory = stagingBufferAllocation.MapAllocation();
             }
 
             foreach (VulkanManagedBufferSection section in m_sections)
             {
-                // Get read lock
-                section.SectionLock.EnterReadLock();
-
                 // Write section to mapped memory
                 if (section.HasChanged[swapchainIndex])
                 {
@@ -282,9 +289,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                     section.Sizes[swapchainIndex] = section.NewSize;
                     Marshal.Copy(section.Data, 0, mappedMemory + section.Offsets[swapchainIndex], section.Data.Length);
                 }
-
-                // Get read lock
-                section.SectionLock.ExitReadLock();
             }
 
             // Unmap memory and copy staging buffer if used
@@ -299,7 +303,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                 stagingBufferAllocation.UnmapAllocation();
 
                 // copy staging buffer
-                m_apiManager.CopyBufferToBuffer(stagingBuffer, 0, m_buffers[swapchainIndex], 0, m_usedSpace);
+                m_apiManager.CopyBufferToBuffer(stagingBuffer, 0, m_buffers[swapchainIndex], 0, spaceNeeded);
 
                 // free staging buffer
                 m_apiManager.FreeAllocation(stagingBufferAllocation);
@@ -330,6 +334,11 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                         }
                     }
                 }
+            }
+
+            // release section locks
+            foreach (VulkanManagedBufferSection section in m_sections){
+                section.SectionLock.ExitReadLock();
             }
 
             // release buffer lock
