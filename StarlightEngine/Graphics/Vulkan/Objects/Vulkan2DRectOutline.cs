@@ -38,10 +38,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			this.Visible = true;
 
 			// Create mesh data
-			FVec2 topLeft = new FVec2(position.X, position.Y);
-			FVec2 topRight = new FVec2(position.X + size.X, position.Y);
-			FVec2 bottomLeft = new FVec2(position.X, position.Y + size.Y);
-			FVec2 bottomRight = new FVec2(position.X + size.X, position.Y + size.Y);
+			FVec2 topLeft = new FVec2(position.X(), position.Y());
+			FVec2 topRight = new FVec2(position.X() + size.X(), position.Y());
+			FVec2 bottomLeft = new FVec2(position.X(), position.Y() + size.Y());
+			FVec2 bottomRight = new FVec2(position.X() + size.X(), position.Y() + size.Y());
 			int[] indices = { 0, 1, 1, 3, 3, 2, 2, 0 };
 			m_numIndices = 8;
 

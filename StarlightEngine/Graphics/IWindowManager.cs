@@ -1,17 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using glfw3;
 using StarlightEngine.Graphics.Math;
+using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics
 {
-	public enum KeyAction
-	{
-		Press,
-		Release,
-		Repeat
-	}
-
 	public enum MouseButton
 	{
 		Primary,
@@ -21,7 +14,8 @@ namespace StarlightEngine.Graphics
 
 	public struct WindowManagerCallbacks
 	{
-		public delegate void KeyboardEventDelegate(Key key, KeyAction action, List<KeyModifier> modifiers);
+		public delegate void KeyboardEventDelegate(Key key, KeyAction action, KeyModifiers modifiers);
+		public delegate void MouseEventDelegate(MouseButton button, MouseAction action, KeyModifiers modifiers, FVec2 mousePosition, float scrollMotion);
 	}
 
 	/* Interface that any window manager class should implement
@@ -53,6 +47,7 @@ namespace StarlightEngine.Graphics
         void PollEvents();
 
 		void SetKeyboardEventDelegate(WindowManagerCallbacks.KeyboardEventDelegate keyboardEventDelegate);
+		void SetMouseEventDelegate(WindowManagerCallbacks.MouseEventDelegate mouseEventDelegate);
 
 		/* getters for width and height
 		 */

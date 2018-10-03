@@ -91,7 +91,7 @@ namespace StarlightGame
                     framesDrawn++;
 
 					FVec2 mousePos = window.GetMousePosition();
-					mousePosText.UpdateText(StaticFonts.Font_Arial, string.Format("Mouse: ({0:0.##}, {1:0.##})", mousePos.X, mousePos.Y), 20);
+					mousePosText.UpdateText(StaticFonts.Font_Arial, string.Format("Mouse: ({0:0.##}, {1:0.##})", mousePos.X(), mousePos.Y()), 20);
 
                     if (sw.ElapsedMilliseconds > 1000)
                     {

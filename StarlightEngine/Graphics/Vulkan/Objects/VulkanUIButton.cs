@@ -30,10 +30,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 			// center text
 			float textWidth = AngelcodeFontLoader.GetWidthOfString(font, fontSize, text) / 640.0f;
-			float textHeight = AngelcodeFontLoader.GetHeightOfString(font, fontSize, text, size.X) / 360.0f;
-			FVec2 textOffset = new FVec2(location.X + ((size.X - textWidth) / 2.0f), location.Y + ((size.Y - textHeight) / 2.0f));
+			float textHeight = AngelcodeFontLoader.GetHeightOfString(font, fontSize, text, size.X()) / 360.0f;
+			FVec2 textOffset = new FVec2(location.X() + ((size.X() - textWidth) / 2.0f), location.Y() + ((size.Y() - textHeight) / 2.0f));
 
-			m_text = new VulkanTextObject(apiManager, font, text, fontSize, textOffset, size.X);
+			m_text = new VulkanTextObject(apiManager, font, text, fontSize, textOffset, size.X());
 			m_mouseOverHighlight = new Vulkan2DRect(apiManager, location, size, new FVec4(1.0f, 1.0f, 1.0f, .2f));
 			m_mouseOverHighlight.Visible = false;
 			m_mouseClickHighlight = new Vulkan2DRect(apiManager, location, size, new FVec4(.8f, .8f, .8f, .2f));
@@ -47,7 +47,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		{
 			FVec2 mouseVector = m_apiManager.GetWindowManager().GetMousePosition();
 			bool isClicked = m_apiManager.GetWindowManager().IsMouseButtonPressed(MouseButton.Primary);
-			if (m_collider.IsCollision(new FVec3(mouseVector.X, mouseVector.Y, 0.0f)))
+			if (m_collider.IsCollision(new FVec3(mouseVector.X(), mouseVector.Y(), 0.0f)))
 			{
 				if (isClicked)
 				{

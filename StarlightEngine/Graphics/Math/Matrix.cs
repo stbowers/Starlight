@@ -426,24 +426,24 @@ namespace StarlightEngine.Graphics.Math
 
             FVec3 f = center - eye;
 			f.Normalize();
-            FVec3 nUp = new FVec3(up.X, up.Y, up.Z);
+            FVec3 nUp = up.XYZ();
             nUp.Normalize();
             FVec3 s = f.Cross(nUp);
-            FVec3 ns = new FVec3(s.X, s.Y, s.Z);
+            FVec3 ns = s.XYZ();
             ns.Normalize();
             FVec3 u = ns.Cross(f);
 
-            newMatrix[0, 0] = s.X;
-            newMatrix[0, 1] = s.Y;
-            newMatrix[0, 2] = s.Z;
+            newMatrix[0, 0] = s.X();
+            newMatrix[0, 1] = s.Y();
+            newMatrix[0, 2] = s.Z();
             newMatrix[0, 3] = 0;
-            newMatrix[1, 0] = u.X;
-            newMatrix[1, 1] = u.Y;
-            newMatrix[1, 2] = u.Z;
+            newMatrix[1, 0] = u.X();
+            newMatrix[1, 1] = u.Y();
+            newMatrix[1, 2] = u.Z();
             newMatrix[1, 3] = 0;
-            newMatrix[2, 0] = -f.X;
-            newMatrix[2, 1] = -f.Y;
-            newMatrix[2, 2] = -f.Z;
+            newMatrix[2, 0] = -f.X();
+            newMatrix[2, 1] = -f.Y();
+            newMatrix[2, 2] = -f.Z();
             newMatrix[2, 3] = 0;
             newMatrix[3, 0] = 0;
             newMatrix[3, 1] = 0;
@@ -451,9 +451,9 @@ namespace StarlightEngine.Graphics.Math
             newMatrix[3, 3] = 1.0f;
 
 			FMat4 translationMatrix = new FMat4(1.0f);
-			translationMatrix[0, 3] = -eye.X;
-			translationMatrix[1, 3] = -eye.Y;
-			translationMatrix[2, 3] = -eye.Z;
+			translationMatrix[0, 3] = -eye.X();
+			translationMatrix[1, 3] = -eye.Y();
+			translationMatrix[2, 3] = -eye.Z();
 			newMatrix = newMatrix * translationMatrix;
 
             return newMatrix;
@@ -479,11 +479,11 @@ namespace StarlightEngine.Graphics.Math
 
 			float s = (float)System.Math.Sin(angle);
 			float c = (float)System.Math.Cos(angle);
-			FVec3 nAxis = new FVec3(axis.X, axis.Y, axis.Z);
+			FVec3 nAxis = axis.XYZ();
 			nAxis.Normalize();
-			float x = nAxis.X;
-			float y = nAxis.Y;
-			float z = nAxis.Z;
+			float x = nAxis.X();
+			float y = nAxis.Y();
+			float z = nAxis.Z();
 
 			result[0, 0] = (x * x * (1 - c)) + (c);
 			result[0, 1] = (x * y * (1 - c)) - (z * s);
@@ -509,9 +509,9 @@ namespace StarlightEngine.Graphics.Math
 		{
 			FMat4 newMatrix = new FMat4(1.0f);
 
-			newMatrix[0, 3] = translate.X;
-			newMatrix[1, 3] = translate.Y;
-			newMatrix[2, 3] = translate.Z;
+			newMatrix[0, 3] = translate.X();
+			newMatrix[1, 3] = translate.Y();
+			newMatrix[2, 3] = translate.Z();
 
 			return newMatrix;
 		}
@@ -520,9 +520,9 @@ namespace StarlightEngine.Graphics.Math
 		{
 			FMat4 newMatrix = new FMat4(1.0f);
 
-			newMatrix[0, 0] = scale.X;
-			newMatrix[1, 1] = scale.Y;
-			newMatrix[2, 2] = scale.Z;
+			newMatrix[0, 0] = scale.X();
+			newMatrix[1, 1] = scale.Y();
+			newMatrix[2, 2] = scale.Z();
 			newMatrix[3, 3] = 1;
 
 			return newMatrix;

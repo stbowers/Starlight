@@ -21,7 +21,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_size = size;
 
 			float fill = Functions.Clamp(percentFilled, 0.0f, 1.0f);
-			FVec2 fillSize = new FVec2(fill * size.X, size.Y);
+			FVec2 fillSize = new FVec2(fill * size.X(), size.Y());
 			m_fill = new Vulkan2DRect(apiManager, position, fillSize, color);
 			m_outline = new Vulkan2DRectOutline(apiManager, position, size, color);
 
@@ -35,7 +35,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		public void UpdatePercentage(float newPercentage)
 		{
 			float fill = Functions.Clamp(newPercentage, 0.0f, 1.0f);
-			FVec2 fillSize = new FVec2(fill * m_size.X, m_size.Y);
+			FVec2 fillSize = new FVec2(fill * m_size.X(), m_size.Y());
 
 			m_fill.UpdateSize(fillSize);
 		}

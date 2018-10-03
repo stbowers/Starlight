@@ -46,7 +46,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_transient = transient;
 
 			// Create text mesh
-			m_position = new FVec2(location.X * (apiManager.GetSwapchainImageExtent().Width / 2.0f), location.Y * (apiManager.GetSwapchainImageExtent().Height / 2.0f));
+			m_position = new FVec2(location.X() * (apiManager.GetSwapchainImageExtent().Width / 2.0f), location.Y() * (apiManager.GetSwapchainImageExtent().Height / 2.0f));
 			m_width = width * (apiManager.GetSwapchainImageExtent().Width / 2);
 			m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, text, m_position, m_width);
 			m_numIndices = m_textMesh.numVertices;

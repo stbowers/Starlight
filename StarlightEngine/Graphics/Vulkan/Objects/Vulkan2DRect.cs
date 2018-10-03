@@ -52,10 +52,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			this.Visible = true;
 
 			// Create mesh data
-			FVec2 topLeft = new FVec2(position.X, position.Y);
-			FVec2 topRight = new FVec2(position.X + size.X, position.Y);
-			FVec2 bottomLeft = new FVec2(position.X, position.Y + size.Y);
-			FVec2 bottomRight = new FVec2(position.X + size.X, position.Y + size.Y);
+			FVec2 topLeft = new FVec2(position.X(), position.Y());
+			FVec2 topRight = new FVec2(position.X() + size.X(), position.Y());
+			FVec2 bottomLeft = new FVec2(position.X(), position.Y() + size.Y());
+			FVec2 bottomRight = new FVec2(position.X() + size.X(), position.Y() + size.Y());
 			int[] indices = { 0, 1, 3, 3, 2, 0 };
 			m_numIndices = 6;
 
@@ -105,10 +105,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_size = newSize;
 
 			// Create mesh data
-			FVec2 topLeft = new FVec2(m_position.X, m_position.Y);
-			FVec2 topRight = new FVec2(m_position.X + m_size.X, m_position.Y);
-			FVec2 bottomLeft = new FVec2(m_position.X, m_position.Y + m_size.Y);
-			FVec2 bottomRight = new FVec2(m_position.X + m_size.X, m_position.Y + m_size.Y);
+			FVec2 topLeft = new FVec2(m_position.X(), m_position.Y());
+			FVec2 topRight = new FVec2(m_position.X() + m_size.X(), m_position.Y());
+			FVec2 bottomLeft = new FVec2(m_position.X(), m_position.Y() + m_size.Y());
+			FVec2 bottomRight = new FVec2(m_position.X() + m_size.X(), m_position.Y() + m_size.Y());
 			int[] indices = new[] { 0, 1, 3, 3, 2, 0 };
 			m_numIndices = 6;
 

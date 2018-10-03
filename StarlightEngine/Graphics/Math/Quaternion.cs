@@ -10,44 +10,44 @@ namespace StarlightEngine.Graphics.Math
 		{
 			get
 			{
-				return X;
+				return this.X();
 			}
 			set
 			{
-				X = value;
+				this.SetX(value);
 			}
 		}
 		public float I
 		{
 			get
 			{
-				return Y;
+				return this.Y();
 			}
 			set
 			{
-				Y = value;
+				this.SetY(value);
 			}
 		}
 		public float J
 		{
 			get
 			{
-				return Z;
+				return this.Z();
 			}
 			set
 			{
-				Z = value;
+				this.SetZ(value);
 			}
 		}
 		public float K
 		{
 			get
 			{
-				return W;
+				return this.W();
 			}
 			set
 			{
-				W = value;
+				this.SetW(value);
 			}
 		}
 
@@ -106,9 +106,9 @@ namespace StarlightEngine.Graphics.Math
 			Quaternion rotation = new Quaternion();
 
 			rotation.R = (float)System.Math.Cos(angle / 2);
-			rotation.I = (float)System.Math.Sin(angle / 2) * axis.X;
-			rotation.J = (float)System.Math.Sin(angle / 2) * axis.Y;
-			rotation.K = (float)System.Math.Sin(angle / 2) * axis.Z;
+			rotation.I = (float)System.Math.Sin(angle / 2) * axis.X();
+			rotation.J = (float)System.Math.Sin(angle / 2) * axis.Y();
+			rotation.K = (float)System.Math.Sin(angle / 2) * axis.Z();
 
 			return rotation;
 		}

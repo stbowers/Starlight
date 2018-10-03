@@ -255,7 +255,7 @@ namespace StarlightEngine.Graphics.Fonts
             float xPadding = scaleX * (float)font.padding[1];
 
             // keep track of where to put new characters
-            FVec2 cursor = new FVec2(offset.X + xPadding, offset.Y + (scaleY * font.@base) - yPadding);
+            FVec2 cursor = new FVec2(offset.X() + xPadding, offset.Y() + (scaleY * font.@base) - yPadding);
 
             // loop through words, adding them to the mesh one at a time
             int lineWordCount = 0;
@@ -271,12 +271,12 @@ namespace StarlightEngine.Graphics.Fonts
 
                 // Else check if there is enough space for the word, and if not move the cursor to the next line
                 float wordWidth = GetWidthOfString(font, size, word);
-                if (cursor.X + wordWidth > width)
+                if (cursor.X() + wordWidth > width)
                 {
                     // move cursor to next line by resting x and adding lineHeight to it
-                    cursor.X = offset.X + xPadding;
-                    cursor.Y += scaleY * font.lineHeight;
-                    cursor.Y -= yPadding;
+                    cursor.SetX(xPadding);
+                    cursor.SetY(cursor.Y() + (scaleY * font.lineHeight));
+                    cursor.SetY(cursor.Y() - yPadding);
 
                     // reset word count
                     lineWordCount = 0;
@@ -285,7 +285,7 @@ namespace StarlightEngine.Graphics.Fonts
                 // if this is not the first word of the line add a space
                 if (lineWordCount > 0)
                 {
-                    cursor.X += scaleX * font.GetGlyph(Encoding.ASCII.GetBytes(" ")[0]).xadvance;
+                    cursor.SetX(cursor.X() + (scaleX * font.GetGlyph(Encoding.ASCII.GetBytes(" ")[0]).xadvance));
                 }
 
                 // add the word
@@ -366,19 +366,19 @@ namespace StarlightEngine.Graphics.Fonts
 				// If this is the first word of the line add it without checking the length
 				if (lineWordCount == 0)
 				{
-					cursor.X += GetWidthOfString(font, size, word);
+					cursor.SetX(cursor.X() + GetWidthOfString(font, size, word));
 					lineWordCount++;
 					continue;
 				}
 
 				// Else check if there is enough space for the word, and if not move the cursor to the next line
 				float wordWidth = GetWidthOfString(font, size, word);
-				if (cursor.X + wordWidth > width)
+				if (cursor.X() + wordWidth > width)
 				{
 					// move cursor to next line by resting x and adding lineHeight to it
-					cursor.X = xPadding;
-					cursor.Y += scaleY * font.lineHeight;
-					cursor.Y -= yPadding;
+					cursor.SetX(xPadding);
+					cursor.SetY(cursor.Y() + (scaleY * font.lineHeight));
+					cursor.SetY(cursor.Y() - yPadding);
 
 					// reset word count
 					lineWordCount = 0;
@@ -387,14 +387,14 @@ namespace StarlightEngine.Graphics.Fonts
 				// if this is not the first word of the line add a space
 				if (lineWordCount > 0)
 				{
-					cursor.X += scaleX * font.GetGlyph(Encoding.ASCII.GetBytes(" ")[0]).xadvance;
+					cursor.SetX(cursor.X() + (scaleX * font.GetGlyph(Encoding.ASCII.GetBytes(" ")[0]).xadvance));
 				}
 
 				// add the word
 				lineWordCount++;
 			}
 
-			return cursor.Y;
+			return cursor.Y();
 		}
 
         private static void AddWordToMesh(AngelcodeFont font, float scaleX, float scaleY, string word, ref FVec2 cursor, ref List<FVec4> verts, ref List<int> indices)
@@ -422,10 +422,10 @@ namespace StarlightEngine.Graphics.Fonts
 
                 // Calculate verticies for char
                 int topLeftIndex = verts.Count;
-                FVec4 topLeft = new FVec4(cursor.X + xOffset, cursor.Y + yOffset - charHeight, textureX, textureY);
-                FVec4 topRight = new FVec4(cursor.X + charWidth + xOffset, cursor.Y + yOffset - charHeight, textureX + textureWidth, textureY);
-                FVec4 bottomLeft = new FVec4(cursor.X + xOffset, cursor.Y + yOffset, textureX, textureY + textureHeight);
-                FVec4 bottomRight = new FVec4(cursor.X + charWidth + xOffset, cursor.Y + yOffset, textureX + textureWidth, textureY + textureHeight);
+                FVec4 topLeft = new FVec4(cursor.X() + xOffset, cursor.Y() + yOffset - charHeight, textureX, textureY);
+                FVec4 topRight = new FVec4(cursor.X() + charWidth + xOffset, cursor.Y() + yOffset - charHeight, textureX + textureWidth, textureY);
+                FVec4 bottomLeft = new FVec4(cursor.X() + xOffset, cursor.Y() + yOffset, textureX, textureY + textureHeight);
+                FVec4 bottomRight = new FVec4(cursor.X() + charWidth + xOffset, cursor.Y() + yOffset, textureX + textureWidth, textureY + textureHeight);
                 verts.Add(topLeft);
                 verts.Add(topRight);
                 verts.Add(bottomLeft);
@@ -435,8 +435,8 @@ namespace StarlightEngine.Graphics.Fonts
                 indices.AddRange(new[] { topLeftIndex + 0, topLeftIndex + 1, topLeftIndex + 3, topLeftIndex + 3, topLeftIndex + 2, topLeftIndex + 0 });
 
                 // move cursor
-                cursor.X += scaleX * font.GetGlyph((int)ch).xadvance;
-                cursor.X -= paddingOffset - kerningOffset;
+                cursor.SetX(cursor.X() + (scaleX * font.GetGlyph((int)ch).xadvance));
+                cursor.SetX(cursor.X() - (paddingOffset - kerningOffset));
             }
         }
 	}
