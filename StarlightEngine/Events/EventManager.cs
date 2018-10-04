@@ -19,12 +19,12 @@ namespace StarlightEngine.Events
         private class EventListener
         {
             #region Private Members
-            HandleEvent m_handler;
+            HandleEventDelegate m_handler;
             EventType m_filter;
             #endregion
 
             #region Constructors
-            public EventListener(HandleEvent handler, EventType filter)
+            public EventListener(HandleEventDelegate handler, EventType filter)
             {
                 m_handler = handler;
                 m_filter = filter;
@@ -32,7 +32,7 @@ namespace StarlightEngine.Events
             #endregion
 
             #region Public Accessors
-            public HandleEvent Handler
+            public HandleEventDelegate Handler
             {
                 get
                 {
@@ -62,7 +62,7 @@ namespace StarlightEngine.Events
         Stopwatch m_eventThreadTimer;
 
         // Synchronize event manager settings on a reader/writer lock
-        ReaderWriterLock m_eventManagerSettingsLock;
+        ReaderWriterLockSlim m_eventManagerSettingsLock;
 
         bool m_shouldEventManagerAbort;
 
@@ -82,7 +82,7 @@ namespace StarlightEngine.Events
             m_eventThreadTimer = new Stopwatch();
 
             // create lock
-            m_eventManagerSettingsLock = new ReaderWriterLock();
+            m_eventManagerSettingsLock = new ReaderWriterLockSlim();
 
             // initialize settings
             m_shouldEventManagerAbort = false;
@@ -101,7 +101,7 @@ namespace StarlightEngine.Events
             while (true)
             {
                 // Lock
-                m_eventManagerSettingsLock.AcquireReaderLock(-1);
+                m_eventManagerSettingsLock.EnterReadLock();
 
                 if (m_shouldEventManagerAbort)
                 {
@@ -112,18 +112,20 @@ namespace StarlightEngine.Events
                 m_eventThreadTimer.Start();
 
                 // Unlock
-                m_eventManagerSettingsLock.ReleaseReaderLock();
+                m_eventManagerSettingsLock.ExitReadLock();
 
                 // poll events
                 m_windowManager.PollEvents();
 
-                // Lock
-                m_eventManagerSettingsLock.AcquireReaderLock(-1);
+                // Lock, with option to elivate to writer lock
+                m_eventManagerSettingsLock.EnterUpgradeableReadLock();
 
                 // Handle events
                 foreach (IEvent @event in m_queuedEvents)
                 {
-                    foreach (EventListener listener in m_listeners)
+                    // loop through copy of event listeners, as calling some listeners may
+                    // modify the list, which should only take effect on the next loop
+                    foreach (EventListener listener in m_listeners.ToArray())
                     {
                         if (listener.Filter == @event.Type)
                         {
@@ -134,7 +136,7 @@ namespace StarlightEngine.Events
                 m_queuedEvents.Clear();
 
                 // Unlock
-                m_eventManagerSettingsLock.ReleaseReaderLock();
+                m_eventManagerSettingsLock.ExitUpgradeableReadLock();
 
                 // Wait until EVENT_THREAD_PERIOD has passed
                 float timeLeft = EVENT_THREAD_PERIOD - (m_eventThreadTimer.ElapsedMilliseconds / 1000.0f);
@@ -147,28 +149,62 @@ namespace StarlightEngine.Events
         #endregion
 
         #region Public Methods
-        public void AddListener(HandleEvent handler, EventType filter)
+        public void AddListener(HandleEventDelegate handler, EventType filter)
         {
             // Lock
-            m_eventManagerSettingsLock.AcquireWriterLock(-1);
+            bool exitWithReadLock = false;
+            if (m_eventManagerSettingsLock.IsUpgradeableReadLockHeld){
+                // The thread holds an upgradable read lock, so upgrade to write lock
+                m_eventManagerSettingsLock.EnterWriteLock();
+            } else if (!m_eventManagerSettingsLock.IsReadLockHeld && !m_eventManagerSettingsLock.IsWriteLockHeld) {
+                // The thread does not hold any lock, so enter write lock
+                m_eventManagerSettingsLock.EnterWriteLock();
+            } else if (m_eventManagerSettingsLock.IsWriteLockHeld){
+                // the thread already holds the write lock, continue
+            } else {
+                // the thread is holding a read lock
+                m_eventManagerSettingsLock.ExitReadLock();
+                m_eventManagerSettingsLock.EnterWriteLock();
+                exitWithReadLock = true;
+            }
 
 			// Add listener
             m_listeners.Add(new EventListener(handler, filter));
 
             // Unlock
-            m_eventManagerSettingsLock.ReleaseWriterLock();
+            m_eventManagerSettingsLock.ExitWriteLock();
+            if (exitWithReadLock){
+                m_eventManagerSettingsLock.EnterReadLock();
+            }
         }
 
-        public void RemoveListener(HandleEvent handler)
+        public void RemoveListener(HandleEventDelegate handler)
         {
             // Lock
-            m_eventManagerSettingsLock.AcquireWriterLock(-1);
+            bool exitWithReadLock = false;
+            if (m_eventManagerSettingsLock.IsUpgradeableReadLockHeld){
+                // The thread holds an upgradable read lock, so upgrade to write lock
+                m_eventManagerSettingsLock.EnterWriteLock();
+            } else if (!m_eventManagerSettingsLock.IsReadLockHeld && !m_eventManagerSettingsLock.IsWriteLockHeld) {
+                // The thread does not hold any lock, so enter write lock
+                m_eventManagerSettingsLock.EnterWriteLock();
+            } else if (m_eventManagerSettingsLock.IsWriteLockHeld){
+                // the thread already holds the write lock, continue
+            } else {
+                // the thread is holding a read lock
+                m_eventManagerSettingsLock.ExitReadLock();
+                m_eventManagerSettingsLock.EnterWriteLock();
+                exitWithReadLock = true;
+            }
 
 			// Remove any listeners that match this handler function
 			m_listeners.RemoveAll(listener => listener.Handler == handler);
 
             // Unlock
-            m_eventManagerSettingsLock.ReleaseWriterLock();
+            m_eventManagerSettingsLock.ExitWriteLock();
+            if (exitWithReadLock){
+                m_eventManagerSettingsLock.EnterReadLock();
+            }
         }
 
         /* terminates the event manager thread and joins it
@@ -176,13 +212,13 @@ namespace StarlightEngine.Events
         public void TerminateEventManagerAndJoin()
         {
             // get lock
-            m_eventManagerSettingsLock.AcquireWriterLock(-1);
+            m_eventManagerSettingsLock.EnterWriteLock();
 
             // tell thread to abort
             m_shouldEventManagerAbort = true;
 
             // release lock
-            m_eventManagerSettingsLock.ReleaseWriterLock();
+            m_eventManagerSettingsLock.ExitWriteLock();
 
             // join thread
             m_eventThread.Join();
@@ -190,33 +226,33 @@ namespace StarlightEngine.Events
         #endregion
 
         #region Delegate Definitions
-        public delegate void HandleEvent(IEvent @event);
+        public delegate void HandleEventDelegate(IEvent @event);
         #endregion
 
         #region Callback Functions
         private void KeyboardEventHandler(Key key, KeyAction action, KeyModifiers modifiers)
         {
             // Lock event queue
-            m_eventManagerSettingsLock.AcquireWriterLock(-1);
+            m_eventManagerSettingsLock.EnterWriteLock();
 
             // Create new key event, and push onto the event queue
             KeyboardEvent keyEvent = new KeyboardEvent(key, action, modifiers);
             m_queuedEvents.Enqueue(keyEvent);
 
             // Unlock event queue
-            m_eventManagerSettingsLock.ReleaseWriterLock();
+            m_eventManagerSettingsLock.ExitWriteLock();
         }
 
         private void MouseEventHandler(MouseButton button, MouseAction action, KeyModifiers modifiers, FVec2 mousePosition, float scrollX, float scrollY){
             // Lock event queue
-            m_eventManagerSettingsLock.AcquireWriterLock(-1);
+            m_eventManagerSettingsLock.EnterWriteLock();
 
             // Create new mouse event, and push onto the event queue
             MouseEvent mouseEvent = new MouseEvent(button, action, modifiers, mousePosition, scrollX, scrollY);
             m_queuedEvents.Enqueue(mouseEvent);
 
             // Unlock event queue
-            m_eventManagerSettingsLock.ReleaseWriterLock();
+            m_eventManagerSettingsLock.ExitWriteLock();
         }
         #endregion
     }

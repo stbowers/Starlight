@@ -45,7 +45,7 @@ namespace StarlightEngine.Graphics.Vulkan
 		private CommandPool m_graphicsCommandPool;
 		private CommandPool m_transferCommandPool;
 
-		Dictionary<CommandPool, Mutex> poolLocks = new Dictionary<CommandPool, Mutex>();
+		Dictionary<long, Mutex> poolLocks = new Dictionary<long, Mutex>();
 
 		// Swapchain info
 		private SwapchainKhr m_swapchain;
@@ -369,7 +369,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			graphicsPoolInfo.QueueFamilyIndex = (int)m_deviceQueueFamilies.graphicsFamily;
 
 			m_graphicsCommandPool = m_device.CreateCommandPool(graphicsPoolInfo);
-			poolLocks.Add(m_graphicsCommandPool, new Mutex());
+			poolLocks.Add(m_graphicsCommandPool.Handle, new Mutex());
 
 			// Even though the graphics queue and transfer queue might be the same, and therefore we could
 			// use the graphics command pool, we'll make a new one so that it can be optimized for transfer
@@ -379,7 +379,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			transferPoolInfo.QueueFamilyIndex = (int)m_deviceQueueFamilies.transferFamily;
 
 			m_transferCommandPool = m_device.CreateCommandPool(transferPoolInfo);
-			poolLocks.Add(m_transferCommandPool, new Mutex());
+			poolLocks.Add(m_transferCommandPool.Handle, new Mutex());
 		}
 
 		private void CreateSwapchain(bool recreate = false)
@@ -522,9 +522,9 @@ namespace StarlightEngine.Graphics.Vulkan
 			allocInfo.Level = CommandBufferLevel.Primary;
 			allocInfo.CommandBufferCount = imageCount;
 
-			poolLocks[m_graphicsCommandPool].WaitOne();
+			poolLocks[m_graphicsCommandPool.Handle].WaitOne();
 			m_swapchainCommandBuffers = m_graphicsCommandPool.AllocateBuffers(allocInfo);
-			poolLocks[m_graphicsCommandPool].ReleaseMutex();
+			poolLocks[m_graphicsCommandPool.Handle].ReleaseMutex();
 
 			/* Create semaphores and fences */
 			FenceCreateInfo fenceInfo = new FenceCreateInfo();
@@ -897,7 +897,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			allocInfo.Level = CommandBufferLevel.Primary;
 			allocInfo.CommandBufferCount = 1;
 
-			poolLocks[pool].WaitOne();
+			poolLocks[pool.Handle].WaitOne();
 			CommandBuffer commandBuffer = pool.AllocateBuffers(allocInfo)[0];
 
 			CommandBufferBeginInfo beginInfo = new CommandBufferBeginInfo();
@@ -922,7 +922,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			submitInfo.CommandBuffers = new[] { commandBuffer.Handle };
 			queueLocks[submitQueue.Handle].WaitOne();
 			submitQueue.Submit(submitInfo, transferDone);
-			poolLocks[pool].ReleaseMutex();
+			poolLocks[pool.Handle].ReleaseMutex();
 			queueLocks[submitQueue.Handle].ReleaseMutex();
 
 			/* Wait for command buffer to finish */
@@ -1087,6 +1087,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			// get lock for queue
 			queueLocks[m_graphicsQueue.Handle].WaitOne();
 			m_graphicsQueue.Submit(submitInfo, m_inFlightFences[m_currentFrame]);
+			poolLocks[m_swapchainCommandBuffers[m_currentFrame].Parent.Handle].ReleaseMutex();
 			queueLocks[m_graphicsQueue.Handle].ReleaseMutex();
 		}
 
@@ -1130,6 +1131,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			CommandBuffer currentBuffer = m_swapchainCommandBuffers[m_currentFrame];
 			CommandBufferBeginInfo beginInfo = new CommandBufferBeginInfo();
 			beginInfo.Flags = CommandBufferUsages.SimultaneousUse;
+			poolLocks[currentBuffer.Parent.Handle].WaitOne();
 			currentBuffer.Begin(beginInfo);
 			currentFrame = m_currentFrame;
 			return currentBuffer;

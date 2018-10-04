@@ -5,6 +5,7 @@ using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Graphics.Vulkan.Objects;
 using StarlightEngine.Graphics.Math;
 using StarlightEngine.Events;
+using StarlightGame.GameCore;
 
 namespace StarlightGame.Graphics.Scenes
 {
@@ -14,8 +15,14 @@ namespace StarlightGame.Graphics.Scenes
         SceneManager m_sceneManager;
 		EventManager m_eventManager;
 
+		GameState m_gameState = null;
+
 		// Objects
+        VulkanUIButton m_startGameButton;
         VulkanUIButton m_backButton;
+
+		// Sub-scenes
+		Scene m_mapScene = null;
 
 		// Animation thread
 		Thread m_animationThread;
@@ -30,16 +37,28 @@ namespace StarlightGame.Graphics.Scenes
             m_sceneManager = sceneManager;
 			m_eventManager = eventManager;
 
+			// start game button
+			m_startGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Start Game", 20, new FVec2(0.0f, 0.0f), new FVec2(.2f, .1f), onStartGameClicked);
+			AddObject(2, m_startGameButton);
+
             // create back button
-			m_backButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Back", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), eventManager, onBackClicked);
+			m_backButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Back", 20, new FVec2(-1.0f, .9f), new FVec2(.2f, .1f), onBackClicked);
             AddObject(2, m_backButton);
 		}
 
         // Button callbacks
+		public void onStartGameClicked(){
+			// make new gamestate
+			if (m_gameState == null){
+				m_gameState = new GameState();
+				m_mapScene = new MapScene(m_apiManager, m_sceneManager, m_eventManager, m_gameState);
+			}
+
+			m_sceneManager.PushScene(m_mapScene);
+		}
+
         public void onBackClicked(){
-            if (m_sceneManager.PeekScene() == this){
-                m_sceneManager.PopScene();
-            }
+			m_sceneManager.PopScene();
         }
 	}
 }

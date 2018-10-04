@@ -292,6 +292,7 @@ namespace StarlightEngine.Graphics.Vulkan
 				allocInfo.DescriptorSetCount = numDescriptorSets;
 				allocInfo.SetLayouts = layouts;
 
+				currentBlock.m_numAllocations += numDescriptorSets;
 				return pool.AllocateSets(allocInfo);
 			}
 		}

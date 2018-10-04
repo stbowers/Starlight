@@ -1,5 +1,6 @@
 ﻿using StarlightEngine.Graphics.Math;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
+using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
@@ -37,5 +38,13 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			}
 			return false;
 		}
+		
+        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
+        {
+            get
+            {
+                return new(EventManager.HandleEventDelegate, EventType)[] { };
+            }
+        }
 	}
 }

@@ -10,7 +10,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 	public class VulkanUIButton : ICollectionObject
 	{
 		VulkanAPIManager m_apiManager;
-		EventManager m_eventManager;
 
 		// Button state
 		bool m_selected = false;
@@ -30,16 +29,16 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		public delegate void OnSelectDelegate();
 		OnClickDelegate m_onClickDelegate;
 		OnSelectDelegate m_onSelectDelegate;
+		(EventManager.HandleEventDelegate, EventType)[] m_eventListeners;
 
-		public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, EventManager eventManager, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null)
+		public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null)
 		{
 			m_apiManager = apiManager;
-			m_eventManager = eventManager;
 			m_onClickDelegate = onClickDelegate;
 			m_onSelectDelegate = onSelectDelegate;
 
-			// Register mouse event listener
-			m_eventManager.AddListener(MouseEventListener, EventType.Mouse);
+			// set up event listeners
+			m_eventListeners = new (EventManager.HandleEventDelegate, EventType)[] {(MouseEventListener, EventType.Mouse)};
 
 			// center text
 			float textWidth = AngelcodeFontLoader.GetWidthOfString(font, fontSize, text) / 640.0f;
@@ -102,5 +101,13 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 				return m_objects;
 			}
 		}
+		
+        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
+        {
+            get
+            {
+                return m_eventListeners;
+            }
+        }
 	}
 }

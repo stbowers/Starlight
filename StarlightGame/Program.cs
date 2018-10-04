@@ -58,7 +58,7 @@ namespace StarlightGame
 
             // use simple renderer
 			IRenderer renderer = new SimpleVulkanRenderer(apiManager, StaticPipelines.pipeline_clear);
-			SceneManager sceneManager = new SceneManager(renderer);
+			SceneManager sceneManager = new SceneManager(renderer, eventManager);
 
 			// create fps counter
 			VulkanTextObject fpsText = new VulkanTextObject(apiManager, StaticFonts.Font_Arial, "FPS: 00.00", 20, new FVec2(-.99f, -.99f), 1.0f, true);

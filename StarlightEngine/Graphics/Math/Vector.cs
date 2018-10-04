@@ -118,6 +118,22 @@ namespace StarlightEngine.Graphics.Math
             this[0] = x;
             this[1] = y;
         }
+
+        public static FVec2 operator +(FVec2 left, FVec2 right)
+        {
+            BasicMatrix<float> l = left as BasicMatrix<float>;
+            BasicMatrix<float> r = right as BasicMatrix<float>;
+            BasicMatrix<float> sum = l + r;
+            return new FVec2(sum);
+        }
+
+        public static FVec2 operator -(FVec2 left, FVec2 right)
+        {
+            BasicMatrix<float> l = left as BasicMatrix<float>;
+            BasicMatrix<float> r = right as BasicMatrix<float>;
+            BasicMatrix<float> difference = l - r;
+            return new FVec2(difference);
+        }
     }
 
     public class FVec3 : FVec

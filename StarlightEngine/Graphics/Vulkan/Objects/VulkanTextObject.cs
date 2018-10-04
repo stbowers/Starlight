@@ -5,6 +5,7 @@ using StarlightEngine.Graphics.Vulkan.Memory;
 using StarlightEngine.Graphics.Fonts;
 using StarlightEngine.Graphics.Math;
 using System.Collections.Generic;
+using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
@@ -142,5 +143,13 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		}
 
 		public bool Visible { get; set; }
+		
+        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
+        {
+            get
+            {
+                return new(EventManager.HandleEventDelegate, EventType)[] { };
+            }
+        }
 	}
 }
