@@ -35,9 +35,13 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 		}
 
 		public IntPtr MapAllocation(){
+			return MapAllocation(0, size);
+		}
+
+		public IntPtr MapAllocation(long mapOffset, long mapSize){
 			// get memory lock
 			if(memoryLock.WaitOne()){
-				IntPtr mappedPtr = memory.Map(offset, size);
+				IntPtr mappedPtr = memory.Map(offset + mapOffset, mapSize);
 				return mappedPtr;
 			}else{
 			}
@@ -193,8 +197,9 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 					// if we don't have any more allocations, delete this block
 					if (allocations.Count == 0)
 					{
-						parent.FreeBlock(this);
-						memoryBlock.Dispose();
+						// currently commented out, since freeing the block can create a race condition, and we don't really need to free the block, as long as the memory can be reallocated
+						//parent.FreeBlock(this);
+						//memoryBlock.Dispose();
 					}
 
 					memoryLock.ReleaseMutex();

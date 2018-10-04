@@ -56,15 +56,17 @@ namespace StarlightGame.GameCore.Field
 
         #region Serialization
         // Serialization function
-        public void GetObjectData(SerializationInfo info, StreamingContext streamingContext)
+        public void GetObjectData(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
-
+            serializationInfo.AddValue("m_starSystems", m_starSystems);
         }
 
         // Deserialization constructor
         public GameField(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
+            m_rng = new Random();
 
+            m_starSystems = (StarSystem[])serializationInfo.GetValue("m_starSystems", typeof(StarSystem[]));
         }
         #endregion
     }

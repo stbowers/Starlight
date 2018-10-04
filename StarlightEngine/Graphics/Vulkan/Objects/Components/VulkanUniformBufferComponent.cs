@@ -18,7 +18,7 @@ namespace StarlightEngine
 
 		byte[] m_bufferData;
 		VulkanManagedBuffer m_buffer;
-		VulkanManagedBuffer.VulkanManagedBufferSection m_uniformBufferSection;
+		VulkanManagedBuffer.ManagedBufferSection m_uniformBufferSection;
 
 		VulkanDescriptorSet m_descriptorSet;
 		int m_binding;
@@ -35,12 +35,12 @@ namespace StarlightEngine
 
 			m_bufferData = bufferData;
 			m_buffer = buffer;
-			m_uniformBufferSection = m_buffer.AddSection(m_bufferData.Length, m_bufferData, DescriptorType.UniformBuffer, m_descriptorSet, m_binding);
+			m_uniformBufferSection = m_buffer.AddSection(m_bufferData, DescriptorType.UniformBuffer, m_descriptorSet, m_binding);
 		}
 
 		public void UpdateUniformBuffer(byte[] newData)
 		{
-			m_buffer.UpdateSection(m_uniformBufferSection, newData.Length, newData);
+			m_buffer.UpdateSection(m_uniformBufferSection, newData);
 
 			m_buffer.WriteAllBuffers(false);
 		}

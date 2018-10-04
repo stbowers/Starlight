@@ -42,7 +42,7 @@ namespace StarlightGame.Graphics.Scenes
 			AddObject(2, m_startGameButton);
 
             // create back button
-			m_backButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Back", 20, new FVec2(-1.0f, .9f), new FVec2(.2f, .1f), onBackClicked);
+			m_backButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Back", 20, new FVec2(-.5f, .5f), new FVec2(.2f, .1f), onBackClicked);
             AddObject(2, m_backButton);
 		}
 

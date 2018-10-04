@@ -41,8 +41,8 @@ namespace StarlightEngine.Graphics.Vulkan
 			for (int i = 0; i < m_sets.Length; i++)
 			{
 				updateThreads[i] = new Thread(UpdateBuffer);
+				updateThreads[i].Name = "Update Descriptor Set Buffer " + i;
 				updateThreads[i].Start(new ValueTuple<int, DescriptorBufferInfo, DescriptorType, int>(binding, bufferInfo, type, i));
-				updateThreads[i].Join();
 			}
 
 			if (block)
@@ -70,6 +70,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			for (int i = 0; i < m_sets.Length; i++)
 			{
 				updateThreads[i] = new Thread(UpdateImage);
+				updateThreads[i].Name = "Update Descriptor Set Buffer " + i;
 				updateThreads[i].Start(new ValueTuple<int, DescriptorImageInfo, DescriptorType, int>(binding, imageInfo, type, i));
 			}
 
