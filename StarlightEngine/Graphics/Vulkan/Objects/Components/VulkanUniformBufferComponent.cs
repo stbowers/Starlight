@@ -42,7 +42,7 @@ namespace StarlightEngine
 		{
 			m_buffer.UpdateSection(m_uniformBufferSection, newData);
 
-			m_buffer.WriteAllBuffers(false);
+			m_buffer.WriteAllBuffers();
 		}
 
 		public VulkanPipeline Pipeline

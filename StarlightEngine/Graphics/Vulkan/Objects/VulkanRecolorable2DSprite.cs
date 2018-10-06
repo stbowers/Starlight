@@ -86,7 +86,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             // Create recolor settings buffer
             m_recolorUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_recolorData, m_objectBuffer, m_materialDescriptorSet, 1);
 
-			m_objectBuffer.WriteAllBuffers(true);
+			m_apiManager.WaitForDeviceIdleAndLock();
+			m_objectBuffer.WriteAllBuffers();
+			m_apiManager.ReleaseDeviceIdleLock();
 
             m_bindableComponents = new IVulkanBindableComponent[] { m_mesh, m_texture, m_mvpUniform, m_recolorUniform };
 		}

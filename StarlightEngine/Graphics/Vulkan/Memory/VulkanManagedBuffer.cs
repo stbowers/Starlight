@@ -2,7 +2,9 @@
 using System.Threading;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 using VulkanCore;
+using StarlightEngine.Threadding;
 
 namespace StarlightEngine.Graphics.Vulkan.Memory
 {
@@ -27,9 +29,12 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
         VulkanCore.Buffer[] m_buffers;
         VmaAllocation[] m_bufferAllocations;
 
+        Thread[] m_updateThreads;
+        bool[] m_updateBuffer;
+
         bool m_transient;
 
-        ReaderWriterLockSlim m_managedReaderWriterLock = new ReaderWriterLockSlim();
+        ThreadLock m_managedBufferLock = new ThreadLock(EngineConstants.THREADLEVEL_INDIRECTMANAGEDCOLLECTION);
 
         public VulkanManagedBuffer(VulkanAPIManager apiManager, int sectionAlignment, BufferUsages usage, MemoryProperties requiredFlags, MemoryProperties preferredFlags, bool transient = false)
         {
@@ -45,21 +50,141 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 // if this buffer is transient, we will need buffers for each swapchain image (so it can be updated quickly)
                 m_numBuffers = m_apiManager.GetSwapchainImageCount();
-                m_buffers = new VulkanCore.Buffer[m_numBuffers];
-                m_bufferAllocations = new VmaAllocation[m_numBuffers];
             }
             else
             {
                 // if buffer is not transient (won't be updated often if at all, it can be allocated on just one buffer)
                 m_numBuffers = 1;
-                m_buffers = new VulkanCore.Buffer[m_numBuffers];
-                m_bufferAllocations = new VmaAllocation[m_numBuffers];
+            }
+
+            m_buffers = new VulkanCore.Buffer[m_numBuffers];
+            m_bufferAllocations = new VmaAllocation[m_numBuffers];
+            m_updateThreads = new Thread[m_numBuffers];
+            m_updateBuffer = new bool[m_numBuffers];
+
+            for (int i = 0; i < m_numBuffers; i++)
+            {
+                m_updateThreads[i] = new Thread(UpdateThread);
+                m_updateThreads[i].Name = String.Format("Managed buffer 0x{0:X} update thread {1}", this.GetHashCode(), i);
+                m_updateBuffer[i] = false;
+                m_updateThreads[i].Start(i);
+            }
+        }
+
+        private void UpdateThread(object args)
+        {
+            int swapchainIndex = (int)args;
+            Stopwatch timer = new Stopwatch();
+
+            while (true)
+            {
+                m_managedBufferLock.EnterLock();
+                timer.Restart();
+
+                if (m_updateBuffer[swapchainIndex])
+                {
+                    // Lock the swapchain
+                    if (m_transient)
+                    {
+                        // only lock the one index if this is a transient buffer
+                        m_apiManager.WaitForSwapchainBufferIdleAndLock(swapchainIndex);
+                    }
+                    else
+                    {
+                        // lock whole swapchain if not a transient buffer
+                        m_apiManager.WaitForDeviceIdleAndLock();
+                    }
+
+                    // get space required for buffer
+                    int requiredSpace = GetRequiredSpace();
+
+                    // Get buffer
+                    VulkanCore.Buffer mainBuffer;
+                    VmaAllocation mainBufferAllocation;
+                    // if this buffer is not host visible, we'll need to make sure the buffer can be a transfer destination
+                    BufferUsages usage = m_usage | (m_requiredFlags.HasFlag(MemoryProperties.HostVisible) ? 0 : BufferUsages.TransferDst);
+                    if (m_buffers[swapchainIndex] == null)
+                    {
+                        // Create new buffer if we don't already have one
+                        m_apiManager.CreateBuffer(requiredSpace, usage, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
+
+                        mainBuffer = m_buffers[swapchainIndex];
+                        mainBufferAllocation = m_bufferAllocations[swapchainIndex];
+                    }
+                    else
+                    {
+                        // If we already have a buffer, check if there is enough space for our usage
+                        if (m_bufferAllocations[swapchainIndex].size >= requiredSpace)
+                        {
+                            // If there is use it
+                            mainBuffer = m_buffers[swapchainIndex];
+                            mainBufferAllocation = m_bufferAllocations[swapchainIndex];
+                        }
+                        else
+                        {
+                            // If there isn't create a new buffer
+                            // free old buffer
+                            m_apiManager.FreeAllocation(m_bufferAllocations[swapchainIndex]);
+                            m_buffers[swapchainIndex].Dispose();
+
+                            // make new buffer
+                            m_apiManager.CreateBuffer(requiredSpace, usage, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
+                            mainBuffer = m_buffers[swapchainIndex];
+                            mainBufferAllocation = m_bufferAllocations[swapchainIndex];
+                        }
+                    }
+
+                    // Get the staging buffer (the buffer we actually write to - is different from main buffer if main buffer is not host visible)
+                    VulkanCore.Buffer stagingBuffer;
+                    VmaAllocation stagingBufferAllocation;
+                    if (m_requiredFlags.HasFlag(MemoryProperties.HostVisible))
+                    {
+                        stagingBuffer = mainBuffer;
+                        stagingBufferAllocation = mainBufferAllocation;
+                    }
+                    else
+                    {
+                        m_apiManager.CreateBuffer(requiredSpace, BufferUsages.TransferSrc, MemoryProperties.HostVisible, MemoryProperties.None, out stagingBuffer, out stagingBufferAllocation);
+                    }
+
+                    // write sections
+                    foreach (ManagedBufferSection section in m_sections)
+                    {
+                        section.GetRawBufferSection(swapchainIndex).WriteSection(mainBuffer, stagingBuffer, stagingBufferAllocation, swapchainIndex, m_apiManager.GetSwapchainImageCount(), m_transient, false);
+                    }
+
+                    // Copy staging buffer if it is different from the main buffer
+                    if (stagingBuffer != mainBuffer)
+                    {
+                        // copy staging buffer
+                        m_apiManager.CopyBufferToBuffer(stagingBuffer, 0, m_buffers[swapchainIndex], 0, requiredSpace);
+
+                        // free staging buffer
+                        m_apiManager.FreeAllocation(stagingBufferAllocation);
+                        stagingBuffer.Dispose();
+                    }
+
+                    // release swapchain lock
+                    if (m_transient)
+                    {
+                        m_apiManager.ReleaseSwapchainBufferLock(swapchainIndex);
+                    }
+                    else
+                    {
+                        m_apiManager.ReleaseDeviceIdleLock();
+                    }
+                }
+
+                m_managedBufferLock.ExitLock();
+
+                m_updateBuffer[swapchainIndex] = false;
+                // Yield execution and make sure each loop takes at least 10 ms to give other threads the chance to enter lock
+                Thread.Sleep(System.Math.Abs((int)(10 - timer.ElapsedMilliseconds)));
             }
         }
 
         /// <summary>
         /// Gets the ammount of space needed to store all buffer sections
-        /// MUST HAVE READ LOCK FOR MANAGED BUFFER
         /// <summary>
         private int GetRequiredSpace()
         {
@@ -85,20 +210,18 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             DescriptorType? descriptorType = null, VulkanDescriptorSet set = null, int setBinding = -1
             )
         {
-            m_managedReaderWriterLock.EnterUpgradeableReadLock();
+            m_managedBufferLock.EnterLock();
 
             int offset = GetRequiredSpace();
             // get padding required to append this buffer to end
             int padding = Functions.Mod((m_sectionAlignment - GetRequiredSpace()), m_sectionAlignment);
             offset += padding;
 
-            m_managedReaderWriterLock.EnterWriteLock();
             ManagedBufferSection newSection = new ManagedBufferSection(data, offset, padding, m_numBuffers, descriptorType, set, setBinding);
 
             m_sections.Add(newSection);
 
-            m_managedReaderWriterLock.ExitWriteLock();
-            m_managedReaderWriterLock.ExitUpgradeableReadLock();
+            m_managedBufferLock.ExitLock();
 
             return newSection;
         }
@@ -115,7 +238,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 		 */
         private void UpdateSection(ManagedBufferSection section, byte[] data, int offset)
         {
-            m_managedReaderWriterLock.EnterUpgradeableReadLock();
+            m_managedBufferLock.EnterLock();
             // set to true if the buffer's offset is moved, or if the size changes
             bool memoryFootprintChanged = (data.Length != section.Size) || (offset != 0);
 
@@ -123,7 +246,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             int oldEnd = section.Offset + section.Size;
             int oldStart = section.Offset - section.Padding;
 
-            m_managedReaderWriterLock.EnterWriteLock();
             // update this section's data
             section.Data = data;
 
@@ -139,8 +261,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             // determine if the memory footprint has changed
             memoryFootprintChanged |= oldEnd != newEnd;
 
-            m_managedReaderWriterLock.ExitWriteLock();
-            m_managedReaderWriterLock.ExitUpgradeableReadLock();
+            m_managedBufferLock.ExitLock();
 
             // update following sections if our memory footprint has changed
             if (memoryFootprintChanged)
@@ -160,132 +281,19 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             }
         }
 
-        /* Write data to all buffers; if block is true waits until all buffers are written
+        /* Write data to all buffers
 		 */
-        public void WriteAllBuffers(bool block)
+        public void WriteAllBuffers()
         {
-            // Spawn threads for each buffer
-            Thread[] writeBufferThreads = new Thread[m_numBuffers];
+            m_managedBufferLock.EnterLock();
+
+            // signal all buffers to write
             for (int i = 0; i < m_numBuffers; i++)
             {
-                writeBufferThreads[i] = new Thread(WriteBufferThreadStart);
-                writeBufferThreads[i].Name = "Write Buffer " + i;
-                writeBufferThreads[i].Start(i);
+                m_updateBuffer[i] = true;
             }
 
-            if (block || !m_transient)
-            {
-                foreach (Thread thread in writeBufferThreads)
-                {
-                    thread.Join();
-                }
-            }
-        }
-
-        public void WriteBufferThreadStart(Object obj)
-        {
-            int swapchainIndex = (int)obj;
-            WriteBuffer(swapchainIndex);
-        }
-
-        /* Writes the sections to a Vulkan buffer (or updates the buffer if changes were made), blocks until buffer is written
-		 */
-        public void WriteBuffer(int swapchainIndex)
-        {
-            m_managedReaderWriterLock.EnterWriteLock();
-
-            // Lock the swapchain
-            if (m_transient)
-            {
-                // only lock the one index if this is a transient buffer
-                m_apiManager.WaitForSwapchainBufferIdleAndLock(swapchainIndex);
-            }
-            else
-            {
-                // lock whole swapchain if not a transient buffer
-                m_apiManager.WaitForDeviceIdleAndLock();
-            }
-
-            // get space required for buffer
-            int requiredSpace = GetRequiredSpace();
-
-            // Get buffer
-            VulkanCore.Buffer mainBuffer;
-            VmaAllocation mainBufferAllocation;
-            // if this buffer is not host visible, we'll need to make sure the buffer can be a transfer destination
-            BufferUsages usage = m_usage | (m_requiredFlags.HasFlag(MemoryProperties.HostVisible) ? 0 : BufferUsages.TransferDst);
-            if (m_buffers[swapchainIndex] == null)
-            {
-                // Create new buffer if we don't already have one
-                m_apiManager.CreateBuffer(requiredSpace, usage, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
-
-                mainBuffer = m_buffers[swapchainIndex];
-                mainBufferAllocation = m_bufferAllocations[swapchainIndex];
-            }
-            else
-            {
-                // If we already have a buffer, check if there is enough space for our usage
-                if (m_bufferAllocations[swapchainIndex].size >= requiredSpace)
-                {
-                    // If there is use it
-                    mainBuffer = m_buffers[swapchainIndex];
-                    mainBufferAllocation = m_bufferAllocations[swapchainIndex];
-                }
-                else
-                {
-                    // If there isn't create a new buffer
-                    // free old buffer
-                    m_apiManager.FreeAllocation(m_bufferAllocations[swapchainIndex]);
-                    m_buffers[swapchainIndex].Dispose();
-
-                    // make new buffer
-                    m_apiManager.CreateBuffer(requiredSpace, usage, m_requiredFlags, m_preferredFlags, out m_buffers[swapchainIndex], out m_bufferAllocations[swapchainIndex]);
-                    mainBuffer = m_buffers[swapchainIndex];
-                    mainBufferAllocation = m_bufferAllocations[swapchainIndex];
-                }
-            }
-
-            // Get the staging buffer (the buffer we actually write to - is different from main buffer if main buffer is not host visible)
-            VulkanCore.Buffer stagingBuffer;
-            VmaAllocation stagingBufferAllocation;
-            if (m_requiredFlags.HasFlag(MemoryProperties.HostVisible))
-            {
-                stagingBuffer = mainBuffer;
-                stagingBufferAllocation = mainBufferAllocation;
-            }
-            else
-            {
-                m_apiManager.CreateBuffer(requiredSpace, BufferUsages.TransferSrc, MemoryProperties.HostVisible, MemoryProperties.None, out stagingBuffer, out stagingBufferAllocation);
-            }
-
-            // write sections
-            foreach (ManagedBufferSection section in m_sections)
-            {
-                section.GetRawBufferSection(swapchainIndex).WriteSection(mainBuffer, stagingBuffer, stagingBufferAllocation, swapchainIndex, m_apiManager.GetSwapchainImageCount(), m_transient, false);
-            }
-
-            // Copy staging buffer if it is different from the main buffer
-            if (stagingBuffer != mainBuffer)
-            {
-                // copy staging buffer
-                m_apiManager.CopyBufferToBuffer(stagingBuffer, 0, m_buffers[swapchainIndex], 0, requiredSpace);
-
-                // free staging buffer
-                m_apiManager.FreeAllocation(stagingBufferAllocation);
-                stagingBuffer.Dispose();
-            }
-
-            // release swapchain lock
-            if (m_transient)
-            {
-                m_apiManager.ReleaseSwapchainBufferLock(swapchainIndex);
-            }
-            else
-            {
-                m_apiManager.ReleaseDeviceIdleLock();
-            }
-
-            m_managedReaderWriterLock.ExitWriteLock();
+            m_managedBufferLock.ExitLock();
         }
 
         #region Buffer Section Class Definition
@@ -313,7 +321,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             // set to true if the above cache doesn't match the target values (and so buffer should be rewritten)
             bool m_cacheInvalidated;
 
-            ReaderWriterLockSlim m_readerWriterLock = new ReaderWriterLockSlim();
+            ThreadLock m_sectionLock = new ThreadLock(EngineConstants.THREADLEVEL_DIRECTAPIMANAGERS);
             #endregion
 
             #region Constructor
@@ -338,7 +346,8 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             /// <param name="forceWrite">Force this section to write to the buffer, instead of trying to skip unrequired writes</param>
             public void WriteSection(VulkanCore.Buffer targetBuffer, VulkanCore.Buffer stagingBuffer, VmaAllocation stagingBufferAllocation, int swapchainIndex, int numSwapchainImages, bool transient, bool forceWrite)
             {
-                m_readerWriterLock.EnterUpgradeableReadLock();
+                m_sectionLock.EnterLock();
+
                 // Write to the buffer if any of the following conditions are met:
                 // 1) the target buffer is not the same as the cached buffer - the buffer has changed and we need to rewrite our data to it
                 // 2) the target buffer is not the same as the staging buffer - the staging buffer will replace the data in targetBuffer, so we need to write to it regardless
@@ -352,39 +361,37 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                     stagingBufferAllocation.UnmapAllocation();
 
                     // Reset cache values
-                    m_readerWriterLock.EnterWriteLock();
                     m_cachedBuffer = targetBuffer;
                     m_cachedOffset = m_offset;
                     m_cachedSize = m_size;
                     m_cacheInvalidated = false;
-
-                    // Write descriptor set
-                    if (m_descriptorSet != null)
-                    {
-                        DescriptorBufferInfo bufferInfo = new DescriptorBufferInfo();
-                        bufferInfo.Buffer = m_cachedBuffer;
-                        bufferInfo.Offset = m_cachedOffset;
-                        bufferInfo.Range = m_cachedSize;
-
-                        if (transient)
-                        {
-                            // if this is a transient buffer, update just the one set
-                            m_descriptorSet.UpdateBuffer(m_setBinding, bufferInfo, m_descriptorType.Value, swapchainIndex);
-                        }
-                        else
-                        {
-                            // Otherwise update all sets
-                            for (int index = 0; index < numSwapchainImages; index++)
-                            {
-                                m_descriptorSet.UpdateBuffer(m_setBinding, bufferInfo, m_descriptorType.Value, false);
-                            }
-                        }
-                    }
-
-                    m_readerWriterLock.ExitWriteLock();
                 }
 
-                m_readerWriterLock.ExitUpgradeableReadLock();
+                // Get values needed to update descriptor set before releasing lock
+                VulkanCore.Buffer buffer = m_cachedBuffer;
+                int offset = m_cachedOffset;
+                int range = m_cachedSize;
+                m_sectionLock.ExitLock();
+                        
+                // Update descriptor set
+                if (m_descriptorSet != null)
+                {
+                    DescriptorBufferInfo bufferInfo = new DescriptorBufferInfo();
+                    bufferInfo.Buffer = buffer;
+                    bufferInfo.Offset = offset;
+                    bufferInfo.Range = range;
+
+                    if (transient)
+                    {
+                        // if this is a transient buffer, update just the one set
+                        m_descriptorSet.UpdateSetBindingForSwapchainIndex(m_setBinding, bufferInfo, null, m_descriptorType.Value, swapchainIndex);
+                    }
+                    else
+                    {
+                        // Otherwise update all sets
+                        m_descriptorSet.UpdateSetBinding(m_setBinding, bufferInfo, null, m_descriptorType.Value);
+                    }
+                }
             }
             #endregion
 
@@ -396,18 +403,18 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 set
                 {
-                    m_readerWriterLock.EnterWriteLock();
+                    m_sectionLock.EnterLock();
                     m_data = value;
                     m_size = value.Length;
                     m_cacheInvalidated = true;
-                    m_readerWriterLock.ExitWriteLock();
+                    m_sectionLock.ExitLock();
                 }
 
                 get
                 {
-                    m_readerWriterLock.EnterReadLock();
+                    m_sectionLock.EnterLock();
                     byte[] data = m_data;
-                    m_readerWriterLock.ExitReadLock();
+                    m_sectionLock.ExitLock();
                     return data;
                 }
             }
@@ -421,17 +428,17 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 set
                 {
-                    m_readerWriterLock.EnterWriteLock();
+                    m_sectionLock.EnterLock();
                     m_offset = value;
                     m_cacheInvalidated = true;
-                    m_readerWriterLock.ExitWriteLock();
+                    m_sectionLock.ExitLock();
                 }
 
                 get
                 {
-                    m_readerWriterLock.EnterReadLock();
+                    m_sectionLock.EnterLock();
                     int offset = m_cachedOffset;
-                    m_readerWriterLock.ExitReadLock();
+                    m_sectionLock.ExitLock();
                     return offset;
                 }
             }
@@ -443,9 +450,9 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 get
                 {
-                    m_readerWriterLock.EnterReadLock();
+                    m_sectionLock.EnterLock();
                     int size = m_cachedSize;
-                    m_readerWriterLock.ExitReadLock();
+                    m_sectionLock.ExitLock();
                     return size;
                 }
             }
@@ -457,9 +464,9 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 get
                 {
-                    m_readerWriterLock.EnterReadLock();
+                    m_sectionLock.EnterLock();
                     VulkanCore.Buffer buffer = m_cachedBuffer;
-                    m_readerWriterLock.ExitReadLock();
+                    m_sectionLock.ExitLock();
                     return buffer;
                 }
             }
@@ -478,7 +485,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             int m_offset;
             int m_padding;
 
-            ReaderWriterLockSlim m_bufferReaderWriterLock = new ReaderWriterLockSlim();
+            ThreadLock m_sectionLock = new ThreadLock(EngineConstants.THREADLEVEL_INDIRECTAPIMANAGERS);
             #endregion
 
             #region Constructor
@@ -533,9 +540,9 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 get
                 {
-                    m_bufferReaderWriterLock.EnterReadLock();
+                    m_sectionLock.EnterLock();
                     int size = m_data.Length;
-                    m_bufferReaderWriterLock.ExitReadLock();
+                    m_sectionLock.ExitLock();
                     return size;
                 }
             }
@@ -544,20 +551,20 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 set
                 {
-                    m_bufferReaderWriterLock.EnterWriteLock();
+                    m_sectionLock.EnterLock();
                     m_offset = value;
                     foreach (BufferSection section in m_sections)
                     {
                         section.Offset = value;
                     }
-                    m_bufferReaderWriterLock.ExitWriteLock();
+                    m_sectionLock.ExitLock();
                 }
 
                 get
                 {
-                    m_bufferReaderWriterLock.EnterReadLock();
+                    m_sectionLock.EnterLock();
                     int offset = m_offset;
-                    m_bufferReaderWriterLock.ExitReadLock();
+                    m_sectionLock.ExitLock();
                     return offset;
                 }
             }
@@ -566,16 +573,16 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 set
                 {
-                    m_bufferReaderWriterLock.EnterWriteLock();
+                    m_sectionLock.EnterLock();
                     m_padding = value;
-                    m_bufferReaderWriterLock.ExitWriteLock();
+                    m_sectionLock.ExitLock();
                 }
 
                 get
                 {
-                    m_bufferReaderWriterLock.EnterReadLock();
+                    m_sectionLock.EnterLock();
                     int padding = m_padding;
-                    m_bufferReaderWriterLock.ExitReadLock();
+                    m_sectionLock.ExitLock();
                     return padding;
                 }
             }
@@ -584,20 +591,20 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 set
                 {
-                    m_bufferReaderWriterLock.EnterWriteLock();
+                    m_sectionLock.EnterLock();
                     m_data = value;
                     foreach (BufferSection section in m_sections)
                     {
                         section.Data = value;
                     }
-                    m_bufferReaderWriterLock.ExitWriteLock();
+                    m_sectionLock.ExitLock();
                 }
 
                 get
                 {
-                    m_bufferReaderWriterLock.EnterReadLock();
+                    m_sectionLock.EnterLock();
                     byte[] data = m_data;
-                    m_bufferReaderWriterLock.ExitReadLock();
+                    m_sectionLock.ExitLock();
                     return data;
                 }
             }

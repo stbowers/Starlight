@@ -51,6 +51,7 @@ namespace StarlightGame.Graphics.Scenes
 
 			// Start animation on new thread
 			m_animationThread = new Thread(AnimateTitleScreen);
+			m_animationThread.Name = "Title scene animation";
 			m_animationThread.Start();
 		}
 

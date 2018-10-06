@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using StarlightEngine.Graphics;
 using StarlightEngine.Graphics.Math;
+using StarlightEngine.Threadding;
 
 namespace StarlightEngine.Events
 {
@@ -61,8 +62,8 @@ namespace StarlightEngine.Events
         Thread m_eventThread;
         Stopwatch m_eventThreadTimer;
 
-        // Synchronize event manager settings on a reader/writer lock
-        ReaderWriterLockSlim m_eventManagerSettingsLock;
+        // Synchronize/protect event manager settings
+        ThreadLock m_eventManagerSettingsLock = new ThreadLock(EngineConstants.THREADLEVEL_EVENTMANAGER);
 
         bool m_shouldEventManagerAbort;
 
@@ -79,10 +80,8 @@ namespace StarlightEngine.Events
 
             // create thread
             m_eventThread = new Thread(EventThread);
+            m_eventThread.Name = "Event Thread";
             m_eventThreadTimer = new Stopwatch();
-
-            // create lock
-            m_eventManagerSettingsLock = new ReaderWriterLockSlim();
 
             // initialize settings
             m_shouldEventManagerAbort = false;
@@ -101,8 +100,9 @@ namespace StarlightEngine.Events
             while (true)
             {
                 // Lock
-                m_eventManagerSettingsLock.EnterReadLock();
+                m_eventManagerSettingsLock.EnterLock();
 
+                // check if we should exit
                 if (m_shouldEventManagerAbort)
                 {
                     break;
@@ -111,17 +111,24 @@ namespace StarlightEngine.Events
                 // Start stopwatch
                 m_eventThreadTimer.Start();
 
-                // Unlock
-                m_eventManagerSettingsLock.ExitReadLock();
+                // Unlock, before polling events
+                m_eventManagerSettingsLock.ExitLock();
 
                 // poll events
                 m_windowManager.PollEvents();
 
-                // Lock, with option to elivate to writer lock
-                m_eventManagerSettingsLock.EnterUpgradeableReadLock();
+                // Get lock again
+                m_eventManagerSettingsLock.EnterLock();
+
+                // Get list of events and clear the queue
+                IEvent[] queuedEvents = m_queuedEvents.ToArray();
+                m_queuedEvents.Clear();
+
+                // Release lock before calling event listeners
+                m_eventManagerSettingsLock.ExitLock();
 
                 // Handle events
-                foreach (IEvent @event in m_queuedEvents)
+                foreach (IEvent @event in queuedEvents)
                 {
                     // loop through copy of event listeners, as calling some listeners may
                     // modify the list, which should only take effect on the next loop
@@ -133,10 +140,6 @@ namespace StarlightEngine.Events
                         }
                     }
                 }
-                m_queuedEvents.Clear();
-
-                // Unlock
-                m_eventManagerSettingsLock.ExitUpgradeableReadLock();
 
                 // Wait until EVENT_THREAD_PERIOD has passed
                 float timeLeft = EVENT_THREAD_PERIOD - (m_eventThreadTimer.ElapsedMilliseconds / 1000.0f);
@@ -152,59 +155,25 @@ namespace StarlightEngine.Events
         public void AddListener(HandleEventDelegate handler, EventType filter)
         {
             // Lock
-            bool exitWithReadLock = false;
-            if (m_eventManagerSettingsLock.IsUpgradeableReadLockHeld){
-                // The thread holds an upgradable read lock, so upgrade to write lock
-                m_eventManagerSettingsLock.EnterWriteLock();
-            } else if (!m_eventManagerSettingsLock.IsReadLockHeld && !m_eventManagerSettingsLock.IsWriteLockHeld) {
-                // The thread does not hold any lock, so enter write lock
-                m_eventManagerSettingsLock.EnterWriteLock();
-            } else if (m_eventManagerSettingsLock.IsWriteLockHeld){
-                // the thread already holds the write lock, continue
-            } else {
-                // the thread is holding a read lock
-                m_eventManagerSettingsLock.ExitReadLock();
-                m_eventManagerSettingsLock.EnterWriteLock();
-                exitWithReadLock = true;
-            }
+            m_eventManagerSettingsLock.EnterLock();
 
 			// Add listener
             m_listeners.Add(new EventListener(handler, filter));
 
             // Unlock
-            m_eventManagerSettingsLock.ExitWriteLock();
-            if (exitWithReadLock){
-                m_eventManagerSettingsLock.EnterReadLock();
-            }
+            m_eventManagerSettingsLock.ExitLock();
         }
 
         public void RemoveListener(HandleEventDelegate handler)
         {
             // Lock
-            bool exitWithReadLock = false;
-            if (m_eventManagerSettingsLock.IsUpgradeableReadLockHeld){
-                // The thread holds an upgradable read lock, so upgrade to write lock
-                m_eventManagerSettingsLock.EnterWriteLock();
-            } else if (!m_eventManagerSettingsLock.IsReadLockHeld && !m_eventManagerSettingsLock.IsWriteLockHeld) {
-                // The thread does not hold any lock, so enter write lock
-                m_eventManagerSettingsLock.EnterWriteLock();
-            } else if (m_eventManagerSettingsLock.IsWriteLockHeld){
-                // the thread already holds the write lock, continue
-            } else {
-                // the thread is holding a read lock
-                m_eventManagerSettingsLock.ExitReadLock();
-                m_eventManagerSettingsLock.EnterWriteLock();
-                exitWithReadLock = true;
-            }
+            m_eventManagerSettingsLock.EnterLock();
 
 			// Remove any listeners that match this handler function
 			m_listeners.RemoveAll(listener => listener.Handler == handler);
 
             // Unlock
-            m_eventManagerSettingsLock.ExitWriteLock();
-            if (exitWithReadLock){
-                m_eventManagerSettingsLock.EnterReadLock();
-            }
+            m_eventManagerSettingsLock.ExitLock();
         }
 
         /* terminates the event manager thread and joins it
@@ -212,13 +181,13 @@ namespace StarlightEngine.Events
         public void TerminateEventManagerAndJoin()
         {
             // get lock
-            m_eventManagerSettingsLock.EnterWriteLock();
+            m_eventManagerSettingsLock.EnterLock();
 
             // tell thread to abort
             m_shouldEventManagerAbort = true;
 
             // release lock
-            m_eventManagerSettingsLock.ExitWriteLock();
+            m_eventManagerSettingsLock.ExitLock();
 
             // join thread
             m_eventThread.Join();
@@ -233,26 +202,26 @@ namespace StarlightEngine.Events
         private void KeyboardEventHandler(Key key, KeyAction action, KeyModifiers modifiers)
         {
             // Lock event queue
-            m_eventManagerSettingsLock.EnterWriteLock();
+            m_eventManagerSettingsLock.EnterLock();
 
             // Create new key event, and push onto the event queue
             KeyboardEvent keyEvent = new KeyboardEvent(key, action, modifiers);
             m_queuedEvents.Enqueue(keyEvent);
 
             // Unlock event queue
-            m_eventManagerSettingsLock.ExitWriteLock();
+            m_eventManagerSettingsLock.ExitLock();
         }
 
         private void MouseEventHandler(MouseButton button, MouseAction action, KeyModifiers modifiers, FVec2 mousePosition, float scrollX, float scrollY){
             // Lock event queue
-            m_eventManagerSettingsLock.EnterWriteLock();
+            m_eventManagerSettingsLock.EnterLock();
 
             // Create new mouse event, and push onto the event queue
             MouseEvent mouseEvent = new MouseEvent(button, action, modifiers, mousePosition, scrollX, scrollY);
             m_queuedEvents.Enqueue(mouseEvent);
 
             // Unlock event queue
-            m_eventManagerSettingsLock.ExitWriteLock();
+            m_eventManagerSettingsLock.ExitLock();
         }
         #endregion
     }

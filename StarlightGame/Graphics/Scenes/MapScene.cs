@@ -52,6 +52,7 @@ namespace StarlightGame.Graphics.Scenes
 
 			// Start animation on new thread
 			m_animationThread = new Thread(AnimateScreen);
+			m_animationThread.Name = "Map scene animation";
 			m_animationThread.Start();
 		}
 

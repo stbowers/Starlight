@@ -8,6 +8,7 @@ using StarlightEngine.Graphics.Fonts;
 using StarlightEngine.Graphics.Math;
 using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Events;
+using StarlightEngine.Threadding;
 using glfw3;
 
 using StarlightGame.Graphics;
@@ -20,6 +21,9 @@ namespace StarlightGame
 
 		public static void Main(string[] args)
 		{
+			// Name main thread for debugging
+			System.Threading.Thread.CurrentThread.Name = "Main Thread";
+
 			//NetworkManager networkManager = new NetworkManager();
 			//string restURL;
 			//List<GameServer> serverList;
