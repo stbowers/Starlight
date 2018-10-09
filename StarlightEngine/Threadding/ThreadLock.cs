@@ -15,6 +15,9 @@ namespace StarlightEngine.Threadding
         Mutex m_lock = new Mutex();
         int m_level;
 
+        // Per-thread bool to tell if the mutex is locked for that thread
+        ThreadLocal<bool> m_locked = new ThreadLocal<bool>();
+
         // A per-thread static reference to the thread's current level, stored in a stack so it can be reverted
         static ThreadLocal<Stack<int>> m_threadLevel = new ThreadLocal<Stack<int>>();
 
@@ -42,6 +45,7 @@ namespace StarlightEngine.Threadding
 
             // Lock mutex
             m_lock.WaitOne();
+            m_locked.Value = true;
         }
 
         /// <summary>
@@ -56,6 +60,7 @@ namespace StarlightEngine.Threadding
 
             // Unlock mutex
             m_lock.ReleaseMutex();
+            m_locked.Value = false;
 
             // Pop stack
             GetThreadLevelStack().Pop();
@@ -79,6 +84,7 @@ namespace StarlightEngine.Threadding
             // Lock each lock in order
             for (int i = 0; i < locks.Length; i++){
                 locks[i].m_lock.WaitOne();
+                locks[i].m_locked.Value = true;
             }
 
             // Set the thread level
@@ -90,7 +96,30 @@ namespace StarlightEngine.Threadding
         /// </summary>
         public static void ExitMultiple(params ThreadLock[] locks)
         {
+            // Assert that all locks are the same level, check for any locks not at the same level as the first
+            bool sameLevel = !Array.Exists(locks, l => l.m_level != locks[0].m_level);
+            if (!sameLevel){
+                throw new ApplicationException("Thread attempted to enter multiple locks at the same time which are not on the same level");
+            }
 
+            // Sort locks by their hash code
+            Array.Sort(locks, (lock1, lock2) => lock1.GetHashCode() - lock2.GetHashCode());
+
+            // unlock each lock in order
+            for (int i = 0; i < locks.Length; i++){
+                locks[i].m_lock.ReleaseMutex();
+                locks[i].m_locked.Value = false;
+            }
+
+            // Set the thread level
+            GetThreadLevelStack().Pop();
+        }
+
+        /// <summary>
+        /// Returns true if the current thread holds this lock
+        /// </summary>
+        public bool IsLockedByThread(){
+            return m_locked.Value;
         }
 
         /// <summary>

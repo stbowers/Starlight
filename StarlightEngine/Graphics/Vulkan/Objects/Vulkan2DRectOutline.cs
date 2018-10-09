@@ -18,7 +18,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		byte[] m_meshData;
 		byte[] m_mvpData;
-		int m_numIndices;
 
 		VulkanManagedBuffer m_objectBuffer;
 
@@ -44,7 +43,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			FVec2 bottomLeft = new FVec2(position.X(), position.Y() + size.Y());
 			FVec2 bottomRight = new FVec2(position.X() + size.X(), position.Y() + size.Y());
 			int[] indices = { 0, 1, 1, 3, 3, 2, 2, 0 };
-			m_numIndices = 8;
 
 			m_meshData = new byte[(4 * 2 * 4) + (4 * 4 * 4) + (8 * 4)];
 			System.Buffer.BlockCopy(topLeft.Bytes, 0, m_meshData, 0, 8);
@@ -73,14 +71,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_mvpDescriptorSet = m_pipeline.CreateDescriptorSet(0);
 
 			// Create mesh component
-			m_mesh = new VulkanMeshComponent(apiManager, m_pipeline, m_meshData, 0, m_meshData.Length - (8 * 4), m_objectBuffer);
+			m_mesh = new VulkanMeshComponent(apiManager, m_pipeline, m_meshData, 0, m_meshData.Length - (8 * 4), 8, m_objectBuffer);
 
 			// Create mvp uniform component
 			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_mvpDescriptorSet, 0);
 
-			m_apiManager.WaitForDeviceIdleAndLock();
-			m_objectBuffer.WriteAllBuffers();
-			m_apiManager.ReleaseDeviceIdleLock();
+			m_objectBuffer.WriteAllBuffers(true);
 
 			m_components = new[] { new IVulkanBindableComponent[] { m_mesh, m_mvpUniform } };
 		}
@@ -113,9 +109,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			}
 		}
 
-		public void Draw(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets, int renderPassIndex)
+		public void Draw(CommandBuffer commandBuffer, int swapchainIndex)
 		{
-			commandBuffer.CmdDrawIndexed(m_numIndices);
+			m_mesh.DrawMesh(commandBuffer, swapchainIndex);
 		}
 
 		public bool Visible { get; set; }

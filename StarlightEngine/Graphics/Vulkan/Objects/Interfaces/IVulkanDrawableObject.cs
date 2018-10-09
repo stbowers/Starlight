@@ -16,7 +16,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Interfaces
 		RenderPass[] RenderPasses { get; }
 		VulkanPipeline[] Pipelines { get; }
         IVulkanBindableComponent[][] BindableComponents { get; }
-        void Draw(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets, int renderPassIndex);
+        void Draw(CommandBuffer commandBuffer, int swapchainIndex);
 
 		// controls if the object should be drawn or not
 		bool Visible { get; set; }

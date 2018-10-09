@@ -15,7 +15,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		byte[] m_meshData;
 		byte[] m_mvpData;
-		int m_numIndices;
 
 		VulkanManagedBuffer m_objectBuffer;
 
@@ -40,7 +39,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			FVec4 bottomLeft = new FVec4(position.X(), position.Y() + scale.Y(), 0.0f, 1.0f);
 			FVec4 bottomRight = new FVec4(position.X() + scale.X(), position.Y() + scale.Y(), 1.0f, 1.0f);
 			int[] indices = { 0, 1, 3, 3, 2, 0 };
-			m_numIndices = 6;
 
 			m_meshData = new byte[(4 * 4 * 4) + (6 * 4)];
 			System.Buffer.BlockCopy(topLeft.Bytes, 0, m_meshData, 0, (int)topLeft.PrimativeSizeOf);
@@ -66,7 +64,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_materialDescriptorSet = m_pipeline.CreateDescriptorSet(1);
 
 			// Create mesh component
-			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, m_meshData, 0, 4 * 4 * 4, m_objectBuffer);
+			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, m_meshData, 0, 4 * 4 * 4, 6, m_objectBuffer);
 
 			// Create texture component
 			m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, textureFile, true, Filter.Linear, Filter.Linear, m_materialDescriptorSet, 1);
@@ -74,9 +72,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			// Create mvp uniform buffer
 			m_mvpUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_mvpData, m_objectBuffer, m_meshDescriptorSet, 0);
 
-			m_apiManager.WaitForDeviceIdleAndLock();
-			m_objectBuffer.WriteAllBuffers();
-			m_apiManager.ReleaseDeviceIdleLock();
+			m_objectBuffer.WriteAllBuffers(true);
 
 			m_bindableComponents = new IVulkanBindableComponent[] { m_mesh, m_texture, m_mvpUniform };
 		}
@@ -109,9 +105,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			}
 		}
 
-		public void Draw(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets, int renderPassIndex)
+		public void Draw(CommandBuffer commandBuffer, int swapchainIndex)
 		{
-			commandBuffer.CmdDrawIndexed(m_numIndices);
+			m_mesh.DrawMesh(commandBuffer, swapchainIndex);
 		}
 
 		public bool Visible { get; set; }

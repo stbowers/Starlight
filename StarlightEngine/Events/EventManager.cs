@@ -122,6 +122,7 @@ namespace StarlightEngine.Events
 
                 // Get list of events and clear the queue
                 IEvent[] queuedEvents = m_queuedEvents.ToArray();
+                (EventType, HandleEventDelegate)[] listeners = m_listeners.ConvertAll(x => (x.Filter, x.Handler)).ToArray();
                 m_queuedEvents.Clear();
 
                 // Release lock before calling event listeners
@@ -132,11 +133,11 @@ namespace StarlightEngine.Events
                 {
                     // loop through copy of event listeners, as calling some listeners may
                     // modify the list, which should only take effect on the next loop
-                    foreach (EventListener listener in m_listeners.ToArray())
+                    foreach ((EventType filter, HandleEventDelegate handler) in listeners)
                     {
-                        if (listener.Filter == @event.Type)
+                        if (filter == @event.Type)
                         {
-                            listener.Handler(@event);
+                            handler(@event);
                         }
                     }
                 }

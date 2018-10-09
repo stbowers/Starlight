@@ -98,7 +98,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
 			imageInfo.ImageView = m_textureImageView;
 			imageInfo.ImageLayout = ImageLayout.ShaderReadOnlyOptimal;
 
+			m_apiManager.WaitForDeviceIdleAndLock();
 			m_textureSamplerSet.UpdateSetBinding(binding, null, imageInfo, DescriptorType.CombinedImageSampler);
+			m_apiManager.ReleaseDeviceIdleLock();
         }
 
         public VulkanPipeline Pipeline

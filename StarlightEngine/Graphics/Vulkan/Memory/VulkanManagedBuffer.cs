@@ -83,6 +83,9 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 
                 if (m_updateBuffer[swapchainIndex])
                 {
+                    // get space required for buffer
+                    int requiredSpace = GetRequiredSpace();
+
                     // Lock the swapchain
                     if (m_transient)
                     {
@@ -94,9 +97,6 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                         // lock whole swapchain if not a transient buffer
                         m_apiManager.WaitForDeviceIdleAndLock();
                     }
-
-                    // get space required for buffer
-                    int requiredSpace = GetRequiredSpace();
 
                     // Get buffer
                     VulkanCore.Buffer mainBuffer;
@@ -150,7 +150,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                     // write sections
                     foreach (ManagedBufferSection section in m_sections)
                     {
-                        section.GetRawBufferSection(swapchainIndex).WriteSection(mainBuffer, stagingBuffer, stagingBufferAllocation, swapchainIndex, m_apiManager.GetSwapchainImageCount(), m_transient, false);
+                        section.GetRawBufferSection(swapchainIndex).WriteSection(mainBuffer, stagingBuffer, stagingBufferAllocation, swapchainIndex, m_transient, false);
                     }
 
                     // Copy staging buffer if it is different from the main buffer
@@ -283,7 +283,8 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 
         /* Write data to all buffers
 		 */
-        public void WriteAllBuffers()
+        public delegate void OnWriteDone();
+        public void WriteAllBuffers(bool block = false, OnWriteDone callback = null)
         {
             m_managedBufferLock.EnterLock();
 
@@ -294,11 +295,45 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             }
 
             m_managedBufferLock.ExitLock();
+
+            // if block or callback make a thread to wait until buffer is written
+            if (block || callback != null)
+            {
+                Thread waitThread = new Thread(() =>
+                {
+                    bool done = false;
+                    do
+                    {
+                        Thread.Sleep(10);
+                        bool stillWriting = false;
+                        for (int i = 0; i < m_numBuffers; i++)
+                        {
+                            stillWriting |= m_updateBuffer[i];
+                        }
+                        done = !stillWriting;
+                    }
+                    while (!done);
+
+                    // call the callback if it's not null
+                    callback?.Invoke();
+                });
+                waitThread.Start();
+
+                // if block is true, wait for thread
+                if (block)
+                {
+                    waitThread.Join();
+                }
+            }
         }
 
         #region Buffer Section Class Definition
         /// <summary>
         /// Contains the data for a section in a vulkan buffer
+        /// Including offset, size, and an optional reference to a user-defined
+        /// object which will be updated along with other values, so the user
+        /// can use this value to synchronize their own code with the correct
+        /// buffer
         /// </summary>
         public class BufferSection
         {
@@ -308,15 +343,17 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             VulkanDescriptorSet m_descriptorSet;
             int m_setBinding;
 
-            // target values for data, offset
+            // target values for data, offset, size, and userData
             byte[] m_data;
             int m_offset;
             int m_size;
+            object m_userData;
 
             // cached values for offset and size, and which buffer they refer to
             VulkanCore.Buffer m_cachedBuffer;
             int m_cachedOffset;
             int m_cachedSize;
+            object m_cachedUserData;
 
             // set to true if the above cache doesn't match the target values (and so buffer should be rewritten)
             bool m_cacheInvalidated;
@@ -344,7 +381,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             /// <param name="numSwapchainImages">The number of images in the swapchain</param>
             /// <param name="transient">Is the managed buffer transient (has a buffer for each swapchainIndex)</param>
             /// <param name="forceWrite">Force this section to write to the buffer, instead of trying to skip unrequired writes</param>
-            public void WriteSection(VulkanCore.Buffer targetBuffer, VulkanCore.Buffer stagingBuffer, VmaAllocation stagingBufferAllocation, int swapchainIndex, int numSwapchainImages, bool transient, bool forceWrite)
+            public void WriteSection(VulkanCore.Buffer targetBuffer, VulkanCore.Buffer stagingBuffer, VmaAllocation stagingBufferAllocation, int swapchainIndex, bool transient, bool forceWrite)
             {
                 m_sectionLock.EnterLock();
 
@@ -364,34 +401,31 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                     m_cachedBuffer = targetBuffer;
                     m_cachedOffset = m_offset;
                     m_cachedSize = m_size;
+                    m_cachedUserData = m_userData;
                     m_cacheInvalidated = false;
+
+                    // Write descriptor set
+                    if (m_descriptorSet != null)
+                    {
+                        DescriptorBufferInfo bufferInfo = new DescriptorBufferInfo();
+                        bufferInfo.Buffer = m_cachedBuffer;
+                        bufferInfo.Offset = m_cachedOffset;
+                        bufferInfo.Range = m_cachedSize;
+
+                        if (transient)
+                        {
+                            // if this is a transient buffer, update just the one set
+                            m_descriptorSet.UpdateSetBindingForSwapchainIndex(m_setBinding, bufferInfo, null, m_descriptorType.Value, swapchainIndex);
+                        }
+                        else
+                        {
+                            // Otherwise update all sets
+                            m_descriptorSet.UpdateSetBinding(m_setBinding, bufferInfo, null, m_descriptorType.Value);
+                        }
+                    }
                 }
 
-                // Get values needed to update descriptor set before releasing lock
-                VulkanCore.Buffer buffer = m_cachedBuffer;
-                int offset = m_cachedOffset;
-                int range = m_cachedSize;
                 m_sectionLock.ExitLock();
-                        
-                // Update descriptor set
-                if (m_descriptorSet != null)
-                {
-                    DescriptorBufferInfo bufferInfo = new DescriptorBufferInfo();
-                    bufferInfo.Buffer = buffer;
-                    bufferInfo.Offset = offset;
-                    bufferInfo.Range = range;
-
-                    if (transient)
-                    {
-                        // if this is a transient buffer, update just the one set
-                        m_descriptorSet.UpdateSetBindingForSwapchainIndex(m_setBinding, bufferInfo, null, m_descriptorType.Value, swapchainIndex);
-                    }
-                    else
-                    {
-                        // Otherwise update all sets
-                        m_descriptorSet.UpdateSetBinding(m_setBinding, bufferInfo, null, m_descriptorType.Value);
-                    }
-                }
             }
             #endregion
 
@@ -454,6 +488,30 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                     int size = m_cachedSize;
                     m_sectionLock.ExitLock();
                     return size;
+                }
+            }
+
+            /// <summary>
+            /// User-defined object reference to be updated with buffer
+            /// Example: often used to store an index count or other data that
+            /// might be used for drawing that depends on the contents of the
+            /// buffer without being in the buffer itself
+            /// </summary>
+            public object UserData
+            {
+                set
+                {
+                    m_sectionLock.EnterLock();
+                    m_userData = value;
+                    m_sectionLock.ExitLock();
+                }
+
+                get
+                {
+                    m_sectionLock.EnterLock();
+                    object userData = m_cachedUserData;
+                    m_sectionLock.ExitLock();
+                    return userData;
                 }
             }
 
@@ -527,6 +585,17 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             {
                 BufferSection section = m_sections[swapchainIndex % m_sections.Length];
                 return (section.Buffer, section.Offset);
+            }
+
+            public object GetUserData(int swapchainIndex){
+                BufferSection section = m_sections[swapchainIndex % m_sections.Length];
+                return (section.UserData);
+            }
+
+            public void SetUserData(object userData){
+                foreach (BufferSection section in m_sections){
+                    section.UserData = userData;
+                }
             }
 
             public BufferSection GetRawBufferSection(int swapchainIndex)

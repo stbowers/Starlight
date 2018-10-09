@@ -30,7 +30,7 @@ namespace StarlightEngine.Graphics.Vulkan
                 m_setLocks[i] = new ThreadLock(EngineConstants.THREADLEVEL_DIRECTMANAGEDCOLLECTION);
                 m_updateInfo[i] = (false, new List<(int, DescriptorBufferInfo?, DescriptorImageInfo?, DescriptorType)>());
                 m_updateThreads[i] = new Thread(UpdateThread);
-				m_updateThreads[i].Name = String.Format("Managed descriptor set 0x{0:X} update thread {1}", this.GetHashCode(), i);
+                m_updateThreads[i].Name = String.Format("Managed descriptor set 0x{0:X} update thread {1}", this.GetHashCode(), i);
                 m_updateThreads[i].Start(i);
             }
             m_setIndex = setIndex;
@@ -39,49 +39,54 @@ namespace StarlightEngine.Graphics.Vulkan
         public void UpdateThread(object args)
         {
             int index = (int)args;
-			Stopwatch timer = new Stopwatch();
+            Stopwatch timer = new Stopwatch();
 
-			// Continually try to update descriptors
+            // Continually try to update descriptors
             while (true)
             {
-				// Get lock
-				m_setLocks[index].EnterLock();
-				timer.Restart();
+                // Get lock
+                m_setLocks[index].EnterLock();
+                timer.Restart();
 
-				// Get update info 
+                // Get update info 
                 (bool update, List<(int, DescriptorBufferInfo?, DescriptorImageInfo?, DescriptorType)> bindings) = m_updateInfo[index];
 
-				// If we need to update, do update
+                // If we need to update, do update
                 if (update)
                 {
-					// make list of descriptor updates
+                    Console.WriteLine("Updating descriptor set for index {0}", index);
+                    // make list of descriptor updates
                     List<WriteDescriptorSet> descriptorWrites = new List<WriteDescriptorSet>();
-					foreach ((int binding, DescriptorBufferInfo? bufferInfo, DescriptorImageInfo? imageInfo, DescriptorType descriptorType) in bindings){
-						WriteDescriptorSet descriptorWrite = new WriteDescriptorSet();
-						descriptorWrite.DstSet = m_sets[index];
-						descriptorWrite.DstBinding = binding;
-						descriptorWrite.DstArrayElement = 0;
-						descriptorWrite.DescriptorCount = 1;
-						descriptorWrite.DescriptorType = descriptorType;
-						descriptorWrite.BufferInfo = bufferInfo.HasValue? new[] { bufferInfo.Value } : null;
-						descriptorWrite.ImageInfo = imageInfo.HasValue? new[] { imageInfo.Value } : null;
+                    foreach ((int binding, DescriptorBufferInfo? bufferInfo, DescriptorImageInfo? imageInfo, DescriptorType descriptorType) in bindings)
+                    {
+                        WriteDescriptorSet descriptorWrite = new WriteDescriptorSet();
+                        descriptorWrite.DstSet = m_sets[index];
+                        descriptorWrite.DstBinding = binding;
+                        descriptorWrite.DstArrayElement = 0;
+                        descriptorWrite.DescriptorCount = 1;
+                        descriptorWrite.DescriptorType = descriptorType;
+                        descriptorWrite.BufferInfo = bufferInfo.HasValue ? new[] { bufferInfo.Value } : null;
+                        descriptorWrite.ImageInfo = imageInfo.HasValue ? new[] { imageInfo.Value } : null;
+                        if (bufferInfo != null){
+                            Console.WriteLine("[{0:X}] descriptor buffer: 0x{1:X}", Thread.CurrentThread.ManagedThreadId, bufferInfo.Value.Buffer);
+                        }
 
-						descriptorWrites.Add(descriptorWrite);
-					}
+                        descriptorWrites.Add(descriptorWrite);
+                    }
 
-					// clear the bindings list and set update to false
-					bindings.Clear();
-					m_updateInfo[index].Item1 = false;
+                    // clear the bindings list and set update to false
+                    bindings.Clear();
+                    m_updateInfo[index].Item1 = false;
 
-					// update descriptor
+                    // update descriptor
                     m_apiManager.WaitForSwapchainBufferIdleAndLock(index);
                     m_sets[index].Parent.UpdateSets(descriptorWrites.ToArray());
                     m_apiManager.ReleaseSwapchainBufferLock(index);
                 }
 
-				// release lock, and yield to other threads for at least 10ms
-				m_setLocks[index].ExitLock();
-				Thread.Sleep(System.Math.Abs((int)(10 - timer.ElapsedMilliseconds)));
+                // release lock, and yield to other threads for at least 10ms
+                m_setLocks[index].ExitLock();
+                Thread.Sleep(System.Math.Abs((int)(10 - timer.ElapsedMilliseconds)));
             }
         }
 
@@ -95,26 +100,41 @@ namespace StarlightEngine.Graphics.Vulkan
             return m_setIndex;
         }
 
-		/// <summary>
-		/// Updates this descriptor set with the given buffer/image info for the given binding
-		/// </summary>
-		public void UpdateSetBinding(int binding, DescriptorBufferInfo? bufferInfo, DescriptorImageInfo? imageInfo, DescriptorType type){
-			// For each set, get the lock and then add this binding to list of updates
-			for (int i = 0; i < m_sets.Length; i++){
-				UpdateSetBindingForSwapchainIndex(binding, bufferInfo, imageInfo, type, i);
-			}
-		}
+        /// <summary>
+        /// Updates this descriptor set with the given buffer/image info for the given binding
+        /// Caller MUST own lock for given swapchain index
+        /// </summary>
+        public void UpdateSetBinding(int binding, DescriptorBufferInfo? bufferInfo, DescriptorImageInfo? imageInfo, DescriptorType type, bool block = true)
+        {
+            // update each set
+            for (int i = 0; i < m_sets.Length; i++)
+            {
+                UpdateSetBindingForSwapchainIndex(binding, bufferInfo, imageInfo, type, i);
+            }
+        }
 
-		/// <summary>
-		/// Updates this descriptor set with the given buffer/image info for the given binding, for only the descriptor set for the given swapchain index
-		/// </summary>
-		public void UpdateSetBindingForSwapchainIndex(int binding, DescriptorBufferInfo? bufferInfo, DescriptorImageInfo? imageInfo, DescriptorType type, int swapchainIndex){
-			m_setLocks[swapchainIndex].EnterLock();
+        /// <summary>
+        /// Updates this descriptor set with the given buffer/image info for the given binding, for only the descriptor set for the given swapchain index
+        /// Calling thread MUST have locked the swapchain for the given index
+        /// </summary>
+        public void UpdateSetBindingForSwapchainIndex(int binding, DescriptorBufferInfo? bufferInfo, DescriptorImageInfo? imageInfo, DescriptorType type, int swapchainIndex)
+        {
+            if (!m_apiManager.DoesThreadOwnSwapchainLock(swapchainIndex)){
+                throw new ApplicationException("Caller of UpdateSetBindingForSwapchainIndex must own the lock for the given swapchain index");
+            }
 
-			m_updateInfo[swapchainIndex].Item1 = true;
-			m_updateInfo[swapchainIndex].Item2.Add((binding, bufferInfo, imageInfo, type));
 
-			m_setLocks[swapchainIndex].ExitLock();
-		}
+            WriteDescriptorSet descriptorWrite = new WriteDescriptorSet();
+            descriptorWrite.DstSet = m_sets[swapchainIndex];
+            descriptorWrite.DstBinding = binding;
+            descriptorWrite.DstArrayElement = 0;
+            descriptorWrite.DescriptorCount = 1;
+            descriptorWrite.DescriptorType = type;
+            descriptorWrite.BufferInfo = bufferInfo.HasValue ? new[] { bufferInfo.Value } : null;
+            descriptorWrite.ImageInfo = imageInfo.HasValue ? new[] { imageInfo.Value } : null;
+
+            // update descriptor
+            m_sets[swapchainIndex].Parent.UpdateSets(new[] { descriptorWrite });
+        }
     }
 }

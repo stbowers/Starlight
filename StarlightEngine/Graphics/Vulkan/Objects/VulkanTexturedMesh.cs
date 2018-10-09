@@ -22,7 +22,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		byte[] m_meshData;
 		byte[] m_mvpData;
 		byte[] m_lightingData;
-		int m_numIndices;
 
 		VulkanManagedBuffer m_objectBuffer;
 
@@ -43,7 +42,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 			// Load object
 			m_loadedObject = WavefrontModelLoader.LoadFile(objFile);
-			m_numIndices = m_loadedObject.Indices.Length;
 
 			// Create object buffer
 			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
@@ -57,7 +55,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_meshData = new byte[m_loadedObject.VertexData.Length + (m_loadedObject.Indices.Length * 4)];
 			System.Buffer.BlockCopy(m_loadedObject.VertexData, 0, m_meshData, 0, m_loadedObject.VertexData.Length);
 			System.Buffer.BlockCopy(m_loadedObject.Indices, 0, m_meshData, m_loadedObject.VertexData.Length, m_loadedObject.Indices.Length * 4);
-			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, m_meshData, 0, m_loadedObject.VertexData.Length, m_objectBuffer);
+			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, m_meshData, 0, m_loadedObject.VertexData.Length, m_loadedObject.Indices.Length, m_objectBuffer);
 
 			// Create texture component
 			m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, textureFile, true, Filter.Linear, Filter.Linear, m_materialDescriptorSet, 2);
@@ -78,9 +76,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			System.Buffer.BlockCopy(new[] { reflectivity }, 0, m_lightingData, 2 * 4 * 4 + (8), 4);
 			m_lightingUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_lightingData, m_objectBuffer, m_materialDescriptorSet, 1);
 
-			m_apiManager.WaitForDeviceIdleAndLock();
-			m_objectBuffer.WriteAllBuffers();
-			m_apiManager.ReleaseDeviceIdleLock();
+			m_objectBuffer.WriteAllBuffers(true);
         }
 
 		public virtual void Update()
@@ -129,9 +125,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
-        public void Draw(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets, int renderPassIndex)
+        public void Draw(CommandBuffer commandBuffer, int swapchainIndex)
         {
-			commandBuffer.CmdDrawIndexed(m_numIndices);
+			m_mesh.DrawMesh(commandBuffer, swapchainIndex);
         }
 
 		public bool Visible { get; set; }

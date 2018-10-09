@@ -205,7 +205,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 				}
 				else
 				{
-					memoryLock.EnterLock();
+					memoryLock.ExitLock();
 					return false;
 				}
 			}

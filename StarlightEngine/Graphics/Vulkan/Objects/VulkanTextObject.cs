@@ -22,7 +22,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		byte[] m_meshData;
 		byte[] m_mvpData;
 		byte[] m_fontSettingsData;
-		int m_numIndices;
 
 		VulkanManagedBuffer m_objectBuffer;
 
@@ -50,7 +49,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_position = new FVec2(location.X() * (apiManager.GetSwapchainImageExtent().Width / 2.0f), location.Y() * (apiManager.GetSwapchainImageExtent().Height / 2.0f));
 			m_width = width * (apiManager.GetSwapchainImageExtent().Width / 2);
 			m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, text, m_position, m_width);
-			m_numIndices = m_textMesh.numVertices;
 
 			// Create object buffer
 			int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
@@ -63,7 +61,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			// Create mesh component
 			m_meshData = new byte[m_textMesh.meshBufferData.Length];
 			System.Buffer.BlockCopy(m_textMesh.meshBufferData, 0, m_meshData, 0, m_textMesh.meshBufferData.Length);
-			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, m_meshData, m_textMesh.vboOffset, m_textMesh.iboOffset, m_objectBuffer);
+			m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, m_meshData, m_textMesh.vboOffset, m_textMesh.iboOffset, m_textMesh.numVertices, m_objectBuffer);
 
 			// Create texture component
 			m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, "./assets/" + font.pages[0].file, false, Filter.Linear, Filter.Linear, m_materialDescriptorSet, 2);
@@ -94,9 +92,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			System.Buffer.BlockCopy(new[] { edge }, 0, m_fontSettingsData, 12 * 4, 1 * 4);
 			m_fontSettingsUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_fontSettingsData, m_objectBuffer, m_materialDescriptorSet, 1);
 
-			m_apiManager.WaitForDeviceIdleAndLock();
-			m_objectBuffer.WriteAllBuffers();
-			m_apiManager.ReleaseDeviceIdleLock();
+			m_objectBuffer.WriteAllBuffers(true);
 
 			m_bindableComponents = new IVulkanBindableComponent[] { m_mesh, m_texture, m_mvpUniform, m_fontSettingsUniform };
 		}
@@ -104,11 +100,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		public void UpdateText(AngelcodeFont font, string newText, int size)
 		{
 			m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, newText, m_position, m_width);
-			m_numIndices = m_textMesh.numVertices;
 			int meshDataSize = m_textMesh.meshBufferData.Length;
 			System.Array.Resize(ref m_meshData, meshDataSize);
 			System.Buffer.BlockCopy(m_textMesh.meshBufferData, 0, m_meshData, 0, meshDataSize);
-			m_mesh.UpdateMesh(m_meshData, m_textMesh.vboOffset, m_textMesh.iboOffset);
+			m_mesh.UpdateMesh(m_meshData, m_textMesh.vboOffset, m_textMesh.iboOffset, m_textMesh.numVertices);
 		}
 
 		public void Update()
@@ -139,9 +134,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			}
 		}
 
-		public void Draw(CommandBuffer commandBuffer, VulkanPipeline boundPipeline, RenderPass currentRenderPass, List<int> boundSets, int renderPassIndex)
+		public void Draw(CommandBuffer commandBuffer, int swapchainIndex)
 		{
-			commandBuffer.CmdDrawIndexed(m_numIndices);
+			m_mesh.DrawMesh(commandBuffer, swapchainIndex);
 		}
 
 		public bool Visible { get; set; }

@@ -103,7 +103,7 @@ namespace StarlightEngine.Graphics.Vulkan
 							{
 								binding.BindComponent(commandBuffer, currentFrame);
 							}
-							drawableObject.Draw(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets, renderPassIndex);
+							drawableObject.Draw(commandBuffer, currentFrame);
 
 							commandBuffer.CmdEndRenderPass();
 						}
@@ -136,7 +136,7 @@ namespace StarlightEngine.Graphics.Vulkan
 							{
 								binding.BindComponent(commandBuffer, currentFrame);
 							}
-							drawableObject.Draw(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets, renderPassIndex);
+							drawableObject.Draw(commandBuffer, currentFrame);
 
 							commandBuffer.CmdEndRenderPass();
 						}
@@ -167,7 +167,7 @@ namespace StarlightEngine.Graphics.Vulkan
 							{
 								binding.BindComponent(commandBuffer, currentFrame);
 							}
-							drawableObject.Draw(commandBuffer, pipeline, pipeline.GetRenderPass(), boundSets, renderPassIndex);
+							drawableObject.Draw(commandBuffer, renderPassIndex);
 
 							commandBuffer.CmdEndRenderPass();
 						}
