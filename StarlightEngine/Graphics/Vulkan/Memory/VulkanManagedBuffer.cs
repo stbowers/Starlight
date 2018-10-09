@@ -30,11 +30,13 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
         VmaAllocation[] m_bufferAllocations;
 
         Thread[] m_updateThreads;
+        ThreadLock[] m_managedBufferLock;
         bool[] m_updateBuffer;
+        bool[] m_updateThreadShouldClose;
 
         bool m_transient;
 
-        ThreadLock m_managedBufferLock = new ThreadLock(EngineConstants.THREADLEVEL_INDIRECTMANAGEDCOLLECTION);
+        bool m_disposed = false;
 
         public VulkanManagedBuffer(VulkanAPIManager apiManager, int sectionAlignment, BufferUsages usage, MemoryProperties requiredFlags, MemoryProperties preferredFlags, bool transient = false)
         {
@@ -60,12 +62,17 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             m_buffers = new VulkanCore.Buffer[m_numBuffers];
             m_bufferAllocations = new VmaAllocation[m_numBuffers];
             m_updateThreads = new Thread[m_numBuffers];
+            m_managedBufferLock = new ThreadLock[m_numBuffers];
+            m_updateThreadShouldClose = new bool[m_numBuffers];
             m_updateBuffer = new bool[m_numBuffers];
 
             for (int i = 0; i < m_numBuffers; i++)
             {
+                m_managedBufferLock[i] = new ThreadLock(EngineConstants.THREADLEVEL_INDIRECTMANAGEDCOLLECTION);
+                m_updateThreadShouldClose[i] = false;
                 m_updateThreads[i] = new Thread(UpdateThread);
                 m_updateThreads[i].Name = String.Format("Managed buffer 0x{0:X} update thread {1}", this.GetHashCode(), i);
+                m_updateThreads[i].IsBackground = true; // make this a background thread
                 m_updateBuffer[i] = false;
                 m_updateThreads[i].Start(i);
             }
@@ -76,9 +83,11 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             int swapchainIndex = (int)args;
             Stopwatch timer = new Stopwatch();
 
-            while (true)
+            // Get lock, loop has lock nominally, and gives it up at end for ~10ms
+            m_managedBufferLock[swapchainIndex].EnterLock();
+
+            while (!m_updateThreadShouldClose[swapchainIndex])
             {
-                m_managedBufferLock.EnterLock();
                 timer.Restart();
 
                 if (m_updateBuffer[swapchainIndex])
@@ -175,11 +184,14 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                     }
                 }
 
-                m_managedBufferLock.ExitLock();
+                m_managedBufferLock[swapchainIndex].ExitLock();
 
                 m_updateBuffer[swapchainIndex] = false;
                 // Yield execution and make sure each loop takes at least 10 ms to give other threads the chance to enter lock
                 Thread.Sleep(System.Math.Abs((int)(10 - timer.ElapsedMilliseconds)));
+
+                // get lock again
+                m_managedBufferLock[swapchainIndex].EnterLock();
             }
         }
 
@@ -202,6 +214,16 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             return requiredSpace;
         }
 
+        private void GetAllUpdateLocks()
+        {
+            ThreadLock.EnterMultiple(m_managedBufferLock);
+        }
+
+        private void ReleaseAllUpdateLocks()
+        {
+            ThreadLock.ExitMultiple(m_managedBufferLock);
+        }
+
         /// <summary>
         /// Creates a managed buffer section with the given data, and optionally a descriptor set to update when the buffer is changed
         /// </summary>
@@ -210,7 +232,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             DescriptorType? descriptorType = null, VulkanDescriptorSet set = null, int setBinding = -1
             )
         {
-            m_managedBufferLock.EnterLock();
+            GetAllUpdateLocks();
 
             int offset = GetRequiredSpace();
             // get padding required to append this buffer to end
@@ -221,7 +243,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 
             m_sections.Add(newSection);
 
-            m_managedBufferLock.ExitLock();
+            ReleaseAllUpdateLocks();
 
             return newSection;
         }
@@ -238,7 +260,8 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
 		 */
         private void UpdateSection(ManagedBufferSection section, byte[] data, int offset)
         {
-            m_managedBufferLock.EnterLock();
+            GetAllUpdateLocks();
+
             // set to true if the buffer's offset is moved, or if the size changes
             bool memoryFootprintChanged = (data.Length != section.Size) || (offset != 0);
 
@@ -261,7 +284,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             // determine if the memory footprint has changed
             memoryFootprintChanged |= oldEnd != newEnd;
 
-            m_managedBufferLock.ExitLock();
+            ReleaseAllUpdateLocks();
 
             // update following sections if our memory footprint has changed
             if (memoryFootprintChanged)
@@ -286,7 +309,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
         public delegate void OnWriteDone();
         public void WriteAllBuffers(bool block = false, OnWriteDone callback = null)
         {
-            m_managedBufferLock.EnterLock();
+            GetAllUpdateLocks();
 
             // signal all buffers to write
             for (int i = 0; i < m_numBuffers; i++)
@@ -294,7 +317,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                 m_updateBuffer[i] = true;
             }
 
-            m_managedBufferLock.ExitLock();
+            ReleaseAllUpdateLocks();
 
             // if block or callback make a thread to wait until buffer is written
             if (block || callback != null)
@@ -587,13 +610,16 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                 return (section.Buffer, section.Offset);
             }
 
-            public object GetUserData(int swapchainIndex){
+            public object GetUserData(int swapchainIndex)
+            {
                 BufferSection section = m_sections[swapchainIndex % m_sections.Length];
                 return (section.UserData);
             }
 
-            public void SetUserData(object userData){
-                foreach (BufferSection section in m_sections){
+            public void SetUserData(object userData)
+            {
+                foreach (BufferSection section in m_sections)
+                {
                     section.UserData = userData;
                 }
             }

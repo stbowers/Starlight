@@ -59,8 +59,10 @@ namespace StarlightEngine.Threadding
             }
 
             // Unlock mutex
-            m_lock.ReleaseMutex();
-            m_locked.Value = false;
+            if (m_locked.Value){
+                m_lock.ReleaseMutex();
+                m_locked.Value = false;
+            }
 
             // Pop stack
             GetThreadLevelStack().Pop();
