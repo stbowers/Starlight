@@ -22,8 +22,11 @@ namespace StarlightEngine
         /// <summary> locks at this level protect resources used during draw calls </summary>
         public const int THREADLEVEL_DRAW = THREADLEVEL_INDIRECTAPIMANAGERS + 1;
 
+        /// <summary> locks at this level are used to protect resources used for recording swapchain buffers </summary>
+        public const int THREADLEVEL_SWAPCHAIN_RECORD = THREADLEVEL_DRAW + 1;
+
         /// <summary> special level meant for swapchain lock </summary>
-        public const int THREADLEVEL_SWAPCHAIN = THREADLEVEL_DRAW + 1;
+        public const int THREADLEVEL_SWAPCHAIN = THREADLEVEL_SWAPCHAIN_RECORD + 1;
         
         /// <summary> locks at this level protect direct collections of managed api resources (Direct meaning closer to a direct manager, but still a collection manager, like VulkanDescriptorSet) </summary>
         public const int THREADLEVEL_DIRECTMANAGEDCOLLECTION = THREADLEVEL_SWAPCHAIN + 1;

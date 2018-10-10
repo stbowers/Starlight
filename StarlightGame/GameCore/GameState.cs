@@ -21,7 +21,7 @@ namespace StarlightGame.GameCore
         public GameState()
         {
             m_rng = new Random();
-            m_field = new GameField(100);
+            m_field = new GameField();
         }
         #endregion
 

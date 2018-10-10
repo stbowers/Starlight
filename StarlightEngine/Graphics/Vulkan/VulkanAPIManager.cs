@@ -207,9 +207,9 @@ namespace StarlightEngine.Graphics.Vulkan
         private static bool DebugReportCallback(DebugReportCallbackInfo reportInfo)
         {
             // For what types of reports should we print?
-            DebugReportFlagsExt printFlags = DebugReportFlagsExt.Error | DebugReportFlagsExt.Warning;
+            DebugReportFlagsExt printFlags = DebugReportFlagsExt.Error | DebugReportFlagsExt.Warning | DebugReportFlagsExt.PerformanceWarning;
             // For what types of reports should we throw?
-            DebugReportFlagsExt throwFlags = DebugReportFlagsExt.Error | DebugReportFlagsExt.Warning;
+            DebugReportFlagsExt throwFlags = DebugReportFlagsExt.Error;
 
             if ((reportInfo.Flags & printFlags) != 0)
             {
@@ -377,7 +377,7 @@ namespace StarlightEngine.Graphics.Vulkan
             graphicsPoolInfo.QueueFamilyIndex = (int)m_deviceQueueFamilies.graphicsFamily;
 
             m_graphicsCommandPool = m_device.CreateCommandPool(graphicsPoolInfo);
-            m_poolLocks.Add(m_graphicsCommandPool.Handle, new ThreadLock(EngineConstants.THREADLEVEL_DIRECTAPI));
+            m_poolLocks.Add(m_graphicsCommandPool.Handle, new ThreadLock(EngineConstants.THREADLEVEL_SWAPCHAIN_RECORD));
 
             // Even though the graphics queue and transfer queue might be the same, and therefore we could
             // use the graphics command pool, we'll make a new one so that it can be optimized for transfer
@@ -387,7 +387,7 @@ namespace StarlightEngine.Graphics.Vulkan
             transferPoolInfo.QueueFamilyIndex = (int)m_deviceQueueFamilies.transferFamily;
 
             m_transferCommandPool = m_device.CreateCommandPool(transferPoolInfo);
-            m_poolLocks.Add(m_transferCommandPool.Handle, new ThreadLock(EngineConstants.THREADLEVEL_DIRECTAPI));
+            m_poolLocks.Add(m_transferCommandPool.Handle, new ThreadLock(EngineConstants.THREADLEVEL_SWAPCHAIN_RECORD));
         }
 
         private void CreateSwapchain(bool recreate = false)
@@ -933,10 +933,10 @@ namespace StarlightEngine.Graphics.Vulkan
             // submit
             SubmitInfo submitInfo = new SubmitInfo();
             submitInfo.CommandBuffers = new[] { commandBuffer.Handle };
-            m_poolLocks[pool.Handle].ExitLock();
-            ThreadLock.EnterMultiple(m_poolLocks[pool.Handle], m_queueLocks[submitQueue.Handle]);
+            m_queueLocks[submitQueue.Handle].EnterLock();
             submitQueue.Submit(submitInfo, transferDone);
-            ThreadLock.ExitMultiple(m_poolLocks[pool.Handle], m_queueLocks[submitQueue.Handle]);
+            m_queueLocks[submitQueue.Handle].ExitLock();
+            m_poolLocks[pool.Handle].ExitLock();
 
             /* Wait for command buffer to finish */
             m_device.WaitFences(new[] { transferDone }, true);
@@ -1111,10 +1111,11 @@ namespace StarlightEngine.Graphics.Vulkan
             submitInfo.SignalSemaphores = new[] { m_renderFinishedSemaphores[m_currentFrame].Handle };
 
             // get lock for queue
-            ThreadLock.EnterMultiple(m_queueLocks[m_graphicsQueue.Handle], m_poolLocks[m_swapchainCommandBuffers[m_currentFrame].Parent.Handle], m_inFlightFenceLocks[m_currentFrame]);
+            ThreadLock.EnterMultiple(m_queueLocks[m_graphicsQueue.Handle], m_inFlightFenceLocks[m_currentFrame]);
 			m_frameInFlight[m_currentFrame] = true;
             m_graphicsQueue.Submit(submitInfo, m_inFlightFences[m_currentFrame]);
-            ThreadLock.ExitMultiple(m_queueLocks[m_graphicsQueue.Handle], m_poolLocks[m_swapchainCommandBuffers[m_currentFrame].Parent.Handle], m_inFlightFenceLocks[m_currentFrame]);
+            ThreadLock.ExitMultiple(m_queueLocks[m_graphicsQueue.Handle], m_inFlightFenceLocks[m_currentFrame]);
+            m_poolLocks[m_swapchainCommandBuffers[m_currentFrame].Parent.Handle].ExitLock();
         }
 
         public void Present()
@@ -1165,7 +1166,6 @@ namespace StarlightEngine.Graphics.Vulkan
             beginInfo.Flags = CommandBufferUsages.SimultaneousUse;
             m_poolLocks[currentBuffer.Parent.Handle].EnterLock();
             currentBuffer.Begin(beginInfo);
-            m_poolLocks[currentBuffer.Parent.Handle].ExitLock();
             currentFrame = m_currentFrame;
             return currentBuffer;
         }

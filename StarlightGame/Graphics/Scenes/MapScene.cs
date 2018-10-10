@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Diagnostics;
+using System.Collections.Generic;
 using StarlightEngine.Graphics.Vulkan;
 using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Graphics.Vulkan.Objects;
@@ -9,6 +10,7 @@ using StarlightEngine.Events;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightGame.GameCore;
 using StarlightGame.GameCore.Field;
+using StarlightGame.GameCore.Field.Galaxy;
 
 namespace StarlightGame.Graphics.Scenes
 {
@@ -42,11 +44,19 @@ namespace StarlightGame.Graphics.Scenes
 
             // Create sprite for each star
             Console.WriteLine("Creating sprites...");
-            StarSystem[] stars = m_gameState.Field.Stars;
-            m_starSprites = new Vulkan2DSprite[stars.Length];
-            for (int i = 0; i < stars.Length; i++){
-                m_starSprites[i] = new Vulkan2DSprite(m_apiManager, "./assets/Star.png", stars[i].Location, new FVec2(.03f, .03f));
-                AddObject(2, m_starSprites[i]);
+            Quadrant[] quadrants = m_gameState.Field.Quadrants;
+			List<Vulkan2DSprite> starSprites = new List<Vulkan2DSprite>();
+            for (int i = 0; i < quadrants.Length; i++){
+				for (int j = 0; j < 4; j++){
+					for (int k = 0; k < 4; k++){
+						StarSystem system = quadrants[i][j, k];
+						if (system != null){
+							Vulkan2DSprite starSprite = new Vulkan2DSprite(m_apiManager, "./assets/Star.png", system.Location, new FVec2(.03f, .03f));
+							starSprites.Add(starSprite);
+							AddObject(2, starSprite);
+						}
+					}
+				}
             }
             Console.WriteLine("Done!");
 

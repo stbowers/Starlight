@@ -2,7 +2,7 @@ using System;
 using System.Runtime.Serialization;
 using StarlightEngine.Graphics.Math;
 
-namespace StarlightGame.GameCore.Field
+namespace StarlightGame.GameCore.Field.Galaxy
 {
     [Serializable()]
     public class StarSystem : ISerializable

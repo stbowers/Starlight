@@ -61,12 +61,13 @@ namespace StarlightGame.Graphics.Scenes
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
 
-			// animate loading bar (2s)
-			while (stopwatch.ElapsedMilliseconds / 1000.0f < 2.0f)
+			// animate loading bar (.5s)
+			while (stopwatch.ElapsedMilliseconds / 1000.0f < .5f)
 			{
-				m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 2000.0f);
-				Thread.Sleep(10);
+				m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 500.0f);
+				Thread.Sleep(1);
 			}
+			m_loadingBar.UpdatePercentage(1.0f);
 
 			// set host game button to visible
 			m_hostGameButton.SetVisible(true);
