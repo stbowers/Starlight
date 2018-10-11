@@ -7,7 +7,7 @@ using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
-	public class VulkanUIButton : ICollectionObject
+	public class VulkanUIButton : ICollectionObject, IVulkanObject
 	{
 		VulkanAPIManager m_apiManager;
 
@@ -20,6 +20,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		Vulkan2DRect m_mouseOverHighlight;
 		Vulkan2DRect m_mouseClickHighlight;
 		IVulkanObject[] m_objects;
+
+		FMat4 m_projectionMatrix = new FMat4(1.0f);
 
 		// collider
 		VulkanBoxCollider m_collider;
@@ -74,12 +76,33 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			}
 		}
 
+		FMat4 m_view;
+
+		public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform){
+			m_projectionMatrix = projection;
+			m_view = view;
+			m_text.UpdateMVPData(projection, view, modelTransform);
+			m_mouseOverHighlight.UpdateMVPData(projection, view, modelTransform);
+			m_mouseClickHighlight.UpdateMVPData(projection, view, modelTransform);
+			m_collider.UpdateMVPData(projection, view, modelTransform);
+		}
+
 		public void MouseEventListener(IEvent e){
 			// cast e to MouseEvent
 			MouseEvent mouseEvent = e as MouseEvent;
 
+			// Get ray from camera to mouse position on screen
+			//FVec3 start = FMat4.UnProject(m_projectionMatrix, m_view, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), -1.0f));
+			//FVec3 end = FMat4.UnProject(m_projectionMatrix, m_view, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 1.0f));
+			//Ray mouseRay = new Ray(start, end - start);
+			//Ray mouseRay = new Ray(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), -1.0f), new FVec3(0.0f, 0.0f, 1.0f));
+
+			//System.Console.WriteLine("mouse location on near plane: ({0}, {1}, {2})", start.X(), start.Y(), start.Z());
+			//System.Console.WriteLine("mouse location on far plane: ({0}, {1}, {2})", end.X(), end.Y(), end.Z());
+
 			// Determine if mouse position is inside our collider, and select if it is
-			bool selected = m_collider.IsCollision(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
+			bool selected = m_collider.IsPointInside(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
+			//bool selected = m_collider.DoesIntersect(mouseRay);
 			if (!m_selected && selected){
 				m_onSelectDelegate?.Invoke();
 			}

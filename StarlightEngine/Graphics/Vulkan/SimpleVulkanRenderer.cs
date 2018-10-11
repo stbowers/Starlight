@@ -80,10 +80,10 @@ namespace StarlightEngine.Graphics.Vulkan
 
 					if (graphicsObject is IVulkanDrawableObject)
 					{
-						if (!((IVulkanDrawableObject)graphicsObject).Visible)
+						if (!(((IVulkanDrawableObject)graphicsObject).Visible))
 						{
 							// if the object is not visible, don't draw it
-							break;
+							continue;
 						}
 						IVulkanDrawableObject drawableObject = graphicsObject as IVulkanDrawableObject;
 						for (int renderPassIndex = 0; renderPassIndex < drawableObject.RenderPasses.Length; renderPassIndex++)

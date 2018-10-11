@@ -5,7 +5,7 @@ using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
-    public class Vulkan2DProgressBar : ICollectionObject
+    public class Vulkan2DProgressBar : ICollectionObject, IVulkanObject
     {
         VulkanAPIManager m_apiManager;
 
@@ -31,6 +31,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void Update()
         {
+        }
+
+        public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform){
+            m_fill.UpdateMVPData(projection, view, modelTransform);
+            m_outline.UpdateMVPData(projection, view, modelTransform);
         }
 
         public void UpdatePercentage(float newPercentage)

@@ -13,6 +13,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		VulkanAPIManager m_apiManager;
 		VulkanPipeline m_pipeline;
 
+		FMat4 m_modelMatrix;
+
 		byte[] m_meshData;
 		byte[] m_mvpData;
         byte[] m_recolorData;
@@ -50,11 +52,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			System.Buffer.BlockCopy(indices, 0, m_meshData, 4*(int)topLeft.PrimativeSizeOf, 6 * 4);
 
 			// Create mvp data
-			FMat4 mvp = new FMat4(1.0f);
-			float depth = 1.0f;
+			m_modelMatrix = new FMat4(1.0f);
+			float depth = 0.0f;
 
 			m_mvpData = new byte[(1 * 4 * 4 * 4) + (1 * 4)];
-			System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, 4 * 4 * 4);
+			System.Buffer.BlockCopy(m_modelMatrix.Bytes, 0, m_mvpData, 0, 4 * 4 * 4);
 			System.Buffer.BlockCopy(new[] { depth }, 0, m_mvpData, 4 * 4 * 4, 4);
 
             // Create recolor data
@@ -91,6 +93,13 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		public void Update()
 		{
+		}
+
+		public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform){
+			FMat4 mvp = projection * view * modelTransform * m_modelMatrix;
+
+			System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, 4 * 4 * 4);
+			m_mvpUniform.UpdateUniformBuffer(m_mvpData);
 		}
 
 		public RenderPass[] RenderPasses

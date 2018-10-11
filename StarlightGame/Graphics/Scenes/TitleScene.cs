@@ -16,6 +16,8 @@ namespace StarlightGame.Graphics.Scenes
 		EventManager m_eventManager;
 
 		// Objects
+		VulkanCanvas m_canvas;
+		Vulkan2DSprite m_background;
 		Vulkan2DSprite m_title;
 		Vulkan2DProgressBar m_loadingBar;
 		VulkanUIButton m_hostGameButton;
@@ -36,18 +38,34 @@ namespace StarlightGame.Graphics.Scenes
 			m_sceneManager = sceneManager;
 			m_eventManager = eventManager;
 
-			m_title = new Vulkan2DSprite(apiManager, "./assets/Title.png", new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f));
-			AddObject(1, m_title);
+			FMat4 model = FMat4.Rotate((0.0f / 1000.0f) * ((float)System.Math.PI / 4), new FVec3(0.0f, 1.0f, 0.0f));
+			FMat4 view = FMat4.LookAt(new FVec3(2.0f, 0.0f, 2.0f), new FVec3(0.0f, 0.0f, 0.0f), new FVec3(0.0f, 1.0f, 0.0f));
+			FMat4 proj = FMat4.Perspective((float)(75 * System.Math.PI) / 180, apiManager.GetSwapchainImageExtent().Width / apiManager.GetSwapchainImageExtent().Height, 0.01f, 100.0f);
+
+			m_canvas = new VulkanCanvas(new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f), new FVec2(2.0f, 2.0f));
+			//m_canvas = new VulkanCanvas(model, new FVec2(2.0f, 2.0f), proj, view);
+
+			m_background = new Vulkan2DSprite(apiManager, "./assets/bricks.jpg", new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f));
+			//AddObject(0, m_background);
+			//m_canvas.AddObject(m_background);
+
+			m_title = new Vulkan2DSprite(apiManager, "./assets/Title.png", new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f), 0.0f);
+			//AddObject(1, m_title);
+			m_canvas.AddObject(m_title);
 
 			float fill = 0.0f;
 			m_loadingBar = new Vulkan2DProgressBar(apiManager, new FVec2(-.5f, .25f), new FVec2(1.0f, .1f), fill, new FVec4(1.0f, 1.0f, 1.0f, 1.0f));
-			AddObject(2, m_loadingBar);
+			//AddObject(2, m_loadingBar);
+			m_canvas.AddObject(m_loadingBar);
 
 			// Host Game
 			m_hostGameScene = new HostGameScene(m_apiManager, m_sceneManager, m_eventManager);
 			m_hostGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Host Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), onHostGameClicked);
-			AddObject(2, m_hostGameButton);
+			//AddObject(2, m_hostGameButton);
+			m_canvas.AddObject(m_hostGameButton);
 			m_hostGameButton.SetVisible(false);
+
+			AddObject(1, m_canvas);
 
 			// Start animation on new thread
 			m_animationThread = new Thread(AnimateTitleScreen);
@@ -61,13 +79,27 @@ namespace StarlightGame.Graphics.Scenes
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
 
-			// animate loading bar (.5s)
-			while (stopwatch.ElapsedMilliseconds / 1000.0f < .5f)
+			// animate loading bar
+			while (stopwatch.ElapsedMilliseconds / 1000.0f < 1.0f)
 			{
-				m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 500.0f);
+				m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 1000.0f);
 				Thread.Sleep(1);
 			}
 			m_loadingBar.UpdatePercentage(1.0f);
+			m_loadingBar.SetVisible(false);
+
+			// Move title sprite
+			stopwatch.Restart();
+			FMat4 proj = new FMat4(1.0f);
+			FMat4 view = new FMat4(1.0f);
+			while (stopwatch.ElapsedMilliseconds / 1000.0f < .75f)
+			{
+				m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 750.0f);
+				FMat4 shift = FMat4.Translate(new FVec3(0.0f, -(stopwatch.ElapsedMilliseconds / 1750.0f), 0.0f));
+				m_title.UpdateMVPData(m_canvas.Projection, m_canvas.View, m_canvas.Model * shift);
+				Thread.Sleep(1);
+			}
+
 
 			// set host game button to visible
 			m_hostGameButton.SetVisible(true);

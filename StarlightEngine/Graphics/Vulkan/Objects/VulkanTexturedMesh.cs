@@ -22,6 +22,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		byte[] m_meshData;
 		byte[] m_mvpData;
 		byte[] m_lightingData;
+		FMat4 m_modelMatrix;
 
 		VulkanManagedBuffer m_objectBuffer;
 
@@ -39,6 +40,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_pipeline = StaticPipelines.pipeline_basic3D;
 
 			this.Visible = true;
+
+			m_modelMatrix = model;
 
 			// Load object
 			m_loadedObject = WavefrontModelLoader.LoadFile(objFile);
@@ -83,21 +86,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		{
 		}
 
-		public void UpdateModelMatrix(FMat4 newModel)
-		{
-			System.Buffer.BlockCopy(newModel.Bytes, 0, m_mvpData, 0 * 4 * 4 * 4, 4 * 4 * 4);
-			m_mvpUniform.UpdateUniformBuffer(m_mvpData);
-		}
-
-		public void UpdateViewMatrix(FMat4 newView)
-		{
-			System.Buffer.BlockCopy(newView.Bytes, 0, m_mvpData, 1 * 4 * 4 * 4, 4 * 4 * 4);
-			m_mvpUniform.UpdateUniformBuffer(m_mvpData);
-		}
-
-		public void UpdateProjectionMatrix(FMat4 newProj)
-		{
-			System.Buffer.BlockCopy(newProj.Bytes, 0, m_mvpData, 0 * 4 * 4 * 4, 4 * 4 * 4);
+		public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform){
+			FMat4 finalModel = modelTransform * m_modelMatrix;
+			System.Buffer.BlockCopy(finalModel.Bytes, 0, m_mvpData, 0 * 4 * 4 * 4, 4 * 4 * 4);
+			System.Buffer.BlockCopy(view.Bytes, 0, m_mvpData, 1 * 4 * 4 * 4, 4 * 4 * 4);
+			System.Buffer.BlockCopy(projection.Bytes, 0, m_mvpData, 2 * 4 * 4 * 4, 4 * 4 * 4);
 			m_mvpUniform.UpdateUniformBuffer(m_mvpData);
 		}
 

@@ -26,11 +26,14 @@ namespace StarlightEngine.Graphics.Scenes
                 m_objects.Add(layer, list);
             }
 
-			// add object
+            // add object
             list.Add(obj);
 
-			// add listeners
-			m_eventListeners.AddRange(obj.EventListeners);
+            // add listeners
+            if (obj.EventListeners != null)
+            {
+                m_eventListeners.AddRange(obj.EventListeners);
+            }
 
             // If it's a collection, add the other objects too
             if (obj is ICollectionObject)
@@ -48,13 +51,14 @@ namespace StarlightEngine.Graphics.Scenes
             {
                 if (objList.Value.Contains(obj))
                 {
-					// remove object
+                    // remove object
                     objList.Value.Remove(obj);
 
-					// remove listeners
-					foreach ((EventManager.HandleEventDelegate, EventType) listener in obj.EventListeners){
-						m_eventListeners.Remove(listener);
-					}
+                    // remove listeners
+                    foreach ((EventManager.HandleEventDelegate, EventType) listener in obj.EventListeners)
+                    {
+                        m_eventListeners.Remove(listener);
+                    }
                 }
             }
         }

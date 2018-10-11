@@ -15,6 +15,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
 		VulkanAPIManager m_apiManager;
 
+		FMat4 m_projectionMatrix;
+		FMat4 m_viewMatrix;
+
 		AnimationKeyframe[] m_keyframes;
 
 		AnimationState m_animationState = new AnimationState();
@@ -24,6 +27,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		base(apiManager, objFile, textureFile, keyframes[0].Translation * keyframes[0].Rotation.GetRotationMatrix(), view, proj, lightPosition, lightColor, ambientLight, shineDamper, reflectivity)
 		{
 			m_apiManager = apiManager;
+
+			m_projectionMatrix = proj;
+			m_viewMatrix = view;
 
 			m_keyframes = keyframes;
 
@@ -66,7 +72,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 				FMat4 translation = FMat4.Interpolate(lastFrame.Translation, thisFrame.Translation, interpolationFactor);
 				Quaternion rotation = Quaternion.Slerp(lastFrame.Rotation, thisFrame.Rotation, interpolationFactor);
 
-				base.UpdateModelMatrix(translation * rotation.GetRotationMatrix());
+				//base.UpdateModelMatrix(translation * rotation.GetRotationMatrix());
+				base.UpdateMVPData(m_projectionMatrix, m_viewMatrix, translation * rotation.GetRotationMatrix());
 
 				if (m_animationState.position >= m_animationState.length)
 				{
