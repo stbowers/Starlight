@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Threading;
 using StarlightEngine.Graphics;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 using StarlightEngine.Threadding;
 
 namespace StarlightEngine.Events

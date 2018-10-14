@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace StarlightEngine.Graphics.Math
+namespace StarlightEngine.Math
 {
     // Defines simple math operations for a type T
     public struct SimpleOperations<T>

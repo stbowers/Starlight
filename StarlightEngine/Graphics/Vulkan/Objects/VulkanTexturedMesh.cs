@@ -1,5 +1,5 @@
 ﻿using StarlightEngine.Graphics.Objects;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 using VulkanCore;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Graphics.Vulkan.Objects.Components;

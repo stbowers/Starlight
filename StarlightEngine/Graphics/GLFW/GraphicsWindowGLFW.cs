@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 using glfw3;
 using StarlightEngine.Events;
 

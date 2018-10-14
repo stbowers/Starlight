@@ -1,6 +1,6 @@
 using System;
 
-namespace StarlightEngine.Graphics.Math
+namespace StarlightEngine.Math
 {
     /// <summary>
     /// Represents a ray in R^3

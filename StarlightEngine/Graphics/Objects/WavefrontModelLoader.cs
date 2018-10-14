@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 
 namespace StarlightEngine.Graphics.Objects
 {

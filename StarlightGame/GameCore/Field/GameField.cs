@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.Serialization;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 using StarlightGame.GameCore.Field.Galaxy;
 
 namespace StarlightGame.GameCore.Field

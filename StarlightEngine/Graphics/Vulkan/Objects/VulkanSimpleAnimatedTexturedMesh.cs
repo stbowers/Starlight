@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using StarlightEngine.Graphics.Objects;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {

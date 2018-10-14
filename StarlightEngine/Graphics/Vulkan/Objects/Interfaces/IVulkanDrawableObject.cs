@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using StarlightEngine.Graphics.Objects;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 using VulkanCore;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects.Interfaces

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StarlightEngine.Graphics.Math
+namespace StarlightEngine.Math
 {
     public class BasicVector<T> : BasicMatrix<T>
     {

@@ -5,7 +5,7 @@ using StarlightEngine.Graphics.Vulkan;
 using StarlightEngine.Graphics.Vulkan.Objects;
 using StarlightEngine.Graphics.GLFW;
 using StarlightEngine.Graphics.Fonts;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Events;
 using StarlightEngine.Threadding;

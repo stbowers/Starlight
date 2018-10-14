@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace StarlightEngine.Graphics.Math
+namespace StarlightEngine.Math
 {
 	/* Interface defined on most math objects to get the underlying bytes for the data
 	 */

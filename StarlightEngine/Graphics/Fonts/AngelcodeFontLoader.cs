@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 
 namespace StarlightEngine.Graphics.Fonts
 {

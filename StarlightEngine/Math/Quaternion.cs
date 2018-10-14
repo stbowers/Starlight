@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace StarlightEngine.Graphics.Math
+namespace StarlightEngine.Math
 {
 	/* A quaternion is a specialized Vec4 representing 4D complex space, often used for rotations
 	 */

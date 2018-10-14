@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using StarlightEngine.Graphics.Vulkan;
 using StarlightEngine.Graphics.Scenes;
 using StarlightEngine.Graphics.Vulkan.Objects;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 using StarlightEngine.Events;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightGame.GameCore;

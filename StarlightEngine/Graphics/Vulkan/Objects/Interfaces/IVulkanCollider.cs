@@ -1,5 +1,5 @@
 ﻿using System;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects.Interfaces
 {

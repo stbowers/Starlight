@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 
 namespace StarlightEngine.Events
 {

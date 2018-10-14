@@ -1,5 +1,5 @@
 ﻿using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
-using StarlightEngine.Graphics.Math;
+using StarlightEngine.Math;
 using StarlightEngine.Graphics.Fonts;
 using StarlightEngine.Graphics.Objects;
 using System.Collections.Generic;
