@@ -11,7 +11,7 @@ namespace StarlightEngine.Graphics.Math
         // a ray is then defined on that line segment for all t >= 0
         FVec3 m_origin;
         FVec3 m_direction;
-        float m_tmin = 0.0f;
+        float m_tmin = float.NegativeInfinity;
         float m_tmax = float.PositiveInfinity;
 
         // pre-calculated components of 1/(m_direction), used to speed up clipping calculations
@@ -50,10 +50,6 @@ namespace StarlightEngine.Graphics.Math
 
         public void ClipX(float x0, float x1)
         {
-            // x(t) = o.x + t(v.x)
-            // x0 = o.x + t0(v.x)
-            // t0 = (x0 - o.x) / (v.x)
-
             // calculate intersections
             float t0 = (x0 - m_origin.X()) * m_invDirectionX;
             float t1 = (x1 - m_origin.X()) * m_invDirectionX;
@@ -87,10 +83,45 @@ namespace StarlightEngine.Graphics.Math
 
         public static Ray operator *(FMat4 matrix, Ray ray)
         {
+            // transform origin
             FVec3 newOrigin = (matrix * new FVec4(ray.m_origin.X(), ray.m_origin.Y(), ray.m_origin.Z(), 1.0f)).XYZ();
-            FVec3 newDirection = (matrix * new FVec4(ray.m_direction.X(), ray.m_direction.Y(), ray.m_direction.Z(), 1.0f)).XYZ();
+
+            // transform direction (no w component, so it doesn't get shifted)
+            FVec3 newDirection = (matrix * new FVec4(ray.m_direction.X(), ray.m_direction.Y(), ray.m_direction.Z(), 0.0f)).XYZ();
 
             return new Ray(newOrigin, newDirection);
+        }
+
+        public FVec3 Origin
+        {
+            get
+            {
+                return m_origin;
+            }
+        }
+
+        public FVec3 Direction
+        {
+            get
+            {
+                return m_direction;
+            }
+        }
+
+        public float TMin
+        {
+            get
+            {
+                return m_tmin;
+            }
+        }
+
+        public float TMax
+        {
+            get
+            {
+                return m_tmax;
+            }
         }
     }
 }

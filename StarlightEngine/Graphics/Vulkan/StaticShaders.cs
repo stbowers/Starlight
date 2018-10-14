@@ -35,9 +35,9 @@ namespace StarlightEngine.Graphics.Vulkan
             if (shader_basic3D != null) return;
 
             VulkanShader.ShaderCreateInfo shaderCreateInfo = new VulkanShader.ShaderCreateInfo();
-            shaderCreateInfo.vertexShaderFile = "./Shaders/shader_basic3D.vert.spv";
+            shaderCreateInfo.vertexShaderFile = "./shaders/shader_basic3D.vert.spv";
             shaderCreateInfo.vertexEntryPoint = "main";
-            shaderCreateInfo.fragmentShaderFile = "./Shaders/shader_basic3D.frag.spv";
+            shaderCreateInfo.fragmentShaderFile = "./shaders/shader_basic3D.frag.spv";
             shaderCreateInfo.fragmentEntryPoint = "main";
 
             shaderCreateInfo.inputs = new[] {
@@ -101,9 +101,9 @@ namespace StarlightEngine.Graphics.Vulkan
             if (shader_distanceFieldFont != null) return;
 
             VulkanShader.ShaderCreateInfo shaderCreateInfo = new VulkanShader.ShaderCreateInfo();
-            shaderCreateInfo.vertexShaderFile = "./Shaders/shader_distanceFieldFont.vert.spv";
+            shaderCreateInfo.vertexShaderFile = "./shaders/shader_distanceFieldFont.vert.spv";
             shaderCreateInfo.vertexEntryPoint = "main";
-            shaderCreateInfo.fragmentShaderFile = "./Shaders/shader_distanceFieldFont.frag.spv";
+            shaderCreateInfo.fragmentShaderFile = "./shaders/shader_distanceFieldFont.frag.spv";
             shaderCreateInfo.fragmentEntryPoint = "main";
 
             shaderCreateInfo.inputs = new[] {
@@ -158,9 +158,9 @@ namespace StarlightEngine.Graphics.Vulkan
 			if (shader_basic2D != null) return;
 
 			VulkanShader.ShaderCreateInfo shaderCreateInfo = new VulkanShader.ShaderCreateInfo();
-			shaderCreateInfo.vertexShaderFile = "./Shaders/shader_basic2D.vert.spv";
+			shaderCreateInfo.vertexShaderFile = "./shaders/shader_basic2D.vert.spv";
 			shaderCreateInfo.vertexEntryPoint = "main";
-			shaderCreateInfo.fragmentShaderFile = "./Shaders/shader_basic2D.frag.spv";
+			shaderCreateInfo.fragmentShaderFile = "./shaders/shader_basic2D.frag.spv";
 			shaderCreateInfo.fragmentEntryPoint = "main";
 
 			shaderCreateInfo.inputs = new[] {
@@ -214,9 +214,9 @@ namespace StarlightEngine.Graphics.Vulkan
 			if (shader_recolor2D != null) return;
 
 			VulkanShader.ShaderCreateInfo shaderCreateInfo = new VulkanShader.ShaderCreateInfo();
-			shaderCreateInfo.vertexShaderFile = "./Shaders/shader_recolor2D.vert.spv";
+			shaderCreateInfo.vertexShaderFile = "./shaders/shader_recolor2D.vert.spv";
 			shaderCreateInfo.vertexEntryPoint = "main";
-			shaderCreateInfo.fragmentShaderFile = "./Shaders/shader_recolor2D.frag.spv";
+			shaderCreateInfo.fragmentShaderFile = "./shaders/shader_recolor2D.frag.spv";
 			shaderCreateInfo.fragmentEntryPoint = "main";
 
 			shaderCreateInfo.inputs = new[] {
@@ -269,9 +269,9 @@ namespace StarlightEngine.Graphics.Vulkan
 			if (shader_color2D != null) return;
 
 			VulkanShader.ShaderCreateInfo shaderCreateInfo = new VulkanShader.ShaderCreateInfo();
-			shaderCreateInfo.vertexShaderFile = "./Shaders/shader_color2D.vert.spv";
+			shaderCreateInfo.vertexShaderFile = "./shaders/shader_color2D.vert.spv";
 			shaderCreateInfo.vertexEntryPoint = "main";
-			shaderCreateInfo.fragmentShaderFile = "./Shaders/shader_color2D.frag.spv";
+			shaderCreateInfo.fragmentShaderFile = "./shaders/shader_color2D.frag.spv";
 			shaderCreateInfo.fragmentEntryPoint = "main";
 
 			shaderCreateInfo.inputs = new[] {
@@ -294,6 +294,46 @@ namespace StarlightEngine.Graphics.Vulkan
 			shader_color2D = apiManager.CreateShader(shaderCreateInfo);
 		}
 
+		/* A basic shader to render colored 3d geometry
+         * Vertex inputs:
+         *      vec3 vertexPosition
+         *      vec4 color
+         *      
+         * Uniforms:
+         *      (set 0, binding 0) mvp buffer (vertex)
+         *          mat4 mvp
+         */
+		public static VulkanShader shader_color3D;
+		public static void LoadShaderColor3D(VulkanAPIManager apiManager)
+		{
+			if (shader_color3D != null) return;
+
+			VulkanShader.ShaderCreateInfo shaderCreateInfo = new VulkanShader.ShaderCreateInfo();
+			shaderCreateInfo.vertexShaderFile = "./shaders/shader_color3D.vert.spv";
+			shaderCreateInfo.vertexEntryPoint = "main";
+			shaderCreateInfo.fragmentShaderFile = "./shaders/shader_color3D.frag.spv";
+			shaderCreateInfo.fragmentEntryPoint = "main";
+
+			shaderCreateInfo.inputs = new[] {
+				new[] {
+					ShaderTypes.vec3,
+					ShaderTypes.vec4,
+				}
+			};
+
+			ShaderUniformInputInfo mvpBufferInfo = new ShaderUniformInputInfo();
+			mvpBufferInfo.set = 0;
+			mvpBufferInfo.binding = 0;
+			mvpBufferInfo.type = DescriptorType.UniformBuffer;
+			mvpBufferInfo.stage = ShaderStages.Vertex;
+
+			shaderCreateInfo.uniformInputInfos = new[] {
+				mvpBufferInfo,
+			};
+
+			shader_color3D = apiManager.CreateShader(shaderCreateInfo);
+		}
+
         /* Creates all shaders, which might take a while
          * (though usually not too long, the actually intensive part of loading the shaders will be done during pipeline creation)
          */
@@ -303,6 +343,7 @@ namespace StarlightEngine.Graphics.Vulkan
             LoadShaderDistanceFieldFont(apiManager);
 			LoadShaderBasic2D(apiManager);
 			LoadShaderColor2D(apiManager);
+            LoadShaderColor3D(apiManager);
             LoadShaderRecolor2D(apiManager);
         }
     }

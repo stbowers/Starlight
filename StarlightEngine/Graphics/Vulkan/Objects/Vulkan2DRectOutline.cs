@@ -32,7 +32,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		public Vulkan2DRectOutline(VulkanAPIManager apiManager, FVec2 position, FVec2 size, FVec4 color)
 		{
 			m_apiManager = apiManager;
-			m_pipeline = StaticPipelines.pipeline_colorLine;
+			m_pipeline = StaticPipelines.pipeline_colorLine2D;
 
 			m_renderPasses = new RenderPass[] { m_pipeline.GetRenderPass() };
 			m_pipelines = new VulkanPipeline[] { m_pipeline };

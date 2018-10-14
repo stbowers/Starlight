@@ -394,7 +394,8 @@ namespace StarlightEngine.Graphics.Fonts
 				lineWordCount++;
 			}
 
-			return cursor.Y();
+			//return cursor.Y();
+			return (scaleY * font.@base) - yPadding;
 		}
 
         private static void AddWordToMesh(AngelcodeFont font, float scaleX, float scaleY, string word, ref FVec2 cursor, ref List<FVec4> verts, ref List<int> indices)

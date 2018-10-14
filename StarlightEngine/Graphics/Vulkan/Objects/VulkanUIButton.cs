@@ -87,22 +87,24 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 			m_collider.UpdateMVPData(projection, view, modelTransform);
 		}
 
+		public VulkanBoxCollider GetCollider(){
+			return m_collider;
+		}
+
 		public void MouseEventListener(IEvent e){
 			// cast e to MouseEvent
 			MouseEvent mouseEvent = e as MouseEvent;
 
 			// Get ray from camera to mouse position on screen
-			//FVec3 start = FMat4.UnProject(m_projectionMatrix, m_view, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), -1.0f));
-			//FVec3 end = FMat4.UnProject(m_projectionMatrix, m_view, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 1.0f));
-			//Ray mouseRay = new Ray(start, end - start);
+			FVec3 start = FMat4.UnProject(m_projectionMatrix, m_view, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
+			FVec3 end = FMat4.UnProject(m_projectionMatrix, m_view, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 1.0f));
+			//end = new FVec3(0, 0, 0);
+			Ray mouseRay = new Ray(start, end - start);
 			//Ray mouseRay = new Ray(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), -1.0f), new FVec3(0.0f, 0.0f, 1.0f));
 
-			//System.Console.WriteLine("mouse location on near plane: ({0}, {1}, {2})", start.X(), start.Y(), start.Z());
-			//System.Console.WriteLine("mouse location on far plane: ({0}, {1}, {2})", end.X(), end.Y(), end.Z());
-
 			// Determine if mouse position is inside our collider, and select if it is
-			bool selected = m_collider.IsPointInside(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
-			//bool selected = m_collider.DoesIntersect(mouseRay);
+			//bool selected = m_collider.IsPointInside(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
+			bool selected = m_collider.DoesIntersect(mouseRay);
 			if (!m_selected && selected){
 				m_onSelectDelegate?.Invoke();
 			}

@@ -27,6 +27,11 @@ namespace StarlightEngine.Graphics
          */
         bool ShouldWindowClose();
 
+		/// <summary>
+		/// send a signal to the window to close
+		/// </summary>
+		void CloseWindow();
+
 		/* Gets the current mouse position in the window (top left is -1, -1, +x is to the right, +y is down)
 		 */
 		FVec2 GetMousePosition();

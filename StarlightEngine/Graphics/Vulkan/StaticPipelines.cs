@@ -230,7 +230,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipeline_color2D = apiManager.CreatePipeline(pipelineCreateInfo);
 		}
 
-		/* A pipeline which draws colored lines
+		/* A pipeline which draws colored 2d lines
 		 * Shader: color2D
          * Primatives: line list
          * Primative restart: no
@@ -240,13 +240,13 @@ namespace StarlightEngine.Graphics.Vulkan
          * Clear color: no
          * Clear depth: no
          */
-		public static VulkanPipeline pipeline_colorLine;
-		public static void LoadPipelineColorLine(VulkanAPIManager apiManager)
+		public static VulkanPipeline pipeline_colorLine2D;
+		public static void LoadPipelineColorLine2D(VulkanAPIManager apiManager)
 		{
-			if (pipeline_colorLine != null) return;
+			if (pipeline_colorLine2D != null) return;
 
 			VulkanPipeline.VulkanPipelineCreateInfo pipelineCreateInfo = new VulkanPipeline.VulkanPipelineCreateInfo();
-			pipelineCreateInfo.name = "colorLine";
+			pipelineCreateInfo.name = "colorLine2D";
 
 			// make sure shader is loaded
 			StaticShaders.LoadShaderColor2D(apiManager);
@@ -264,7 +264,44 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineCreateInfo.clearColorAttachment = false;
 			pipelineCreateInfo.clearDepthAttachment = false;
 
-			pipeline_colorLine = apiManager.CreatePipeline(pipelineCreateInfo);
+			pipeline_colorLine2D = apiManager.CreatePipeline(pipelineCreateInfo);
+		}
+
+		/* A pipeline which draws colored 3d lines
+		 * Shader: color2D
+         * Primatives: line list
+         * Primative restart: no
+         * Polygon mode: line
+         * Depth test: yes
+         * Depth writes: yes
+         * Clear color: no
+         * Clear depth: no
+         */
+		public static VulkanPipeline pipeline_colorLine3D;
+		public static void LoadPipelineColorLine3D(VulkanAPIManager apiManager)
+		{
+			if (pipeline_colorLine3D != null) return;
+
+			VulkanPipeline.VulkanPipelineCreateInfo pipelineCreateInfo = new VulkanPipeline.VulkanPipelineCreateInfo();
+			pipelineCreateInfo.name = "colorLine3D";
+
+			// make sure shader is loaded
+			StaticShaders.LoadShaderColor3D(apiManager);
+			pipelineCreateInfo.shader = StaticShaders.shader_color3D;
+
+			pipelineCreateInfo.topology = PrimitiveTopology.LineList;
+			pipelineCreateInfo.primitiveRestartEnable = false;
+			pipelineCreateInfo.polygonMode = PolygonMode.Line;
+
+			pipelineCreateInfo.frontFaceCCW = false;
+
+			pipelineCreateInfo.depthTestEnable = true;
+			pipelineCreateInfo.depthWriteEnable = true;
+
+			pipelineCreateInfo.clearColorAttachment = false;
+			pipelineCreateInfo.clearDepthAttachment = false;
+
+			pipeline_colorLine3D = apiManager.CreatePipeline(pipelineCreateInfo);
 		}
 
         /* Load all pipelines. This might take some time to complete, depending on the complexity of the pipelines being loaded, and more importantly the complexity
@@ -277,7 +314,8 @@ namespace StarlightEngine.Graphics.Vulkan
 			LoadPipelineBasic2D(apiManager);
 			LoadPipelineClear(apiManager);
 			LoadPipelineColor2D(apiManager);
-			LoadPipelineColorLine(apiManager);
+			LoadPipelineColorLine2D(apiManager);
+			LoadPipelineColorLine3D(apiManager);
             LoadPipelineRecolor2D(apiManager);
         }
     }

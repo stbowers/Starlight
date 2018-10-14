@@ -131,6 +131,10 @@ namespace StarlightEngine.Graphics.GLFW
             return Glfw.WindowShouldClose(m_window) != 0;
         }
 
+        public void CloseWindow(){
+            Glfw.SetWindowShouldClose(m_window, (int)glfw3.State.True);
+        }
+
         public FVec2 GetMousePosition()
         {
             FMat4 translation = new FMat4(1.0f);

@@ -12,11 +12,16 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		 *   0 <= v.Y <= 1,
 		 *   0 <= v.Z <= 1
 		 */
-		// m_transform: transforms object space into collision space
+        // m_transform: transforms object space into collision space
         FMat4 m_transform;
+        public FMat4 Transform {
+            get{
+                return m_transform;
+            }
+        }
 
-		// m_modelTransformInverse: transforms world space into object space
-		FMat4 m_modelTransformInverse;
+        // m_modelTransformInverse: transforms world space into object space
+        FMat4 m_modelTransformInverse;
 
         // 2D box colider
         public VulkanBoxCollider(FVec2 position, FVec2 size)
@@ -32,7 +37,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
-			m_modelTransformInverse = FMat4.Invert(modelTransform);
+            m_modelTransformInverse = FMat4.Invert(modelTransform);
         }
 
         public bool IsPointInside(FVec3 point)
@@ -50,16 +55,21 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public bool DoesIntersect(Ray ray)
         {
-			// Transform ray into collision space (world space -> object space -> collision space)
-			Ray transformedRay = m_transform * /*m_modelTransformInverse **/ ray;
+            // Transform ray into collision space (world space -> object space -> collision space)
+            Ray transformedRay = m_transform * m_modelTransformInverse * ray;
+            //Ray transformedRay = m_transform * ray;
+            //System.Console.WriteLine("Transformed ray: ({0}, {1}, {2})->({3}, {4}, {5})", transformedRay.Origin.X(), transformedRay.Origin.Y(), transformedRay.Origin.Z(), transformedRay.Direction.X(), transformedRay.Direction.Y(), transformedRay.Direction.Z());
 
-			// Clip ray with each plane of the box collider
-			transformedRay.ClipX(0, 1);
-			transformedRay.ClipY(0, 1);
-			transformedRay.ClipZ(0, 1);
+            // Clip ray with each plane of the box collider
+            transformedRay.ClipX(0, 1);
+            //System.Console.WriteLine("After clipping x: {0} <= t <= {1}", transformedRay.TMin, transformedRay.TMax);
+            transformedRay.ClipY(0, 1);
+            //System.Console.WriteLine("After clipping y: {0} <= t <= {1}", transformedRay.TMin, transformedRay.TMax);
+            transformedRay.ClipZ(0, 1);
+            //System.Console.WriteLine("After clipping z: {0} <= t <= {1}", transformedRay.TMin, transformedRay.TMax);
 
-			bool intersect = transformedRay.IsSegment();
-			return intersect;
+            bool intersect = transformedRay.IsSegment();
+            return intersect;
         }
 
         public (EventManager.HandleEventDelegate, EventType)[] EventListeners
