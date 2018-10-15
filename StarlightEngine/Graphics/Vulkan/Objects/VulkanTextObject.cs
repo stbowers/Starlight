@@ -16,7 +16,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         FVec2 m_position;
         float m_width;
-		FMat4 m_modelMatrix;
+        FMat4 m_modelMatrix;
 
         TextMesh m_textMesh;
 
@@ -65,10 +65,17 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_mesh = new VulkanMeshComponent(m_apiManager, m_pipeline, m_meshData, m_textMesh.vboOffset, m_textMesh.iboOffset, m_textMesh.numVertices, m_objectBuffer);
 
             // Create texture component
-            m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, "./assets/" + font.pages[0].file, false, Filter.Linear, Filter.Linear, m_materialDescriptorSet, 2);
+            VulkanTextureCreateInfo textureInfo = new VulkanTextureCreateInfo();
+            textureInfo.APIManager = m_apiManager;
+            textureInfo.FileName = "./assets/" + font.pages[0].file;
+            textureInfo.EnableMipmap = true;
+            textureInfo.MagFilter = Filter.Linear;
+            textureInfo.MinFilter = Filter.Linear;
+            VulkanTexture fontAtlas = VulkanTextureCache.GetTexture(font.face, textureInfo);
+            m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, fontAtlas, m_materialDescriptorSet, 2);
 
             // Create mvp uniform buffer
-			m_modelMatrix = new FMat4(1.0f);
+            m_modelMatrix = new FMat4(1.0f);
             m_modelMatrix[0, 0] = 1.0f / 640.0f;
             m_modelMatrix[1, 1] = 1.0f / 360.0f;
             float depth = 1.0f;
@@ -114,10 +121,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
-			FMat4 mvp = projection * view * modelTransform * m_modelMatrix;
-			
+            FMat4 mvp = projection * view * modelTransform * m_modelMatrix;
+
             System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, (int)mvp.PrimativeSizeOf);
-			m_mvpUniform.UpdateUniformBuffer(m_mvpData);
+            m_mvpUniform.UpdateUniformBuffer(m_mvpData);
         }
 
         public RenderPass[] RenderPasses

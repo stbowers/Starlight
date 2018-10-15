@@ -20,14 +20,16 @@ namespace StarlightGame.Graphics.Scenes
         Vulkan2DSprite m_background;
         Vulkan2DSprite m_title;
         Vulkan2DProgressBar m_loadingBar;
+
         VulkanUIButton m_hostGameButton;
+        VulkanUIButton m_joinGameButton;
+        VulkanUIButton m_optionsButton;
+        VulkanUIButton m_exitGameButton;
 
         Vulkan3DLine m_xAxis;
         Vulkan3DLine m_yAxis;
         Vulkan3DLine m_zAxis;
         Vulkan3DLine m_mouseRay;
-
-        VulkanBoxCollider m_buttonCollider;
 
         // Animation thread
         Thread m_animationThread;
@@ -66,7 +68,14 @@ namespace StarlightGame.Graphics.Scenes
             //AddObject(0, m_background);
             //m_canvas.AddObject(m_background);
 
-            m_title = new Vulkan2DSprite(apiManager, "./assets/Title.png", new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f), 0.0f);
+            VulkanTextureCreateInfo createInfo = new VulkanTextureCreateInfo();
+            createInfo.APIManager = m_apiManager;
+            createInfo.FileName = "./assets/Title.png";
+            createInfo.EnableMipmap = false;
+            createInfo.MagFilter = VulkanCore.Filter.Nearest;
+            createInfo.MinFilter = VulkanCore.Filter.Nearest;
+            VulkanTexture titleTexture = VulkanTextureCache.GetTexture("./assets/Title.png", createInfo);
+            m_title = new Vulkan2DSprite(apiManager, titleTexture, new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f), 0.0f);
             //AddObject(1, m_title);
             m_canvas.AddObject(m_title);
 
@@ -77,11 +86,19 @@ namespace StarlightGame.Graphics.Scenes
 
             // Host Game
             m_hostGameScene = new HostGameScene(m_apiManager, m_sceneManager, m_eventManager);
-            m_hostGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Host Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), onHostGameClicked);
-            //AddObject(2, m_hostGameButton);
-            m_canvas.AddObject(m_hostGameButton);
+            m_hostGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Host Game", 20, new FVec2(-.1f, -.3f), new FVec2(.2f, .1f), onHostGameClicked);
             m_hostGameButton.SetVisible(false);
-            m_buttonCollider = m_hostGameButton.GetCollider();
+            m_canvas.AddObject(m_hostGameButton);
+
+            m_joinGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Host Game", 20, new FVec2(-.1f, -.2f), new FVec2(.2f, .1f), joinGameButtonClicked);
+            m_joinGameButton.SetVisible(false);
+            m_canvas.AddObject(m_joinGameButton);
+            m_optionsButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Join Game", 20, new FVec2(-.1f, -.1f), new FVec2(.2f, .1f), optionsButtonClicked);
+            m_optionsButton.SetVisible(false);
+            m_canvas.AddObject(m_optionsButton);
+            m_exitGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Exit Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), exitGameButtonClicked);
+            m_exitGameButton.SetVisible(false);
+            m_canvas.AddObject(m_exitGameButton);
 
             AddObject(1, m_canvas);
 
@@ -121,12 +138,28 @@ namespace StarlightGame.Graphics.Scenes
 
             // set host game button to visible
             m_hostGameButton.SetVisible(true);
+            m_joinGameButton.SetVisible(true);
+            m_optionsButton.SetVisible(true);
+            m_exitGameButton.SetVisible(true);
         }
 
         // Button delegates
         public void onHostGameClicked()
         {
             m_sceneManager.PushScene(m_hostGameScene);
+        }
+
+        public void joinGameButtonClicked()
+        {
+        }
+
+        public void optionsButtonClicked()
+        {
+        }
+
+        public void exitGameButtonClicked()
+        {
+            m_apiManager.GetWindowManager().CloseWindow();
         }
 
         bool m_rightButtonDown = false;
