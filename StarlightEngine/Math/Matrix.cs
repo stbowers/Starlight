@@ -325,6 +325,10 @@ namespace StarlightEngine.Math
     // a 4x4 square matrix
     public class FMat4 : FMat
     {
+        // common matricies - public const
+        public static readonly FMat4 Identity = new FMat4(1.0f);
+        public static readonly FMat4 Zero = new FMat4(0.0f);
+
         // create a 4x4 matrix
         public FMat4() : base(4, 4)
         {

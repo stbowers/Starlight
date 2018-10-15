@@ -29,6 +29,16 @@ namespace StarlightEngine.Math
             m_invDirectionX = 1 / m_direction.X();
             m_invDirectionY = 1 / m_direction.Y();
             m_invDirectionZ = 1 / m_direction.Z();
+
+            if (float.IsNaN(m_invDirectionX)){
+                m_invDirectionX = float.PositiveInfinity;
+            }
+            if (float.IsNaN(m_invDirectionY)){
+                m_invDirectionY = float.PositiveInfinity;
+            }
+            if (float.IsNaN(m_invDirectionZ)){
+                m_invDirectionZ = float.PositiveInfinity;
+            }
         }
 
         /// <summary>

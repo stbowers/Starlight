@@ -27,7 +27,8 @@ namespace StarlightGame.Graphics.Scenes
 		// Animation thread
 		Thread m_animationThread;
 
-		public HostGameScene(VulkanAPIManager apiManager, SceneManager sceneManager, EventManager eventManager)
+		public HostGameScene(VulkanAPIManager apiManager, SceneManager sceneManager, EventManager eventManager) :
+		base(new Camera(new FVec3(0.0f, 0.0f, 2.0f), FVec3.Zero, FVec3.Up), (float)System.Math.PI / 2, apiManager.GetSwapchainImageExtent().Width, apiManager.GetSwapchainImageExtent().Height, 0.1f, 100.0f)
 		{
 			/* Layers:
 			 * 	1: background

@@ -18,6 +18,7 @@ namespace StarlightEngine.Graphics.Vulkan
             public PolygonMode polygonMode;
 
 			public bool frontFaceCCW;
+			public bool backFaceCull;
 
 			public bool depthTestEnable;
 			public bool depthWriteEnable;
@@ -94,7 +95,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			rasterizer.DepthClampEnable = false;
 			rasterizer.RasterizerDiscardEnable = false;
 			rasterizer.PolygonMode = createInfo.polygonMode;
-			rasterizer.CullMode = CullModes.Back;
+			rasterizer.CullMode = (createInfo.backFaceCull) ? CullModes.Back : CullModes.None;
 			rasterizer.FrontFace = (createInfo.frontFaceCCW) ? FrontFace.CounterClockwise : FrontFace.Clockwise;
 			rasterizer.DepthBiasEnable = false;
 			rasterizer.DepthBiasConstantFactor = 0.0f;

@@ -20,6 +20,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         FMat4 m_modelTransform;
         FMat4 m_viewMatrix;
         FMat4 m_projectionMatrix;
+
+        bool m_lockToScreen = false;
         #endregion
 
         /// <summary>
@@ -39,7 +41,20 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         }
 
         /// <summary>
-        /// Creates a canvas in 2d space
+        /// Creates a 2d canvas
+        /// </summary>
+        /// <param name="topLeft">The top-left point of the canvas on the screen</param>
+        /// <param name="size">The size of the canvas in world space</param>
+        /// <param name="internalSize">The size of canvas space</param>
+        public VulkanCanvas(FVec3 position, Quaternion rotation, FMat4 projection, FMat4 view) :
+        this(FMat4.Translate(position) * rotation.GetRotationMatrix(), new FVec2(2.0f, 2.0f), projection, view)
+        {
+            // Flip 180 degrees along x axis, since Y is flipped
+            m_modelMatrix = FMat4.Rotate((float)System.Math.PI, FVec3.Right) * m_modelMatrix;
+        }
+
+        /// <summary>
+        /// Creates a 2d canvas 
         /// </summary>
         /// <param name="topLeft">The top-left point of the canvas on the screen</param>
         /// <param name="size">The size of the canvas in world space</param>
@@ -47,6 +62,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public VulkanCanvas(FVec2 topLeft, FVec2 size, FVec2 internalSize) :
         this(FMat4.Translate(new FVec3(topLeft.X(), topLeft.Y(), 0)) * FMat4.Scale(new FVec3(size.X() / internalSize.X(), size.Y() / internalSize.Y(), 1)) * FMat4.Translate(new FVec3(1, 1, 0)), internalSize, new FMat4(1.0f), new FMat4(1.0f))
         {
+            // Lock the projection and view matricies from being updated
+            m_lockToScreen = true;
         }
 
         public void Update()
@@ -55,9 +72,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
-            m_projectionMatrix = projection;
-            m_viewMatrix = view;
-            m_modelTransform = modelTransform;
+            if (!m_lockToScreen)
+            {
+                m_projectionMatrix = projection;
+                m_viewMatrix = view;
+                m_modelTransform = modelTransform;
+            }
 
             foreach (IVulkanObject child in m_objects)
             {

@@ -35,6 +35,7 @@ namespace StarlightEngine.Graphics.Vulkan
             pipelineCreateInfo.polygonMode = PolygonMode.Fill;
 
             pipelineCreateInfo.frontFaceCCW = true;
+            pipelineCreateInfo.backFaceCull = true;
 
             pipelineCreateInfo.depthTestEnable = true;
             pipelineCreateInfo.depthWriteEnable = true;
@@ -72,6 +73,7 @@ namespace StarlightEngine.Graphics.Vulkan
             pipelineCreateInfo.polygonMode = PolygonMode.Fill;
 
             pipelineCreateInfo.frontFaceCCW = false;
+            pipelineCreateInfo.backFaceCull = true;
 
             pipelineCreateInfo.depthTestEnable = true;
             pipelineCreateInfo.depthWriteEnable = true;
@@ -109,6 +111,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineCreateInfo.polygonMode = PolygonMode.Fill;
 
 			pipelineCreateInfo.frontFaceCCW = false;
+            pipelineCreateInfo.backFaceCull = true;
 
 			pipelineCreateInfo.depthTestEnable = true;
 			pipelineCreateInfo.depthWriteEnable = true;
@@ -146,6 +149,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineCreateInfo.polygonMode = PolygonMode.Fill;
 
 			pipelineCreateInfo.frontFaceCCW = false;
+            pipelineCreateInfo.backFaceCull = true;
 
 			pipelineCreateInfo.depthTestEnable = true;
 			pipelineCreateInfo.depthWriteEnable = true;
@@ -183,6 +187,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineCreateInfo.polygonMode = PolygonMode.Fill;
 
 			pipelineCreateInfo.frontFaceCCW = false;
+            pipelineCreateInfo.backFaceCull = true;
 
 			pipelineCreateInfo.depthTestEnable = false;
 			pipelineCreateInfo.depthWriteEnable = false;
@@ -220,6 +225,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineCreateInfo.polygonMode = PolygonMode.Fill;
 
 			pipelineCreateInfo.frontFaceCCW = false;
+            pipelineCreateInfo.backFaceCull = true;
 
 			pipelineCreateInfo.depthTestEnable = true;
 			pipelineCreateInfo.depthWriteEnable = true;
@@ -257,6 +263,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineCreateInfo.polygonMode = PolygonMode.Line;
 
 			pipelineCreateInfo.frontFaceCCW = false;
+            pipelineCreateInfo.backFaceCull = true;
 
 			pipelineCreateInfo.depthTestEnable = true;
 			pipelineCreateInfo.depthWriteEnable = true;
@@ -294,6 +301,7 @@ namespace StarlightEngine.Graphics.Vulkan
 			pipelineCreateInfo.polygonMode = PolygonMode.Line;
 
 			pipelineCreateInfo.frontFaceCCW = false;
+            pipelineCreateInfo.backFaceCull = true;
 
 			pipelineCreateInfo.depthTestEnable = true;
 			pipelineCreateInfo.depthWriteEnable = true;

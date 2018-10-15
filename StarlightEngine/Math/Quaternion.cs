@@ -6,6 +6,17 @@ namespace StarlightEngine.Math
 	 */
 	public class Quaternion: FVec4
 	{
+		// constant values for common quaternion rotations
+		public static readonly Quaternion Identity = new Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+
+		public Quaternion(float r, float i, float j, float k) :
+		base(r, i, j, k)
+		{ }
+
+		public Quaternion() :
+		base()
+		{ }
+
 		public float R
 		{
 			get

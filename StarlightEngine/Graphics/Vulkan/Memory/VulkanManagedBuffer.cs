@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using VulkanCore;
 using StarlightEngine.Threadding;
+using StarlightEngine.Math;
 
 namespace StarlightEngine.Graphics.Vulkan.Memory
 {

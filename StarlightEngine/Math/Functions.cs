@@ -1,5 +1,5 @@
 ﻿using System;
-namespace StarlightEngine
+namespace StarlightEngine.Math
 {
     public static class Functions
     {
