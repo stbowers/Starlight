@@ -14,6 +14,9 @@ namespace StarlightEngine.Graphics.Vulkan
 
         public Filter MinFilter;
         public Filter MagFilter;
+
+        public bool AnisotropyEnable;
+        public int MaxAnisotropy;
     }
 
     public class VulkanTexture
@@ -77,13 +80,13 @@ namespace StarlightEngine.Graphics.Vulkan
             m_textureImageView = m_textureImage.CreateView(viewInfo);
 
             SamplerCreateInfo samplerInfo = new SamplerCreateInfo();
-            samplerInfo.MagFilter = info.MinFilter;
-            samplerInfo.MinFilter = info.MagFilter;
+            samplerInfo.MagFilter = info.MagFilter;
+            samplerInfo.MinFilter = info.MinFilter;
             samplerInfo.AddressModeU = SamplerAddressMode.Repeat;
             samplerInfo.AddressModeV = SamplerAddressMode.Repeat;
             samplerInfo.AddressModeW = SamplerAddressMode.Repeat;
-            samplerInfo.AnisotropyEnable = true;
-            samplerInfo.MaxAnisotropy = 16;
+            samplerInfo.AnisotropyEnable = info.AnisotropyEnable;
+            samplerInfo.MaxAnisotropy = info.MaxAnisotropy;
             samplerInfo.BorderColor = BorderColor.IntOpaqueBlack;
             samplerInfo.UnnormalizedCoordinates = false;
             samplerInfo.CompareEnable = false;

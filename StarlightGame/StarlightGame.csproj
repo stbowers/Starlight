@@ -5,7 +5,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GLFW.NET" Version="0.9.7.1" />
     <PackageReference Include="VulkanCore" Version="1.0.0-alpha40" />
   </ItemGroup>
 

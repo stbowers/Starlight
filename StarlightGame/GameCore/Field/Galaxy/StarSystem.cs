@@ -32,6 +32,14 @@ namespace StarlightGame.GameCore.Field.Galaxy
                 return m_location;
             }
         }
+
+        public string Name
+        {
+            get
+            {
+                return m_name;
+            }
+        }
         #endregion
 
         #region Serialization

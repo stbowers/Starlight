@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "StarlightGame": {
+      "commandName": "Project",
+      "workingDirectory": "F:\\home\\bowers\\Build\\CS3020\\Starlight"
+    }
+  }
+}

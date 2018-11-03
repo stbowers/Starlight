@@ -264,7 +264,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             GetAllUpdateLocks();
 
             // set to true if the buffer's offset is moved, or if the size changes
-            bool memoryFootprintChanged = (data.Length != section.Size) || (offset != 0);
+            //bool memoryFootprintChanged = (data.Length != section.Size) || (offset != 0);
 
             // get start and end values for section before changing
             int oldEnd = section.Offset + section.Size;
@@ -278,12 +278,13 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
             int padding = Functions.Mod((m_sectionAlignment - newStart), m_sectionAlignment);
             int newOffset = newStart + padding;
             section.Offset = newOffset;
+            section.Padding = padding;
 
             // calculate new end
             int newEnd = newOffset + section.Size; // new last index of this section
 
             // determine if the memory footprint has changed
-            memoryFootprintChanged |= oldEnd != newEnd;
+            bool memoryFootprintChanged = oldEnd != newEnd;
 
             ReleaseAllUpdateLocks();
 

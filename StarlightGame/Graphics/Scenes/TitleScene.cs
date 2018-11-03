@@ -90,10 +90,10 @@ namespace StarlightGame.Graphics.Scenes
             m_hostGameButton.SetVisible(false);
             m_canvas.AddObject(m_hostGameButton);
 
-            m_joinGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Host Game", 20, new FVec2(-.1f, -.2f), new FVec2(.2f, .1f), joinGameButtonClicked);
+            m_joinGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Join Game", 20, new FVec2(-.1f, -.2f), new FVec2(.2f, .1f), joinGameButtonClicked);
             m_joinGameButton.SetVisible(false);
             m_canvas.AddObject(m_joinGameButton);
-            m_optionsButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Join Game", 20, new FVec2(-.1f, -.1f), new FVec2(.2f, .1f), optionsButtonClicked);
+            m_optionsButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Options", 20, new FVec2(-.1f, -.1f), new FVec2(.2f, .1f), optionsButtonClicked);
             m_optionsButton.SetVisible(false);
             m_canvas.AddObject(m_optionsButton);
             m_exitGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Exit Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), exitGameButtonClicked);

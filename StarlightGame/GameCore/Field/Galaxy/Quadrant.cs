@@ -20,12 +20,13 @@ namespace StarlightGame.GameCore.Field.Galaxy
         #region Constructor
         public Quadrant(Shape galaxyShape, int quadrantNumber)
         {
-            Random random = new Random((int)DateTime.Now.Ticks);
+            Random random = RNG.GetRNG();
             m_quadrantNumber = quadrantNumber;
 
             float[,] genBias = galaxyShape.GetGenerationBiases(quadrantNumber);
             FVec2 quadrantOffset = null;
-            switch (quadrantNumber){
+            switch (quadrantNumber)
+            {
                 case 0:
                     quadrantOffset = new FVec2(0.0f, -1.0f);
                     break;
@@ -45,12 +46,13 @@ namespace StarlightGame.GameCore.Field.Galaxy
                 for (int j = 0; j < m_sectors.GetLength(1); j++)
                 {
                     bool spawnStar = random.NextDouble() < genBias[i, j];
-                    if (spawnStar){
+                    if (spawnStar)
+                    {
                         FVec2 sectorOffset = new FVec2(i * SECTOR_SIZE, j * SECTOR_SIZE) + quadrantOffset;
                         float x = ((float)random.NextDouble() * SECTOR_SIZE);
                         float y = ((float)random.NextDouble() * SECTOR_SIZE);
                         FVec2 starLocation = new FVec2(x, y) + sectorOffset;
-                        m_sectors[i, j] = new StarSystem("", starLocation);
+                        m_sectors[i, j] = new StarSystem(SystemNames.GetSystemName(), starLocation);
                     }
                 }
             }
@@ -59,8 +61,10 @@ namespace StarlightGame.GameCore.Field.Galaxy
         #endregion
 
         #region Public Properties
-        public StarSystem this[int x, int y]{
-            get{
+        public StarSystem this[int x, int y]
+        {
+            get
+            {
                 return m_sectors[x, y];
             }
         }

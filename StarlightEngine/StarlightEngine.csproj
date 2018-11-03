@@ -8,15 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GLFW.NET" Version="0.9.7.1" />
     <PackageReference Include="System.Drawing.Common" Version="4.5.0" />
     <PackageReference Include="VulkanCore" Version="1.0.0-alpha40" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Shaders\*.*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
 </Project>

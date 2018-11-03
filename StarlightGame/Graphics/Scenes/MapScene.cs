@@ -11,6 +11,7 @@ using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightGame.GameCore;
 using StarlightGame.GameCore.Field;
 using StarlightGame.GameCore.Field.Galaxy;
+using StarlightGame.Graphics.Objects;
 
 namespace StarlightGame.Graphics.Scenes
 {
@@ -24,6 +25,8 @@ namespace StarlightGame.Graphics.Scenes
 
         // Objects
         Vulkan2DSprite[] m_starSprites;
+        StarOutline m_starOutline;
+        VulkanCanvas m_canvas;
 
         // Animation thread
         Thread m_animationThread;
@@ -43,6 +46,8 @@ namespace StarlightGame.Graphics.Scenes
 
             m_gameState = gameState;
 
+            m_canvas = new VulkanCanvas(new FVec2(-1, -1), new FVec2(2, 2), new FVec2(2, 2));
+
             // Create sprite for each star
             Console.WriteLine("Creating sprites...");
             Quadrant[] quadrants = m_gameState.Field.Quadrants;
@@ -61,16 +66,19 @@ namespace StarlightGame.Graphics.Scenes
                         StarSystem system = quadrants[i][j, k];
                         if (system != null)
                         {
-                            createInfo.FileName = "./assets/Star.png";
-                            VulkanTexture starTexture = VulkanTextureCache.GetTexture("./assets/Star.png", createInfo);
-                            Vulkan2DSprite starSprite = new Vulkan2DSprite(m_apiManager, starTexture, system.Location, new FVec2(.03f, .03f));
-                            starSprites.Add(starSprite);
-                            AddObject(2, starSprite);
+                            Star newStar = new Star(m_apiManager, system, OnStarClicked, OnStarMouseOver, OnStarMouseExit);
+                            m_canvas.AddObject(newStar);
                         }
                     }
                 }
             }
             Console.WriteLine("Done!");
+
+            // Create outline
+            m_starOutline = new StarOutline(m_apiManager);
+            m_canvas.AddObject(m_starOutline);
+
+            AddObject(0, m_canvas);
 
             // Start animation on new thread
             m_animationThread = new Thread(AnimateScreen);
@@ -83,6 +91,22 @@ namespace StarlightGame.Graphics.Scenes
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
+        }
+
+        public void OnStarMouseOver(Star star)
+        {
+            Console.WriteLine("Mouse Over");
+        }
+
+        public void OnStarMouseExit(Star star)
+        {
+            Console.WriteLine("Mouse Exit");
+        }
+
+        public void OnStarClicked(Star star)
+        {
+            Console.WriteLine("Mouse Click");
+            m_starOutline.FocusSystem(star.System);
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Runtime.Serialization;
 
 using StarlightGame.GameCore.Field;
+using StarlightEngine.Math;
 
 namespace StarlightGame.GameCore
 {
@@ -20,7 +21,7 @@ namespace StarlightGame.GameCore
         /// </summary>
         public GameState()
         {
-            m_rng = new Random();
+            m_rng = RNG.GetRNG();
             m_field = new GameField();
         }
         #endregion

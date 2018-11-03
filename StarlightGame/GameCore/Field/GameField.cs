@@ -44,7 +44,7 @@ namespace StarlightGame.GameCore.Field
         // Deserialization constructor
         public GameField(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
-            m_rng = new Random();
+            m_rng = RNG.GetRNG();
 
             m_quadrants = (Quadrant[])serializationInfo.GetValue("m_quadrants", typeof(Quadrant[]));
         }

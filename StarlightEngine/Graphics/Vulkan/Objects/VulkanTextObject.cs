@@ -45,6 +45,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
             this.Visible = true;
             m_transient = transient;
+            m_transient = false;
 
             // Create text mesh
             m_position = new FVec2(location.X() * (apiManager.GetSwapchainImageExtent().Width / 2.0f), location.Y() * (apiManager.GetSwapchainImageExtent().Height / 2.0f));
@@ -68,7 +69,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             VulkanTextureCreateInfo textureInfo = new VulkanTextureCreateInfo();
             textureInfo.APIManager = m_apiManager;
             textureInfo.FileName = "./assets/" + font.pages[0].file;
-            textureInfo.EnableMipmap = true;
+            textureInfo.EnableMipmap = false;
             textureInfo.MagFilter = Filter.Linear;
             textureInfo.MinFilter = Filter.Linear;
             VulkanTexture fontAtlas = VulkanTextureCache.GetTexture(font.face, textureInfo);
@@ -110,7 +111,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, newText, m_position, m_width);
             int meshDataSize = m_textMesh.meshBufferData.Length;
-            System.Array.Resize(ref m_meshData, meshDataSize);
+            m_meshData = new byte[meshDataSize];
             System.Buffer.BlockCopy(m_textMesh.meshBufferData, 0, m_meshData, 0, meshDataSize);
             m_mesh.UpdateMesh(m_meshData, m_textMesh.vboOffset, m_textMesh.iboOffset, m_textMesh.numVertices);
         }

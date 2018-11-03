@@ -26,7 +26,12 @@ namespace StarlightEngine.Math
         public static int Mod(int a, int b)
         {
             int r = a % b;
-            return (r < 0) ? r + b : r;
+            int m = (r < 0) ? r + b : r;
+            if (m < 0)
+            {
+                throw new Exception("Mod negative");
+            }
+            return m;
         }
     }
 }

@@ -115,7 +115,7 @@ namespace StarlightEngine.Events
                 m_eventManagerSettingsLock.ExitLock();
 
                 // poll events
-                m_windowManager.PollEvents();
+                //m_windowManager.PollEvents();
 
                 // Get lock again
                 m_eventManagerSettingsLock.EnterLock();
