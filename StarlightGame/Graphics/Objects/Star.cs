@@ -16,6 +16,7 @@ namespace StarlightGame.Graphics.Objects
     {
         #region Private members
         VulkanAPIManager m_apiManager;
+        IParent m_parent;
 
         // System
         StarSystem m_system;
@@ -74,6 +75,48 @@ namespace StarlightGame.Graphics.Objects
         }
 
         public void Update()
+        {
+
+        }
+
+        public FMat4 UIScale
+        {
+            get
+            {
+                return m_parent.UIScale;
+            }
+        }
+
+        public void SetParent(IParent parent)
+        {
+            m_parent = parent;
+        }
+
+        public FMat4 Projection
+        {
+            get
+            {
+                return m_parent.Projection;
+            }
+        }
+
+        public FMat4 View
+        {
+            get
+            {
+                return m_parent.View;
+            }
+        }
+
+        public FMat4 Model
+        {
+            get
+            {
+                return m_parent.Model;
+            }
+        }
+
+        public void AddObject(IGraphicsObject obj)
         {
 
         }

@@ -34,6 +34,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         VulkanUniformBufferComponent m_mvpUniform;
         VulkanUniformBufferComponent m_lightingUniform;
 
+        IParent m_parent;
+
         public VulkanTexturedMesh(VulkanAPIManager apiManager, string objFile, VulkanTexture texture, FMat4 model, FMat4 view, FMat4 proj, FVec4 lightPosition, FVec4 lightColor, float ambientLight, float shineDamper, float reflectivity)
         {
             m_apiManager = apiManager;
@@ -93,6 +95,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             System.Buffer.BlockCopy(view.Bytes, 0, m_mvpData, 1 * 4 * 4 * 4, 4 * 4 * 4);
             System.Buffer.BlockCopy(projection.Bytes, 0, m_mvpData, 2 * 4 * 4 * 4, 4 * 4 * 4);
             m_mvpUniform.UpdateUniformBuffer(m_mvpData);
+        }
+
+        public void SetParent(IParent parent)
+        {
+            m_parent = parent;
         }
 
         public RenderPass[] RenderPasses

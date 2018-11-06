@@ -8,6 +8,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
     public class Vulkan2DProgressBar : ICollectionObject, IVulkanObject
     {
         VulkanAPIManager m_apiManager;
+        IParent m_parent;
 
         FVec2 m_size;
 
@@ -33,7 +34,50 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
         }
 
-        public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform){
+        public FMat4 UIScale
+        {
+            get
+            {
+                return m_parent.UIScale;
+            }
+        }
+
+        public void SetParent(IParent parent)
+        {
+            m_parent = parent;
+        }
+
+        public FMat4 Projection
+        {
+            get
+            {
+                return m_parent.Projection;
+            }
+        }
+
+        public FMat4 View
+        {
+            get
+            {
+                return m_parent.View;
+            }
+        }
+
+        public FMat4 Model
+        {
+            get
+            {
+                return m_parent.Model;
+            }
+        }
+
+        public void AddObject(IGraphicsObject obj)
+        {
+
+        }
+
+        public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
+        {
             m_fill.UpdateMVPData(projection, view, modelTransform);
             m_outline.UpdateMVPData(projection, view, modelTransform);
         }

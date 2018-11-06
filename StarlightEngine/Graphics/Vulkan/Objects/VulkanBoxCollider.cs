@@ -1,6 +1,7 @@
 ﻿using StarlightEngine.Math;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Events;
+using StarlightEngine.Graphics.Objects;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
@@ -14,8 +15,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 		 */
         // m_transform: transforms object space into collision space
         FMat4 m_transform;
-        public FMat4 Transform {
-            get{
+        public FMat4 Transform
+        {
+            get
+            {
                 return m_transform;
             }
         }
@@ -33,6 +36,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void Update()
         {
+        }
+
+        public void SetParent(IParent parent)
+        {
+
         }
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)

@@ -5,6 +5,7 @@ using StarlightEngine.Graphics.Vulkan.Objects.Components;
 using System.Collections.Generic;
 using VulkanCore;
 using StarlightEngine.Events;
+using StarlightEngine.Graphics.Objects;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
@@ -12,6 +13,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
     {
         VulkanAPIManager m_apiManager;
         VulkanPipeline m_pipeline;
+        IParent m_parent;
 
         FMat4 m_modelMatrix;
         float m_depth;
@@ -82,6 +84,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void Update()
         {
+        }
+
+        public void SetParent(IParent parent)
+        {
+            m_parent = parent;
         }
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)

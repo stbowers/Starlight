@@ -46,7 +46,7 @@ namespace StarlightGame.Graphics.Scenes
             m_canvas.AddObject(m_startGameButton);
 
             // Add canvas to scene
-            AddObject(0, m_canvas);
+            AddObject(m_canvas);
         }
 
         // Button callbacks

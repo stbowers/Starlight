@@ -75,12 +75,18 @@ namespace StarlightGame
             // Mouse position tracker
             MousePositionWrapper mousePos = new MousePositionWrapper(apiManager, eventManager);
 
+            // Debug overlay canvas
+            VulkanCanvas debugCanvas = new VulkanCanvas(new FVec2(-1, -1), new FVec2(2, 2), new FVec2(2, 2));
+            debugCanvas.UIScale = FMat4.Scale(new FVec3(2.0f / (float)apiManager.GetWindowManager().Width, 2.0f / (float)apiManager.GetWindowManager().Height, 1));
+
+            debugCanvas.AddObject(fpsText);
+            debugCanvas.AddObject(mousePos.GetMousePosText());
+
             // set special objects for renderer
             IRendererSpecialObjectRefs specialObjectRefs = new IRendererSpecialObjectRefs();
-            specialObjectRefs.fpsCounter = fpsText;
-            specialObjectRefs.mousePositionCounter = mousePos.GetMousePosText();
+            specialObjectRefs.DebugOverlay = debugCanvas;
             renderer.SetSpecialObjectReferences(specialObjectRefs);
-            renderer.SetSpecialObjectsFlags(IRendererSpecialObjectFlags.RenderFPSCounter | IRendererSpecialObjectFlags.RenderMousePositionCounter);
+            renderer.SetSpecialObjectsFlags(IRendererSpecialObjectFlags.RenderDebugOverlay);
 
             // Set up title scene
             Scene titleScene = new TitleScene(apiManager, sceneManager, eventManager);

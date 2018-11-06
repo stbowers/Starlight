@@ -6,6 +6,7 @@ using StarlightEngine.Graphics.Fonts;
 using StarlightEngine.Math;
 using System.Collections.Generic;
 using StarlightEngine.Events;
+using StarlightEngine.Graphics.Objects;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
@@ -34,6 +35,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         VulkanUniformBufferComponent m_mvpUniform;
         VulkanUniformBufferComponent m_fontSettingsUniform;
         IVulkanBindableComponent[] m_bindableComponents;
+
+        IParent m_parent;
 
         // set if the text will be updated often, so the memory should be made transient
         bool m_transient;
@@ -77,8 +80,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
             // Create mvp uniform buffer
             m_modelMatrix = new FMat4(1.0f);
-            m_modelMatrix[0, 0] = 1.0f / 640.0f;
-            m_modelMatrix[1, 1] = 1.0f / 360.0f;
+            //m_modelMatrix[0, 0] = 1.0f / 640.0f;
+            //m_modelMatrix[1, 1] = 1.0f / 360.0f;
             float depth = 1.0f;
 
             m_mvpData = new byte[(4 * 4 * 4) + (4)];
@@ -122,10 +125,16 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
-            FMat4 mvp = projection * view * modelTransform * m_modelMatrix;
+            FMat4 mvp = projection * view * modelTransform * ((m_parent != null) ? m_parent.UIScale : FMat4.Identity) * m_modelMatrix;
 
             System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, (int)mvp.PrimativeSizeOf);
             m_mvpUniform.UpdateUniformBuffer(m_mvpData);
+        }
+
+        public void SetParent(IParent parent)
+        {
+            m_parent = parent;
+            UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
         }
 
         public RenderPass[] RenderPasses

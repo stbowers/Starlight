@@ -59,10 +59,10 @@ namespace StarlightGame.Graphics.Scenes
             m_zAxis = new Vulkan3DLine(apiManager, origin, new FVec3(0, 0, 100), new FVec4(0.0f, 0.0f, 1.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
             m_mouseRay = new Vulkan3DLine(apiManager, origin, new FVec3(1, -10, 10), new FVec4(1.0f, 1.0f, .2f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
             m_eventManager.AddListener(MouseRayEventHander, EventType.Mouse);
-            AddObject(0, m_xAxis);
-            AddObject(0, m_yAxis);
-            AddObject(0, m_zAxis);
-            AddObject(0, m_mouseRay);
+            AddObject(m_xAxis);
+            AddObject(m_yAxis);
+            AddObject(m_zAxis);
+            AddObject(m_mouseRay);
 
             //m_background = new Vulkan2DSprite(apiManager, "./assets/bricks.jpg", new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f));
             //AddObject(0, m_background);
@@ -100,7 +100,7 @@ namespace StarlightGame.Graphics.Scenes
             m_exitGameButton.SetVisible(false);
             m_canvas.AddObject(m_exitGameButton);
 
-            AddObject(1, m_canvas);
+            AddObject(m_canvas);
 
             // Start animation on new thread
             m_animationThread = new Thread(AnimateTitleScreen);

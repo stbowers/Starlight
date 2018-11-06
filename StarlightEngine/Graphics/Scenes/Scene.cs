@@ -6,7 +6,7 @@ using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 
 namespace StarlightEngine.Graphics.Scenes
 {
-    public class Scene
+    public class Scene : IParent
     {
         SortedDictionary<int, List<IGraphicsObject>> m_objects = new SortedDictionary<int, List<IGraphicsObject>>();
         List<(EventManager.HandleEventDelegate, EventType)> m_eventListeners = new List<(EventManager.HandleEventDelegate, EventType)>();
@@ -16,6 +16,9 @@ namespace StarlightEngine.Graphics.Scenes
 
         // Projection matrix - transforms camera space into screen space
         FMat4 m_projectionMatrix;
+
+        // Scale matrix for UI elements in this scene
+        FMat4 m_uiScale;
 
         /// <summary>
         /// Create a scene with a camera and specified fov
@@ -35,6 +38,9 @@ namespace StarlightEngine.Graphics.Scenes
 
             // Flip Y axis for Vulkan
             m_projectionMatrix[1, 1] *= -1.0f;
+
+            // Set UI scale
+            m_uiScale = FMat4.Scale(new FVec3(2.0f / (float)screenWidth, 2.0f / (float)screenHeight, 1));
         }
 
         #region Public Properties
@@ -59,13 +65,42 @@ namespace StarlightEngine.Graphics.Scenes
                 return m_projectionMatrix;
             }
         }
+
+        public FMat4 View
+        {
+            get
+            {
+                return m_camera.View;
+            }
+        }
+
+        public FMat4 Model
+        {
+            get
+            {
+                return FMat4.Identity;
+            }
+        }
+
+        /// <summary>
+        /// Get the scale for UI elements in this scene
+        /// </summary>
+        public FMat4 UIScale
+        {
+            get
+            {
+                return m_uiScale;
+            }
+        }
         #endregion
 
         /// <summary>
         /// Adds an object to this scene
         /// </summary>
-        public void AddObject(int layer, IGraphicsObject obj){
-            AddObject(layer, obj, true);
+        public void AddObject(IGraphicsObject obj)
+        {
+            AddObject(0, obj, true);
+            obj.SetParent(this);
         }
 
         private void AddObject(int layer, IGraphicsObject obj, bool directAdd)
@@ -85,7 +120,8 @@ namespace StarlightEngine.Graphics.Scenes
             list.Add(obj);
 
             // if this is a vulkan object, update it's mvp
-            if (directAdd && obj is IVulkanObject){
+            if (directAdd && obj is IVulkanObject)
+            {
                 (obj as IVulkanObject).UpdateMVPData(m_projectionMatrix, m_camera.View, FMat4.Identity);
             }
 

@@ -11,7 +11,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
     /// <summary>
     /// Displays children objects as 2d objects on a flat plane in 3d space
     /// </summary>
-    public class VulkanCanvas : ICollectionObject, IVulkanObject
+    public class VulkanCanvas : ICollectionObject, IVulkanObject, IParent
     {
         #region Private Members
         List<IVulkanObject> m_objects = new List<IVulkanObject>();
@@ -20,6 +20,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         FMat4 m_modelTransform;
         FMat4 m_viewMatrix;
         FMat4 m_projectionMatrix;
+        FMat4 m_uiScale;
+
+        IParent m_parent;
 
         bool m_lockToScreen = false;
         #endregion
@@ -38,10 +41,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_modelMatrix = modelMatrix;
             m_viewMatrix = view;
             m_projectionMatrix = projection;
+            m_uiScale = FMat4.Identity;
         }
 
         /// <summary>
-        /// Creates a 2d canvas
+        /// Creates a 2d canvas in 3d space
         /// </summary>
         /// <param name="topLeft">The top-left point of the canvas on the screen</param>
         /// <param name="size">The size of the canvas in world space</param>
@@ -54,7 +58,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         }
 
         /// <summary>
-        /// Creates a 2d canvas 
+        /// Creates a 2d canvas in 2d space
         /// </summary>
         /// <param name="topLeft">The top-left point of the canvas on the screen</param>
         /// <param name="size">The size of the canvas in world space</param>
@@ -85,10 +89,44 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
+        public void AddObject(IGraphicsObject obj)
+        {
+            if (obj is IVulkanObject)
+            {
+                AddObject(obj as IVulkanObject);
+            }
+            else
+            {
+                throw new Exception("Can't add a non-vulkan object to a vulkan canvas");
+            }
+        }
+
         public void AddObject(IVulkanObject obj)
         {
             obj.UpdateMVPData(m_projectionMatrix, m_viewMatrix, m_modelTransform * m_modelMatrix);
             m_objects.Add(obj);
+            obj.SetParent(this);
+        }
+
+        public FMat4 UIScale
+        {
+            get
+            {
+                return ((m_parent != null) ? m_parent.UIScale : FMat4.Identity) * m_uiScale;
+            }
+            set
+            {
+                m_uiScale = value;
+            }
+        }
+
+        public void SetParent(IParent parent)
+        {
+            m_parent = parent;
+            foreach (IGraphicsObject child in m_objects)
+            {
+                child.SetParent(this);
+            }
         }
 
         public FMat4 Projection

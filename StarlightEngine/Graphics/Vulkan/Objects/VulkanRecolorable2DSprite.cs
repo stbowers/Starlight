@@ -5,6 +5,7 @@ using StarlightEngine.Graphics.Vulkan.Memory;
 using System.Collections.Generic;
 using VulkanCore;
 using StarlightEngine.Events;
+using StarlightEngine.Graphics.Objects;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
@@ -29,6 +30,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         VulkanUniformBufferComponent m_mvpUniform;
         VulkanUniformBufferComponent m_recolorUniform;
         IVulkanBindableComponent[] m_bindableComponents;
+
+        IParent m_parent;
 
         public VulkanRecolorable2DSprite(VulkanAPIManager apiManager, VulkanTexture texture, FVec2 position, FVec2 scale, FVec4 fromColor1, FVec4 toColor1, FVec4 fromColor2, FVec4 toColor2)
         {
@@ -97,10 +100,15 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
-            FMat4 mvp = projection * view * modelTransform * m_modelMatrix;
+            FMat4 mvp = projection * view * modelTransform * m_parent.UIScale * m_modelMatrix;
 
             System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, 4 * 4 * 4);
             m_mvpUniform.UpdateUniformBuffer(m_mvpData);
+        }
+
+        public void SetParent(IParent parent)
+        {
+            m_parent = parent;
         }
 
         public RenderPass[] RenderPasses

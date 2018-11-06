@@ -78,7 +78,7 @@ namespace StarlightGame.Graphics.Scenes
             m_starOutline = new StarOutline(m_apiManager);
             m_canvas.AddObject(m_starOutline);
 
-            AddObject(0, m_canvas);
+            AddObject(m_canvas);
 
             // Start animation on new thread
             m_animationThread = new Thread(AnimateScreen);

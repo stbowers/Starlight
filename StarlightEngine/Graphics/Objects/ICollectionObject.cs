@@ -1,7 +1,7 @@
 ﻿namespace StarlightEngine.Graphics.Objects
 {
-	public interface ICollectionObject: IGraphicsObject
-	{
-		IGraphicsObject[] Objects { get; }
-	}
+    public interface ICollectionObject : IGraphicsObject, IParent
+    {
+        IGraphicsObject[] Objects { get; }
+    }
 }
