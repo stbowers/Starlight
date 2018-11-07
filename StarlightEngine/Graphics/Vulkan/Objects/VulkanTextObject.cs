@@ -51,9 +51,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_transient = false;
 
             // Create text mesh
-            m_position = new FVec2(location.X() * (apiManager.GetSwapchainImageExtent().Width / 2.0f), location.Y() * (apiManager.GetSwapchainImageExtent().Height / 2.0f));
+            //m_position = new FVec2(location.X() * (apiManager.GetSwapchainImageExtent().Width / 2.0f), location.Y() * (apiManager.GetSwapchainImageExtent().Height / 2.0f));
+            m_position = location;
             m_width = width * (apiManager.GetSwapchainImageExtent().Width / 2);
-            m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, text, m_position, m_width);
+            m_textMesh = AngelcodeFontLoader.CreateTextMesh(font, size, text, new FVec2(0.0f, 0.0f), m_width);
 
             // Create object buffer
             int bufferAlignment = (int)m_apiManager.GetPhysicalDevice().GetProperties().Limits.MinUniformBufferOffsetAlignment;
@@ -79,9 +80,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_texture = new VulkanTextureComponent(m_apiManager, m_pipeline, fontAtlas, m_materialDescriptorSet, 2);
 
             // Create mvp uniform buffer
-            m_modelMatrix = new FMat4(1.0f);
-            //m_modelMatrix[0, 0] = 1.0f / 640.0f;
-            //m_modelMatrix[1, 1] = 1.0f / 360.0f;
+            m_modelMatrix = FMat4.Translate(new FVec3(m_position.X(), m_position.Y(), 0.0f));
+            //m_modelMatrix = FMat4.Identity;
             float depth = 1.0f;
 
             m_mvpData = new byte[(4 * 4 * 4) + (4)];
@@ -125,7 +125,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
-            FMat4 mvp = projection * view * modelTransform * ((m_parent != null) ? m_parent.UIScale : FMat4.Identity) * m_modelMatrix;
+            FMat4 mvp = projection * view * modelTransform * m_modelMatrix * (m_parent != null ? m_parent.UIScale : FMat4.Identity);
 
             System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, (int)mvp.PrimativeSizeOf);
             m_mvpUniform.UpdateUniformBuffer(m_mvpData);

@@ -37,7 +37,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         /// <param name="internalSize">The size of canvas space</param>
         public VulkanCanvas(FMat4 modelMatrix, FVec2 internalSize, FMat4 projection, FMat4 view)
         {
-            m_modelTransform = new FMat4(1.0f);
+            m_modelTransform = FMat4.Identity;
             m_modelMatrix = modelMatrix;
             m_viewMatrix = view;
             m_projectionMatrix = projection;
@@ -68,6 +68,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             // Lock the projection and view matricies from being updated
             m_lockToScreen = true;
+            m_uiScale = FMat4.Scale(new FVec3(internalSize.X() / size.X(), internalSize.Y() / size.Y(), 1.0f));
         }
 
         public void Update()
@@ -112,7 +113,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             get
             {
-                return ((m_parent != null) ? m_parent.UIScale : FMat4.Identity) * m_uiScale;
+                return (m_parent != null ? m_parent.UIScale : FMat4.Identity) * m_uiScale;
             }
             set
             {

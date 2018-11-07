@@ -71,9 +71,11 @@ namespace StarlightGame.Graphics.Scenes
             VulkanTextureCreateInfo createInfo = new VulkanTextureCreateInfo();
             createInfo.APIManager = m_apiManager;
             createInfo.FileName = "./assets/Title.png";
-            createInfo.EnableMipmap = false;
+            createInfo.EnableMipmap = true;
             createInfo.MagFilter = VulkanCore.Filter.Nearest;
             createInfo.MinFilter = VulkanCore.Filter.Nearest;
+            createInfo.AnisotropyEnable = true;
+            createInfo.MaxAnisotropy = 16;
             VulkanTexture titleTexture = VulkanTextureCache.GetTexture("./assets/Title.png", createInfo);
             m_title = new Vulkan2DSprite(apiManager, titleTexture, new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f), 0.0f);
             //AddObject(1, m_title);

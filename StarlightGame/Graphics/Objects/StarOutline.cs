@@ -23,6 +23,8 @@ namespace StarlightGame.Graphics.Objects
             // ---------------
             // [ SHIPS ]
 
+            //UIScale = FMat4.Scale(new FVec3(3.0f, 1.0f, 1.0f));
+
             m_apiManager = apiManager;
 
             Vulkan2DRect background = new Vulkan2DRect(m_apiManager, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f), new FVec4(1.0f, 0.0f, .8f, 1.0f));
