@@ -105,55 +105,61 @@ namespace StarlightEngine.Graphics.Scenes
 
         private void AddObject(int layer, IGraphicsObject obj, bool directAdd)
         {
-            List<IGraphicsObject> list;
-            if (m_objects.ContainsKey(layer))
+            lock (m_objects)
             {
-                list = m_objects[layer];
-            }
-            else
-            {
-                list = new List<IGraphicsObject>();
-                m_objects.Add(layer, list);
-            }
-
-            // add object
-            list.Add(obj);
-
-            // if this is a vulkan object, update it's mvp
-            if (directAdd && obj is IVulkanObject)
-            {
-                (obj as IVulkanObject).UpdateMVPData(m_projectionMatrix, m_camera.View, FMat4.Identity);
-            }
-
-            // add listeners
-            if (obj.EventListeners != null)
-            {
-                m_eventListeners.AddRange(obj.EventListeners);
-            }
-
-            // If it's a collection, add the other objects too
-            if (obj is ICollectionObject)
-            {
-                foreach (IGraphicsObject child in (obj as ICollectionObject).Objects)
+                List<IGraphicsObject> list;
+                if (m_objects.ContainsKey(layer))
                 {
-                    AddObject(layer, child, false);
+                    list = m_objects[layer];
+                }
+                else
+                {
+                    list = new List<IGraphicsObject>();
+                    m_objects.Add(layer, list);
+                }
+
+                // add object
+                list.Add(obj);
+
+                // if this is a vulkan object, update it's mvp
+                if (directAdd && obj is IVulkanObject)
+                {
+                    (obj as IVulkanObject).UpdateMVPData(m_projectionMatrix, m_camera.View, FMat4.Identity);
+                }
+
+                // add listeners
+                if (obj.EventListeners != null)
+                {
+                    m_eventListeners.AddRange(obj.EventListeners);
+                }
+
+                // If it's a collection, add the other objects too
+                if (obj is ICollectionObject)
+                {
+                    foreach (IGraphicsObject child in (obj as ICollectionObject).Objects)
+                    {
+                        AddObject(layer, child, false);
+                    }
                 }
             }
         }
 
         public void RemoveObject(IGraphicsObject obj)
         {
-            foreach (var objList in m_objects)
+            lock (m_objects)
             {
-                if (objList.Value.Contains(obj))
+                foreach (var objList in m_objects)
                 {
-                    // remove object
-                    objList.Value.Remove(obj);
-
-                    // remove listeners
-                    foreach ((EventManager.HandleEventDelegate, EventType) listener in obj.EventListeners)
+                    if (objList.Value.Contains(obj))
                     {
-                        m_eventListeners.Remove(listener);
+                        // remove object
+                        objList.Value.Remove(obj);
+
+                        // remove listeners
+                        foreach ((EventManager.HandleEventDelegate, EventType) listener in obj.EventListeners)
+                        {
+                            m_eventListeners.Remove(listener);
+                        }
                     }
                 }
             }

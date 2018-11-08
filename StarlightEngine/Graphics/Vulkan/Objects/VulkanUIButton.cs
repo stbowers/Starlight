@@ -140,6 +140,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         }
 
+        public void RemoveObject(IGraphicsObject obj)
+        {
+
+        }
+
         public VulkanBoxCollider GetCollider()
         {
             return m_collider;

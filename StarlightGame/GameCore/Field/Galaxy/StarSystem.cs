@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using StarlightEngine.Math;
 using StarlightGame.GameCore.Projects;
+using StarlightGame.GameCore.Ships;
 
 namespace StarlightGame.GameCore.Field.Galaxy
 {
@@ -16,6 +18,7 @@ namespace StarlightGame.GameCore.Field.Galaxy
         bool m_colonized;
         IProject m_currentProject;
         int m_projectTurnsLeft;
+        List<IShip> m_ships;
         #endregion
 
         #region Constructors
@@ -67,6 +70,14 @@ namespace StarlightGame.GameCore.Field.Galaxy
             set
             {
                 m_colonized = value;
+            }
+        }
+
+        public List<IShip> Ships
+        {
+            get
+            {
+                return m_ships;
             }
         }
         #endregion

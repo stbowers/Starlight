@@ -65,11 +65,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         /// <param name="topLeft">The top-left point of the canvas on the screen</param>
         /// <param name="size">The size of the canvas in world space</param>
         /// <param name="internalSize">The size of canvas space</param>
-        public VulkanCanvas(FVec2 topLeft, FVec2 size, FVec2 internalSize) :
+        /// <param name="lockToScreen">If true this canvas will be locked to screen space - i.e. adding it to other canvas' will not change it's transformation</param>
+        public VulkanCanvas(FVec2 topLeft, FVec2 size, FVec2 internalSize, bool lockToScreen = true) :
         this(FMat4.Translate(new FVec3(topLeft.X(), topLeft.Y(), 0)) * FMat4.Scale(new FVec3(size.X() / internalSize.X(), size.Y() / internalSize.Y(), 1)) * FMat4.Translate(new FVec3(1, 1, 0)), internalSize, new FMat4(1.0f), new FMat4(1.0f))
         {
             // Lock the projection and view matricies from being updated
-            m_lockToScreen = true;
+            m_lockToScreen = lockToScreen;
             m_uiScale = FMat4.Scale(new FVec3(internalSize.X() / size.X(), internalSize.Y() / size.Y(), 1.0f));
         }
 
@@ -77,7 +78,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
         }
 
-        public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
+        public virtual void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
             if (!m_lockToScreen)
             {
@@ -117,8 +118,17 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
+        public void RemoveObject(IGraphicsObject obj)
+        {
+            RemoveObject(obj as IVulkanObject);
+        }
+
         public void AddObject(IVulkanObject obj)
         {
+            if (m_parent != null)
+            {
+                m_parent.AddObject(obj);
+            }
             obj.UpdateMVPData(m_projectionMatrix, m_viewMatrix, m_modelTransform * m_modelMatrix);
             m_objects.Add(obj);
             obj.SetParent(this);
@@ -126,6 +136,15 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             if (drawableObject != null)
             {
                 drawableObject.ClipArea = m_clipArea;
+            }
+        }
+
+        public void RemoveObject(IVulkanObject obj)
+        {
+            m_objects.Remove(obj);
+            if (m_parent != null)
+            {
+                m_parent.RemoveObject(obj);
             }
         }
 
@@ -144,9 +163,14 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public void SetParent(IParent parent)
         {
             m_parent = parent;
+            UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
             foreach (IGraphicsObject child in m_objects)
             {
                 child.SetParent(this);
+                if (child is IVulkanObject)
+                {
+                    (child as IVulkanObject).UpdateMVPData(m_projectionMatrix, m_viewMatrix, m_modelTransform * m_modelMatrix);
+                }
             }
         }
 
@@ -182,11 +206,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
+        protected (EventManager.HandleEventDelegate, EventType)[] m_eventListeners;
         public (EventManager.HandleEventDelegate, EventType)[] EventListeners
         {
             get
             {
-                return null;
+                return m_eventListeners;
             }
         }
     }

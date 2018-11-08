@@ -6,6 +6,7 @@ using StarlightEngine.Graphics.Vulkan;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 
 using StarlightGame.GameCore.Field.Galaxy;
+using StarlightGame.GameCore.Projects;
 
 namespace StarlightGame.Graphics.Objects
 {
@@ -17,6 +18,9 @@ namespace StarlightGame.Graphics.Objects
         VulkanTextObject m_systemNameText;
         VulkanTextObject m_systemStatusText;
         VulkanTextObject m_currentProjectText;
+
+        VulkanScrollableObjectList m_projectsList;
+        VulkanScrollableObjectList m_shipsList;
 
         VulkanUIButton m_claimSystemButton;
         VulkanUIButton m_colonizeSystemButton;
@@ -59,12 +63,20 @@ namespace StarlightGame.Graphics.Objects
             m_currentProjectText = new VulkanTextObject(m_apiManager, StaticFonts.Font_Arial, "N/A", 20, new FVec2(-.93f, -.79f), .3f, true);
             AddObject(m_currentProjectText);
 
+            m_projectsList = new VulkanScrollableObjectList(new FVec2(-.93f, -.70f), new FVec2(1.86f, .78f));
+            Vulkan2DRect testrect = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, 2), new FVec4(.5f, 0, .5f, 1));
+            m_projectsList.AddObject(testrect);
+
+            AddObject(m_projectsList);
+
+
             m_claimSystemButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Claim System", 20, new FVec2(-.93f, .91f), new FVec2(1.86f, .09f), center: false, onClickDelegate: ClaimSystemButtonClicked);
             m_claimSystemButton.SetVisible(false);
             AddObject(m_claimSystemButton);
             m_colonizeSystemButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Colonize System", 20, new FVec2(-.93f, .91f), new FVec2(1.86f, .09f), center: false, onClickDelegate: ColonizeSystemButtonClicked);
             m_colonizeSystemButton.SetVisible(false);
             AddObject(m_colonizeSystemButton);
+
         }
 
         public void FocusSystem(StarSystem system)
@@ -107,6 +119,35 @@ namespace StarlightGame.Graphics.Objects
                 {
                     m_colonizeSystemButton.SetVisible(false);
                 }
+
+                // Make list of projects
+                m_projectsList.ClearList();
+                foreach ((IProject project, ProjectAttribute attributes) in m_gameState.AvailableProjects)
+                {
+                    if (project.CanStart(m_gameState.PlayerEmpire, m_currentSystem))
+                    {
+                        string projectText = string.Format("[{0}] {1}", attributes.Turns, attributes.ProjectDescription);
+                        Console.WriteLine(projectText);
+                        VulkanUIButton projectButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, projectText, 20, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, .25f), center: false);
+                        m_projectsList.AddToList(projectButton, .25f);
+                    }
+                }
+                Vulkan2DRect listrect0 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(0, 0, 0, 1));
+                m_projectsList.AddToList(listrect0, .4f);
+                Vulkan2DRect listrect1 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(0, 0, 1, 1));
+                m_projectsList.AddToList(listrect1, .4f);
+                Vulkan2DRect listrect2 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(0, 1, 0, 1));
+                m_projectsList.AddToList(listrect2, .4f);
+                Vulkan2DRect listrect3 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(0, 1, 1, 1));
+                m_projectsList.AddToList(listrect3, .4f);
+                Vulkan2DRect listrect4 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(1, 0, 0, 1));
+                m_projectsList.AddToList(listrect4, .4f);
+                Vulkan2DRect listrect5 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(1, 0, 1, 1));
+                m_projectsList.AddToList(listrect5, .4f);
+                Vulkan2DRect listrect6 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(1, 1, 0, 1));
+                m_projectsList.AddToList(listrect6, .4f);
+                Vulkan2DRect listrect7 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(1, 1, 1, 1));
+                m_projectsList.AddToList(listrect7, .4f);
             }
         }
 

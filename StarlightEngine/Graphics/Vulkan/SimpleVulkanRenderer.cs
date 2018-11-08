@@ -70,44 +70,47 @@ namespace StarlightEngine.Graphics.Vulkan
             commandBuffer.CmdEndRenderPass();
 
             // Render scene
-            foreach (var graphicsObjectList in m_currentScene.GetObjects())
+            lock (m_currentScene.GetObjects())
             {
-                foreach (IGraphicsObject graphicsObject in graphicsObjectList.Value)
+                foreach (var graphicsObjectList in m_currentScene.GetObjects())
                 {
-                    // Call object's update function
-                    graphicsObject.Update();
-
-                    if (graphicsObject is IVulkanDrawableObject)
+                    foreach (IGraphicsObject graphicsObject in graphicsObjectList.Value)
                     {
-                        if (!(((IVulkanDrawableObject)graphicsObject).Visible))
+                        // Call object's update function
+                        graphicsObject.Update();
+
+                        if (graphicsObject is IVulkanDrawableObject)
                         {
-                            // if the object is not visible, don't draw it
-                            continue;
-                        }
-                        IVulkanDrawableObject drawableObject = graphicsObject as IVulkanDrawableObject;
-                        for (int renderPassIndex = 0; renderPassIndex < drawableObject.RenderPasses.Length; renderPassIndex++)
-                        {
-                            // Start render pass and bind pipeline
-                            VulkanPipeline pipeline = drawableObject.Pipelines[renderPassIndex];
-
-                            renderPassInfo.RenderPass = drawableObject.RenderPasses[renderPassIndex];
-                            renderPassInfo.Framebuffer = pipeline.GetFramebuffer(currentFrame);
-
-                            renderPassInfo.RenderArea = drawableObject.ClipArea;
-
-                            commandBuffer.CmdBeginRenderPass(renderPassInfo);
-                            commandBuffer.CmdSetScissor(renderPassInfo.RenderArea);
-                            commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, pipeline.GetPipeline());
-
-                            IVulkanBindableComponent[] bindings = drawableObject.BindableComponents[renderPassIndex];
-                            List<int> boundSets = new List<int>();
-                            foreach (IVulkanBindableComponent binding in bindings)
+                            if (!(((IVulkanDrawableObject)graphicsObject).Visible))
                             {
-                                binding.BindComponent(commandBuffer, currentFrame);
+                                // if the object is not visible, don't draw it
+                                continue;
                             }
-                            drawableObject.Draw(commandBuffer, currentFrame);
+                            IVulkanDrawableObject drawableObject = graphicsObject as IVulkanDrawableObject;
+                            for (int renderPassIndex = 0; renderPassIndex < drawableObject.RenderPasses.Length; renderPassIndex++)
+                            {
+                                // Start render pass and bind pipeline
+                                VulkanPipeline pipeline = drawableObject.Pipelines[renderPassIndex];
 
-                            commandBuffer.CmdEndRenderPass();
+                                renderPassInfo.RenderPass = drawableObject.RenderPasses[renderPassIndex];
+                                renderPassInfo.Framebuffer = pipeline.GetFramebuffer(currentFrame);
+
+                                renderPassInfo.RenderArea = drawableObject.ClipArea;
+
+                                commandBuffer.CmdBeginRenderPass(renderPassInfo);
+                                commandBuffer.CmdSetScissor(renderPassInfo.RenderArea);
+                                commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, pipeline.GetPipeline());
+
+                                IVulkanBindableComponent[] bindings = drawableObject.BindableComponents[renderPassIndex];
+                                List<int> boundSets = new List<int>();
+                                foreach (IVulkanBindableComponent binding in bindings)
+                                {
+                                    binding.BindComponent(commandBuffer, currentFrame);
+                                }
+                                drawableObject.Draw(commandBuffer, currentFrame);
+
+                                commandBuffer.CmdEndRenderPass();
+                            }
                         }
                     }
                 }

@@ -76,6 +76,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         }
 
+        public void RemoveObject(IGraphicsObject obj)
+        {
+
+        }
+
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
             m_fill.UpdateMVPData(projection, view, modelTransform);

@@ -16,6 +16,11 @@ namespace StarlightEngine.Graphics.Objects
         void AddObject(IGraphicsObject obj);
 
         /// <summary>
+        /// Removes an object from the parent
+        /// <summary>
+        void RemoveObject(IGraphicsObject obj);
+
+        /// <summary>
         /// Gets the parent's projection transform
         /// </summary>
         FMat4 Projection { get; }

@@ -121,6 +121,11 @@ namespace StarlightGame.Graphics.Objects
 
         }
 
+        public void RemoveObject(IGraphicsObject obj)
+        {
+
+        }
+
         public void MouseEventListener(IEvent e)
         {
             // e is mouse event

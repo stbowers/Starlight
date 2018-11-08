@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Reflection;
+using System.Linq;
 
 using StarlightGame.GameCore.Field;
 using StarlightEngine.Math;
+using StarlightGame.GameCore.Projects;
 
 namespace StarlightGame.GameCore
 {
@@ -14,6 +18,8 @@ namespace StarlightGame.GameCore
 
         GameField m_field;
         Empire m_playerEmpire;
+
+        List<(IProject, ProjectAttribute)> m_availableProjects = new List<(IProject, ProjectAttribute)>();
         #endregion
 
         #region Constructors
@@ -25,6 +31,13 @@ namespace StarlightGame.GameCore
             m_rng = RNG.GetRNG();
             m_field = new GameField();
             m_playerEmpire = new Empire(playerName);
+
+            Assembly searchAssembly = Assembly.GetAssembly(typeof(GameState));
+            m_availableProjects.AddRange(
+                from type in searchAssembly.GetTypes()
+                where Attribute.IsDefined(type, typeof(ProjectAttribute))
+                select ((IProject)type.GetConstructor(new Type[] { }).Invoke(null), (ProjectAttribute)Attribute.GetCustomAttribute(type, typeof(ProjectAttribute)))
+            );
         }
         #endregion
 
@@ -42,6 +55,14 @@ namespace StarlightGame.GameCore
             get
             {
                 return m_playerEmpire;
+            }
+        }
+
+        public List<(IProject, ProjectAttribute)> AvailableProjects
+        {
+            get
+            {
+                return m_availableProjects;
             }
         }
         #endregion

@@ -9,24 +9,14 @@ namespace StarlightGame.GameCore.Projects
     public interface IProject
     {
         /// <summary>
-        /// Get the description for starting the project
+        /// The description while working on the project
         /// </summary>
-        string GetStartDescription();
-
-        /// <summary>
-        /// Get the description while working on the project
-        /// </summary>
-        string GetBuildDescription();
+        string Description { get; }
 
         /// <summary>
         /// Can the given empire start this project in the given system?
         /// </summary>
         bool CanStart(Empire empire, StarSystem starSystem);
-
-        /// <summary>
-        /// The number of turns required to finish this project
-        /// </summary>
-        int Turns { get; }
 
         /// <summary>
         /// Start the project with the given empire in the given system
