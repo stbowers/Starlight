@@ -24,6 +24,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         IParent m_parent;
 
+        VulkanCore.Rect2D m_clipArea;
+
         bool m_lockToScreen = false;
         #endregion
 
@@ -84,9 +86,22 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
                 m_modelTransform = modelTransform;
             }
 
+            // recalculate clip coordinates
+            FMat4 mvpMatrix = m_projectionMatrix * m_viewMatrix * m_modelTransform * m_modelMatrix;
+            FVec4 topLeft = mvpMatrix * new FVec4(-1.0f, -1.0f, 0.0f, 1.0f);
+            FVec4 extent = mvpMatrix * new FVec4(2.0f, 2.0f, 0.0f, 0.0f);
+            m_clipArea.Offset.X = (int)(((topLeft.X() / topLeft.W()) + 1) * (1280.0f / 2.0f));
+            m_clipArea.Offset.Y = (int)(((topLeft.Y() / topLeft.W()) + 1) * (720.0f / 2.0f));
+            m_clipArea.Extent.Width = (int)(extent.X() * (1280.0f / 2.0f));
+            m_clipArea.Extent.Height = (int)(extent.Y() * (720.0f / 2.0f));
+
             foreach (IVulkanObject child in m_objects)
             {
                 child.UpdateMVPData(m_projectionMatrix, m_viewMatrix, m_modelTransform * m_modelMatrix);
+                if (child is IVulkanDrawableObject)
+                {
+                    (child as IVulkanDrawableObject).ClipArea = m_clipArea;
+                }
             }
         }
 
@@ -107,6 +122,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             obj.UpdateMVPData(m_projectionMatrix, m_viewMatrix, m_modelTransform * m_modelMatrix);
             m_objects.Add(obj);
             obj.SetParent(this);
+            IVulkanDrawableObject drawableObject = obj as IVulkanDrawableObject;
+            if (drawableObject != null)
+            {
+                drawableObject.ClipArea = m_clipArea;
+            }
         }
 
         public FMat4 UIScale

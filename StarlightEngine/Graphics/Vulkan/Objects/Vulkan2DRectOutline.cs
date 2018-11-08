@@ -83,7 +83,15 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_objectBuffer.WriteAllBuffers(true);
 
             m_components = new[] { new IVulkanBindableComponent[] { m_mesh, m_mvpUniform } };
+
+            Rect2D clipArea;
+            clipArea.Offset.X = 0;
+            clipArea.Offset.Y = 0;
+            clipArea.Extent = m_apiManager.GetSwapchainImageExtent();
+            ClipArea = clipArea;
         }
+
+        public Rect2D ClipArea { get; set; }
 
         public void Update()
         {

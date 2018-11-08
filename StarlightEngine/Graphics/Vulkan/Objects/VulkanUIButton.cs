@@ -35,7 +35,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         IParent m_parent;
 
-        public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null)
+        public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null, bool center = true)
         {
             m_apiManager = apiManager;
             m_onClickDelegate = onClickDelegate;
@@ -48,6 +48,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             float textWidth = AngelcodeFontLoader.GetWidthOfString(font, fontSize, text) / 640.0f;
             float textHeight = AngelcodeFontLoader.GetHeightOfString(font, fontSize, text, size.X()) / 360.0f;
             FVec2 textOffset = new FVec2(location.X() + ((size.X() - textWidth) / 2.0f), location.Y() + ((size.Y() - textHeight) / 2.0f));
+            if (!center)
+            {
+                textOffset = location + new FVec2(.01f, .01f);
+            }
 
             m_text = new VulkanTextObject(apiManager, font, text, fontSize, textOffset, size.X());
             m_mouseOverHighlight = new Vulkan2DRect(apiManager, location, size, new FVec4(1.0f, 1.0f, 1.0f, .2f));
@@ -160,7 +164,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             {
                 m_onSelectDelegate?.Invoke();
             }
-            m_selected = selected;
+            m_selected = selected && this.IsVisible();
 
             // If this is a mouse click event, call the click delegate
             if (m_selected && mouseEvent.Action == MouseAction.Down)

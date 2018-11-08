@@ -17,6 +17,7 @@ namespace StarlightGame.GameCore.Field
         #region Constructors
         public GameField()
         {
+            // Generate quadrants
             for (int i = 0; i < 4; i++)
             {
                 m_quadrants[i] = new Quadrant(Shape.Spiral2, i);

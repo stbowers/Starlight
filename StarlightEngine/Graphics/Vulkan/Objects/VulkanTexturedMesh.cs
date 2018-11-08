@@ -82,7 +82,15 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_lightingUniform = new VulkanUniformBufferComponent(m_apiManager, m_pipeline, m_lightingData, m_objectBuffer, m_materialDescriptorSet, 1);
 
             m_objectBuffer.WriteAllBuffers(true);
+
+            Rect2D clipArea;
+            clipArea.Offset.X = 0;
+            clipArea.Offset.Y = 0;
+            clipArea.Extent = m_apiManager.GetSwapchainImageExtent();
+            ClipArea = clipArea;
         }
+
+        public Rect2D ClipArea { get; set; }
 
         public virtual void Update()
         {

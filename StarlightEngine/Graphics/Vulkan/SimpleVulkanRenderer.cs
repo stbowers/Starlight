@@ -48,8 +48,6 @@ namespace StarlightEngine.Graphics.Vulkan
             RenderPassBeginInfo renderPassInfo = new RenderPassBeginInfo();
             renderPassInfo.RenderPass = m_clearPipeline.GetRenderPass();
             renderPassInfo.Framebuffer = m_clearPipeline.GetFramebuffer(currentFrame);
-            renderPassInfo.RenderArea = new Rect2D();
-            renderPassInfo.RenderArea.Offset = new Offset2D();
             renderPassInfo.RenderArea.Offset.X = 0;
             renderPassInfo.RenderArea.Offset.Y = 0;
             renderPassInfo.RenderArea.Extent = m_apiManager.GetSwapchainImageExtent();
@@ -68,6 +66,7 @@ namespace StarlightEngine.Graphics.Vulkan
             renderPassInfo.ClearValues = new[] { colorClearValue, depthClearValue };
 
             commandBuffer.CmdBeginRenderPass(renderPassInfo);
+            commandBuffer.CmdSetScissor(renderPassInfo.RenderArea);
             commandBuffer.CmdEndRenderPass();
 
             // Render scene
@@ -94,7 +93,10 @@ namespace StarlightEngine.Graphics.Vulkan
                             renderPassInfo.RenderPass = drawableObject.RenderPasses[renderPassIndex];
                             renderPassInfo.Framebuffer = pipeline.GetFramebuffer(currentFrame);
 
+                            renderPassInfo.RenderArea = drawableObject.ClipArea;
+
                             commandBuffer.CmdBeginRenderPass(renderPassInfo);
+                            commandBuffer.CmdSetScissor(renderPassInfo.RenderArea);
                             commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, pipeline.GetPipeline());
 
                             IVulkanBindableComponent[] bindings = drawableObject.BindableComponents[renderPassIndex];
@@ -111,6 +113,9 @@ namespace StarlightEngine.Graphics.Vulkan
                 }
             }
 
+            renderPassInfo.RenderArea.Offset.X = 0;
+            renderPassInfo.RenderArea.Offset.Y = 0;
+            renderPassInfo.RenderArea.Extent = m_apiManager.GetSwapchainImageExtent();
             // Render special objects
             if (m_specialObjectFlags.HasFlag(IRendererSpecialObjectFlags.RenderDebugOverlay))
             {
@@ -132,6 +137,7 @@ namespace StarlightEngine.Graphics.Vulkan
                                     renderPassInfo.Framebuffer = pipeline.GetFramebuffer(currentFrame);
 
                                     commandBuffer.CmdBeginRenderPass(renderPassInfo);
+                                    commandBuffer.CmdSetScissor(renderPassInfo.RenderArea);
                                     commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, pipeline.GetPipeline());
 
                                     IVulkanBindableComponent[] bindings = drawableObject.BindableComponents[renderPassIndex];

@@ -75,8 +75,24 @@ namespace StarlightGame.Graphics.Scenes
             Console.WriteLine("Done!");
 
             // Create outline
-            m_starOutline = new StarOutline(m_apiManager);
+            m_starOutline = new StarOutline(m_apiManager, gameState);
             m_canvas.AddObject(m_starOutline);
+
+            VulkanCanvas testcanvas = new VulkanCanvas(new FVec2(0.0f, 0.0f), new FVec2(.5f, .5f), new FVec2(2.0f, 2.0f));
+            VulkanTextureCreateInfo testtexture = new VulkanTextureCreateInfo();
+            testtexture.AnisotropyEnable = false;
+            testtexture.APIManager = m_apiManager;
+            testtexture.EnableMipmap = false;
+            testtexture.FileName = "./assets/bricks.jpg";
+            testtexture.MagFilter = VulkanCore.Filter.Linear;
+            testtexture.MinFilter = VulkanCore.Filter.Linear;
+            VulkanTexture _testtexture = VulkanTextureCache.GetTexture("./assets/bricks.jpg", testtexture);
+            Vulkan2DSprite testsprite = new Vulkan2DSprite(m_apiManager, _testtexture, new FVec2(-1.5f, -1.5f), new FVec2(2.0f, 2.0f));
+            testcanvas.AddObject(testsprite);
+            AddObject(testcanvas);
+
+            Vulkan2DRect testrect = new Vulkan2DRect(m_apiManager, new FVec2(0.0f, 0.0f), new FVec2(.5f, .5f), new FVec4(1.0f, 0.0f, 1.0f, 1.0f));
+            AddObject(testrect);
 
             AddObject(m_canvas);
 

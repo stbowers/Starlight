@@ -55,7 +55,7 @@ namespace StarlightGame.Graphics.Scenes
             // make new gamestate
             if (m_gameState == null)
             {
-                m_gameState = new GameState();
+                m_gameState = new GameState("United Federation of Planets");
                 m_mapScene = new MapScene(m_apiManager, m_sceneManager, m_eventManager, m_gameState);
             }
 

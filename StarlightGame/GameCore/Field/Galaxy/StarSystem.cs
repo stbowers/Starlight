@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 using StarlightEngine.Math;
+using StarlightGame.GameCore.Projects;
 
 namespace StarlightGame.GameCore.Field.Galaxy
 {
@@ -11,6 +12,10 @@ namespace StarlightGame.GameCore.Field.Galaxy
         string m_name;
         FVec2 m_location;
         StarSystem[] m_neighbors;
+        Empire m_owner;
+        bool m_colonized;
+        IProject m_currentProject;
+        int m_projectTurnsLeft;
         #endregion
 
         #region Constructors
@@ -38,6 +43,30 @@ namespace StarlightGame.GameCore.Field.Galaxy
             get
             {
                 return m_name;
+            }
+        }
+
+        public Empire Owner
+        {
+            get
+            {
+                return m_owner;
+            }
+            set
+            {
+                m_owner = value;
+            }
+        }
+
+        public bool Colonized
+        {
+            get
+            {
+                return m_colonized;
+            }
+            set
+            {
+                m_colonized = value;
             }
         }
         #endregion

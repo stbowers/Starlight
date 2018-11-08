@@ -96,6 +96,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_objectBuffer.WriteAllBuffers(true);
 
             m_components = new[] { new IVulkanBindableComponent[] { m_mesh, m_mvpUniform } };
+
+            Rect2D clipArea;
+            clipArea.Offset.X = 0;
+            clipArea.Offset.Y = 0;
+            clipArea.Extent = m_apiManager.GetSwapchainImageExtent();
+            ClipArea = clipArea;
         }
 
         public void Update()
@@ -131,6 +137,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
             m_mesh.UpdateMesh(m_meshData, 0, m_meshData.Length - (6 * 4), 6);
         }
+
+        public Rect2D ClipArea { get; set; }
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {

@@ -13,16 +13,18 @@ namespace StarlightGame.GameCore
         Random m_rng;
 
         GameField m_field;
+        Empire m_playerEmpire;
         #endregion
 
         #region Constructors
         /// <summary>
         /// Creates a new game state - initialized for a new game
         /// </summary>
-        public GameState()
+        public GameState(string playerName)
         {
             m_rng = RNG.GetRNG();
             m_field = new GameField();
+            m_playerEmpire = new Empire(playerName);
         }
         #endregion
 
@@ -32,6 +34,14 @@ namespace StarlightGame.GameCore
             get
             {
                 return m_field;
+            }
+        }
+
+        public Empire PlayerEmpire
+        {
+            get
+            {
+                return m_playerEmpire;
             }
         }
         #endregion
