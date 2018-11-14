@@ -21,5 +21,7 @@ namespace StarlightEngine.Graphics.Objects
         /// Sets this object's parent
         /// </summary>
         void SetParent(IParent parent);
+
+        bool Visible { get; set; }
     }
 }

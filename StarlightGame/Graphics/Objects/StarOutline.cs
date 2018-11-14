@@ -71,10 +71,10 @@ namespace StarlightGame.Graphics.Objects
 
 
             m_claimSystemButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Claim System", 20, new FVec2(-.93f, .91f), new FVec2(1.86f, .09f), center: false, onClickDelegate: ClaimSystemButtonClicked);
-            m_claimSystemButton.SetVisible(false);
+            m_claimSystemButton.Visible = false;
             AddObject(m_claimSystemButton);
             m_colonizeSystemButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Colonize System", 20, new FVec2(-.93f, .91f), new FVec2(1.86f, .09f), center: false, onClickDelegate: ColonizeSystemButtonClicked);
-            m_colonizeSystemButton.SetVisible(false);
+            m_colonizeSystemButton.Visible = false;
             AddObject(m_colonizeSystemButton);
 
         }
@@ -87,8 +87,8 @@ namespace StarlightGame.Graphics.Objects
             if (system.Owner == null)
             {
                 m_systemStatusText.UpdateText(StaticFonts.Font_Arial, "Unclaimed", 20);
-                m_claimSystemButton.SetVisible(true);
-                m_colonizeSystemButton.SetVisible(false);
+                m_claimSystemButton.Visible = true;
+                m_colonizeSystemButton.Visible = false;
             }
             else
             {
@@ -103,21 +103,21 @@ namespace StarlightGame.Graphics.Objects
                 }
                 status += system.Owner.Name;
                 m_systemStatusText.UpdateText(StaticFonts.Font_Arial, status, 8);
-                m_claimSystemButton.SetVisible(false);
+                m_claimSystemButton.Visible = false;
                 if (system.Owner == m_gameState.PlayerEmpire)
                 {
                     if (system.Colonized)
                     {
-                        m_colonizeSystemButton.SetVisible(false);
+                        m_colonizeSystemButton.Visible = false;
                     }
                     else
                     {
-                        m_colonizeSystemButton.SetVisible(true);
+                        m_colonizeSystemButton.Visible = true;
                     }
                 }
                 else
                 {
-                    m_colonizeSystemButton.SetVisible(false);
+                    m_colonizeSystemButton.Visible = false;
                 }
 
                 // Make list of projects

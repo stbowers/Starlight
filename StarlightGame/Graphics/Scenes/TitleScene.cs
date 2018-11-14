@@ -49,6 +49,7 @@ namespace StarlightGame.Graphics.Scenes
             m_eventManager = eventManager;
 
             m_canvas = new VulkanCanvas(new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f), new FVec2(2.0f, 2.0f));
+            m_canvas.Visible = true;
             //FMat4 model = FMat4.Translate(new FVec3(0.0f, 0.0f, 0.0f)) * FMat4.Identity;
             //m_canvas = new VulkanCanvas(model, new FVec2(2.0f, 2.0f), Projection, Camera.View);
             //m_canvas = new VulkanCanvas(FVec3.Zero, Quaternion.Identity, Projection, Camera.View);
@@ -89,17 +90,17 @@ namespace StarlightGame.Graphics.Scenes
             // Host Game
             m_hostGameScene = new HostGameScene(m_apiManager, m_sceneManager, m_eventManager);
             m_hostGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Host Game", 20, new FVec2(-.1f, -.3f), new FVec2(.2f, .1f), onHostGameClicked);
-            m_hostGameButton.SetVisible(false);
+            m_hostGameButton.Visible = false;
             m_canvas.AddObject(m_hostGameButton);
 
             m_joinGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Join Game", 20, new FVec2(-.1f, -.2f), new FVec2(.2f, .1f), joinGameButtonClicked);
-            m_joinGameButton.SetVisible(false);
+            m_joinGameButton.Visible = false;
             m_canvas.AddObject(m_joinGameButton);
             m_optionsButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Options", 20, new FVec2(-.1f, -.1f), new FVec2(.2f, .1f), optionsButtonClicked);
-            m_optionsButton.SetVisible(false);
+            m_optionsButton.Visible = false;
             m_canvas.AddObject(m_optionsButton);
             m_exitGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Exit Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), exitGameButtonClicked);
-            m_exitGameButton.SetVisible(false);
+            m_exitGameButton.Visible = false;
             m_canvas.AddObject(m_exitGameButton);
 
             AddObject(m_canvas);
@@ -119,11 +120,12 @@ namespace StarlightGame.Graphics.Scenes
             // animate loading bar
             while (stopwatch.ElapsedMilliseconds / 1000.0f < 1.0f)
             {
+                m_loadingBar.Visible = true;
                 m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 1000.0f);
                 Thread.Sleep(1);
             }
             m_loadingBar.UpdatePercentage(1.0f);
-            m_loadingBar.SetVisible(false);
+            m_loadingBar.Visible = false;
 
             // Move title sprite
             stopwatch.Restart();
@@ -131,7 +133,6 @@ namespace StarlightGame.Graphics.Scenes
             FMat4 view = new FMat4(1.0f);
             while (stopwatch.ElapsedMilliseconds / 1000.0f < .75f)
             {
-                m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 750.0f);
                 FMat4 shift = FMat4.Translate(new FVec3(0.0f, -(stopwatch.ElapsedMilliseconds / 1750.0f), 0.0f));
                 m_title.UpdateMVPData(m_canvas.Projection, m_canvas.View, m_canvas.Model * shift);
                 Thread.Sleep(1);
@@ -139,10 +140,10 @@ namespace StarlightGame.Graphics.Scenes
 
 
             // set host game button to visible
-            m_hostGameButton.SetVisible(true);
-            m_joinGameButton.SetVisible(true);
-            m_optionsButton.SetVisible(true);
-            m_exitGameButton.SetVisible(true);
+            m_hostGameButton.Visible = true;
+            m_joinGameButton.Visible = true;
+            m_optionsButton.Visible = true;
+            m_exitGameButton.Visible = true;
         }
 
         // Button delegates

@@ -5,7 +5,7 @@ using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
-    public class Vulkan2DProgressBar : ICollectionObject, IVulkanObject
+    public class Vulkan2DProgressBar : IVulkanObject, IParent
     {
         VulkanAPIManager m_apiManager;
         IParent m_parent;
@@ -28,6 +28,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_outline = new Vulkan2DRectOutline(apiManager, position, size, color);
 
             m_objects = new IVulkanObject[] { m_fill, m_outline };
+            m_fill.Visible = true;
+            m_outline.Visible = true;
         }
 
         public void Update()
@@ -45,6 +47,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public void SetParent(IParent parent)
         {
             m_parent = parent;
+            UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
         }
 
         public FMat4 Projection
@@ -95,11 +98,28 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_fill.UpdateSize(fillSize);
         }
 
-        public IGraphicsObject[] Objects
+        public IGraphicsObject[] Children
         {
             get
             {
                 return m_objects;
+            }
+        }
+
+        public bool m_visible;
+        public bool Visible
+        {
+            get
+            {
+                return m_visible;
+            }
+            set
+            {
+                if (!value)
+                {
+                    int x = 1;
+                }
+                m_visible = value;
             }
         }
 

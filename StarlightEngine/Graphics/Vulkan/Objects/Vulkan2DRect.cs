@@ -111,6 +111,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public void SetParent(IParent parent)
         {
             m_parent = parent;
+            UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
         }
 
         public void UpdateSize(FVec2 newSize)
@@ -169,6 +170,14 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             get
             {
                 return m_components;
+            }
+        }
+
+        public IGraphicsObject[] Children
+        {
+            get
+            {
+                return new IGraphicsObject[] { };
             }
         }
 

@@ -7,7 +7,7 @@ using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
-    public class VulkanUIButton : ICollectionObject, IVulkanObject
+    public class VulkanUIButton : IVulkanObject, IParent
     {
         VulkanAPIManager m_apiManager;
 
@@ -59,8 +59,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_mouseClickHighlight = new Vulkan2DRect(apiManager, location, size, new FVec4(.8f, .8f, .8f, .2f));
             m_mouseClickHighlight.Visible = false;
             m_objects = new IVulkanObject[] { m_text, m_mouseOverHighlight, m_mouseClickHighlight };
+            m_text.SetParent(this);
+            m_mouseOverHighlight.SetParent(this);
+            m_mouseClickHighlight.SetParent(this);
 
             m_collider = new VulkanBoxCollider(location, size);
+            m_collider.SetParent(this);
         }
 
         public void Update()
@@ -98,16 +102,14 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public void SetParent(IParent parent)
         {
             m_parent = parent;
-            m_text.SetParent(parent);
-            m_mouseOverHighlight.SetParent(parent);
-            m_mouseClickHighlight.SetParent(parent);
+            UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
         }
 
         public FMat4 Projection
         {
             get
             {
-                return m_parent.Projection;
+                return (m_parent != null) ? m_parent.Projection : FMat4.Identity;
             }
         }
 
@@ -115,7 +117,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             get
             {
-                return m_parent.View;
+                return (m_parent != null) ? m_parent.View : FMat4.Identity;
             }
         }
 
@@ -123,7 +125,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             get
             {
-                return m_parent.Model;
+                return (m_parent != null) ? m_parent.Model : FMat4.Identity;
             }
         }
 
@@ -131,7 +133,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             get
             {
-                return m_parent.UIScale;
+                return (m_parent != null) ? m_parent.UIScale : FMat4.Identity;
             }
         }
 
@@ -169,7 +171,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             {
                 m_onSelectDelegate?.Invoke();
             }
-            m_selected = selected && this.IsVisible();
+            m_selected = selected && Visible;
 
             // If this is a mouse click event, call the click delegate
             if (m_selected && mouseEvent.Action == MouseAction.Down)
@@ -183,13 +185,15 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
-        public IGraphicsObject[] Objects
+        public IGraphicsObject[] Children
         {
             get
             {
                 return m_objects;
             }
         }
+
+        public bool Visible { get; set; }
 
         public (EventManager.HandleEventDelegate, EventType)[] EventListeners
         {

@@ -12,7 +12,7 @@ namespace StarlightGame.Graphics.Objects
     /// <summary>
     /// A graphical representaiton of a star system for the map screen
     /// </summary>
-    public class Star : ICollectionObject, IVulkanObject
+    public class Star : IVulkanObject
     {
         #region Private members
         VulkanAPIManager m_apiManager;
@@ -180,13 +180,15 @@ namespace StarlightGame.Graphics.Objects
             m_collider.UpdateMVPData(projection, view, modelTransform);
         }
 
-        public IGraphicsObject[] Objects
+        public IGraphicsObject[] Children
         {
             get
             {
                 return m_objects;
             }
         }
+
+        public bool Visible { get; set; }
 
         public (EventManager.HandleEventDelegate, EventType)[] EventListeners
         {

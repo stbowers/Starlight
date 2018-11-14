@@ -100,6 +100,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public void SetParent(IParent parent)
         {
             m_parent = parent;
+            UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
         }
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
@@ -131,6 +132,14 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             get
             {
                 return m_components;
+            }
+        }
+
+        public IGraphicsObject[] Children
+        {
+            get
+            {
+                return new IGraphicsObject[] { };
             }
         }
 

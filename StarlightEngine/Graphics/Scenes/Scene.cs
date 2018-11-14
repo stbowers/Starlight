@@ -8,7 +8,7 @@ namespace StarlightEngine.Graphics.Scenes
 {
     public class Scene : IParent
     {
-        SortedDictionary<int, List<IGraphicsObject>> m_objects = new SortedDictionary<int, List<IGraphicsObject>>();
+        List<IGraphicsObject> m_objects = new List<IGraphicsObject>();
         List<(EventManager.HandleEventDelegate, EventType)> m_eventListeners = new List<(EventManager.HandleEventDelegate, EventType)>();
 
         // Camera
@@ -99,75 +99,34 @@ namespace StarlightEngine.Graphics.Scenes
         /// </summary>
         public void AddObject(IGraphicsObject obj)
         {
-            AddObject(0, obj, true);
+            m_objects.Add(obj);
             obj.SetParent(this);
-        }
-
-        private void AddObject(int layer, IGraphicsObject obj, bool directAdd)
-        {
-            lock (m_objects)
-            {
-                List<IGraphicsObject> list;
-                if (m_objects.ContainsKey(layer))
-                {
-                    list = m_objects[layer];
-                }
-                else
-                {
-                    list = new List<IGraphicsObject>();
-                    m_objects.Add(layer, list);
-                }
-
-                // add object
-                list.Add(obj);
-
-                // if this is a vulkan object, update it's mvp
-                if (directAdd && obj is IVulkanObject)
-                {
-                    (obj as IVulkanObject).UpdateMVPData(m_projectionMatrix, m_camera.View, FMat4.Identity);
-                }
-
-                // add listeners
-                if (obj.EventListeners != null)
-                {
-                    m_eventListeners.AddRange(obj.EventListeners);
-                }
-
-                // If it's a collection, add the other objects too
-                if (obj is ICollectionObject)
-                {
-                    foreach (IGraphicsObject child in (obj as ICollectionObject).Objects)
-                    {
-                        AddObject(layer, child, false);
-                    }
-                }
-            }
         }
 
         public void RemoveObject(IGraphicsObject obj)
         {
-            lock (m_objects)
-            {
-                foreach (var objList in m_objects)
-                {
-                    if (objList.Value.Contains(obj))
-                    {
-                        // remove object
-                        objList.Value.Remove(obj);
+            m_objects.Remove(obj);
+            obj.SetParent(null);
+        }
 
-                        // remove listeners
-                        foreach ((EventManager.HandleEventDelegate, EventType) listener in obj.EventListeners)
+        public IGraphicsObject[] Children
+        {
+            get
+            {
+                List<IGraphicsObject> objects = new List<IGraphicsObject>();
+                foreach (IGraphicsObject obj in m_objects)
+                {
+                    if (obj.Visible)
+                    {
+                        objects.Add(obj);
+                        if (obj is IParent)
                         {
-                            m_eventListeners.Remove(listener);
+                            objects.AddRange((obj as IParent).Children);
                         }
                     }
                 }
+                return objects.ToArray();
             }
-        }
-
-        public SortedDictionary<int, List<IGraphicsObject>> GetObjects()
-        {
-            return m_objects;
         }
 
         public List<(EventManager.HandleEventDelegate, EventType)> GetEventListeners()

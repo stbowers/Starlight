@@ -343,7 +343,7 @@ namespace StarlightEngine.Graphics.Vulkan.Memory
                 {
                     flags += "No Flags";
                 }
-                flags += ")";
+                flags += string.Format(") - {0:X}", (int)heap.Flags);
 
                 Console.WriteLine("    Heap {0}: {1:0.#} {2}, {3}", i, (float)((heap.Size) / (System.Math.Pow(1024, pow))), sizeSuffix, flags);
             }

@@ -11,7 +11,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
     /// <summary>
     /// Displays children objects as 2d objects on a flat plane in 3d space
     /// </summary>
-    public class VulkanCanvas : ICollectionObject, IVulkanObject, IParent
+    public class VulkanCanvas : IVulkanObject, IParent
     {
         #region Private Members
         List<IVulkanObject> m_objects = new List<IVulkanObject>();
@@ -106,48 +106,6 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
-        public void AddObject(IGraphicsObject obj)
-        {
-            if (obj is IVulkanObject)
-            {
-                AddObject(obj as IVulkanObject);
-            }
-            else
-            {
-                throw new Exception("Can't add a non-vulkan object to a vulkan canvas");
-            }
-        }
-
-        public void RemoveObject(IGraphicsObject obj)
-        {
-            RemoveObject(obj as IVulkanObject);
-        }
-
-        public void AddObject(IVulkanObject obj)
-        {
-            if (m_parent != null)
-            {
-                m_parent.AddObject(obj);
-            }
-            obj.UpdateMVPData(m_projectionMatrix, m_viewMatrix, m_modelTransform * m_modelMatrix);
-            m_objects.Add(obj);
-            obj.SetParent(this);
-            IVulkanDrawableObject drawableObject = obj as IVulkanDrawableObject;
-            if (drawableObject != null)
-            {
-                drawableObject.ClipArea = m_clipArea;
-            }
-        }
-
-        public void RemoveObject(IVulkanObject obj)
-        {
-            m_objects.Remove(obj);
-            if (m_parent != null)
-            {
-                m_parent.RemoveObject(obj);
-            }
-        }
-
         public FMat4 UIScale
         {
             get
@@ -164,13 +122,33 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             m_parent = parent;
             UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
-            foreach (IGraphicsObject child in m_objects)
+        }
+
+        public void AddObject(IGraphicsObject obj)
+        {
+            IVulkanObject vulkanObject = obj as IVulkanObject;
+            if (vulkanObject != null)
             {
-                child.SetParent(this);
-                if (child is IVulkanObject)
-                {
-                    (child as IVulkanObject).UpdateMVPData(m_projectionMatrix, m_viewMatrix, m_modelTransform * m_modelMatrix);
-                }
+                m_objects.Add(vulkanObject);
+                vulkanObject.SetParent(this);
+            }
+            else
+            {
+                throw new ApplicationException("Cannot add a non-vulkan object to a vulkan canvas");
+            }
+        }
+
+        public void RemoveObject(IGraphicsObject obj)
+        {
+            IVulkanObject vulkanObject = obj as IVulkanObject;
+            if (vulkanObject != null)
+            {
+                m_objects.Remove(vulkanObject);
+                vulkanObject.SetParent(null);
+            }
+            else
+            {
+                throw new ApplicationException("Cannot remove a non-vulkan object from a vulkan canvas");
             }
         }
 
@@ -198,13 +176,27 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
-        public IGraphicsObject[] Objects
+        public IGraphicsObject[] Children
         {
             get
             {
-                return m_objects.ToArray();
+                List<IGraphicsObject> children = new List<IGraphicsObject>();
+                foreach (IGraphicsObject obj in m_objects)
+                {
+                    if (obj.Visible)
+                    {
+                        children.Add(obj);
+                        if (obj is IParent)
+                        {
+                            children.AddRange((obj as IParent).Children);
+                        }
+                    }
+                }
+                return children.ToArray();
             }
         }
+
+        public bool Visible { get; set; }
 
         protected (EventManager.HandleEventDelegate, EventType)[] m_eventListeners;
         public (EventManager.HandleEventDelegate, EventType)[] EventListeners

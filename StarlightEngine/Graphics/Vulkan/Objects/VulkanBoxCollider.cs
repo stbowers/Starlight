@@ -80,6 +80,16 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             return intersect;
         }
 
+        public bool Visible { get; set; }
+
+        public IGraphicsObject[] Children
+        {
+            get
+            {
+                return new IGraphicsObject[] { };
+            }
+        }
+
         public (EventManager.HandleEventDelegate, EventType)[] EventListeners
         {
             get

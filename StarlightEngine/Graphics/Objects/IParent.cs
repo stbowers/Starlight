@@ -11,16 +11,6 @@ namespace StarlightEngine.Graphics.Objects
         FMat4 UIScale { get; }
 
         /// <summary>
-        /// Adds an object to the parent
-        /// <summary>
-        void AddObject(IGraphicsObject obj);
-
-        /// <summary>
-        /// Removes an object from the parent
-        /// <summary>
-        void RemoveObject(IGraphicsObject obj);
-
-        /// <summary>
         /// Gets the parent's projection transform
         /// </summary>
         FMat4 Projection { get; }
@@ -34,5 +24,9 @@ namespace StarlightEngine.Graphics.Objects
         /// Gets the parent's model transform
         /// </summary>
         FMat4 Model { get; }
+
+        void AddObject(IGraphicsObject obj);
+        void RemoveObject(IGraphicsObject obj);
+        IGraphicsObject[] Children { get; }
     }
 }

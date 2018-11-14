@@ -143,6 +143,14 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
+        public IGraphicsObject[] Children
+        {
+            get
+            {
+                return new IGraphicsObject[] { };
+            }
+        }
+
         public void Draw(CommandBuffer commandBuffer, int swapchainIndex)
         {
             m_mesh.DrawMesh(commandBuffer, swapchainIndex);
