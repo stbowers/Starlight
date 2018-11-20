@@ -121,8 +121,6 @@ namespace StarlightGame
                                   "Stack Trace: {1}", e.Message, e.StackTrace);
             }
 
-            eventManager.TerminateEventManagerAndJoin();
-
             Console.WriteLine("Closing Application");
         }
 
@@ -136,10 +134,11 @@ namespace StarlightGame
                 // create mouse position indicator
                 m_mousePosText = new VulkanTextObject(apiManager, StaticFonts.Font_Arial, "Mouse: (0.00, 0.00)", 20, new FVec2(-.99f, -.9f), 1.0f, true);
 
-                eventManager.AddListener(MouseEvent, EventType.Mouse);
+                //eventManager.AddListener(MouseEvent, EventType.Mouse);
+                eventManager.Subscribe(MouseEvent.ID, MouseEventSubscriber);
             }
 
-            public void MouseEvent(IEvent e)
+            public void MouseEventSubscriber(object sender, IEvent e)
             {
                 FVec2 mousePos = (e as MouseEvent).MousePosition;
                 m_mousePosText.UpdateText(StaticFonts.Font_Arial, string.Format("Mouse: ({0:0.##}, {1:0.##})", mousePos.X(), mousePos.Y()), 20);

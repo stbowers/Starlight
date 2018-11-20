@@ -1,4 +1,5 @@
-﻿using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
+﻿using System.Linq;
+using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Math;
 using StarlightEngine.Graphics.Fonts;
 using StarlightEngine.Graphics.Objects;
@@ -7,7 +8,7 @@ using StarlightEngine.Events;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
-    public class VulkanUIButton : IVulkanObject, IParent
+    public class VulkanUIButton : IVulkanObject, IParent, ISubscriberObject
     {
         VulkanAPIManager m_apiManager;
 
@@ -31,9 +32,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public delegate void OnSelectDelegate();
         OnClickDelegate m_onClickDelegate;
         OnSelectDelegate m_onSelectDelegate;
-        (EventManager.HandleEventDelegate, EventType)[] m_eventListeners;
+        (string, EventManager.EventHandler)[] m_eventSubscribers;
 
         IParent m_parent;
+        bool m_visible;
 
         public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null, bool center = true)
         {
@@ -42,7 +44,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_onSelectDelegate = onSelectDelegate;
 
             // set up event listeners
-            m_eventListeners = new(EventManager.HandleEventDelegate, EventType)[] { (MouseEventListener, EventType.Mouse) };
+            m_eventSubscribers = new(string, EventManager.EventHandler)[] { (MouseEvent.ID, MouseEventListener) };
 
             // center text
             float textWidth = AngelcodeFontLoader.GetWidthOfString(font, fontSize, text) / 640.0f;
@@ -65,25 +67,51 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
             m_collider = new VulkanBoxCollider(location, size);
             m_collider.SetParent(this);
+
+            Visible = true;
         }
 
         public void Update()
         {
-            if (m_clicked)
+            if (m_clicked && !m_mouseClickHighlight.Visible)
             {
                 m_mouseClickHighlight.Visible = true;
+                if (m_parent != null)
+                {
+                    m_parent.ChildUpdated(this);
+                }
             }
-            else
+            else if (!m_clicked && m_mouseClickHighlight.Visible)
             {
                 m_mouseClickHighlight.Visible = false;
+                if (m_parent != null)
+                {
+                    m_parent.ChildUpdated(this);
+                }
             }
-            if (m_selected)
+            if (m_selected && !m_mouseOverHighlight.Visible)
             {
                 m_mouseOverHighlight.Visible = true;
+                if (m_parent != null)
+                {
+                    m_parent.ChildUpdated(this);
+                }
             }
-            else
+            else if (!m_selected && m_mouseOverHighlight.Visible)
             {
                 m_mouseOverHighlight.Visible = false;
+                if (m_parent != null)
+                {
+                    m_parent.ChildUpdated(this);
+                }
+            }
+        }
+
+        public void ChildUpdated(IGameObject child)
+        {
+            if (m_parent != null)
+            {
+                m_parent.ChildUpdated(this);
             }
         }
 
@@ -137,12 +165,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
-        public void AddObject(IGraphicsObject obj)
+        public void AddObject(IGameObject obj)
         {
 
         }
 
-        public void RemoveObject(IGraphicsObject obj)
+        public void RemoveObject(IGameObject obj)
         {
 
         }
@@ -152,7 +180,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             return m_collider;
         }
 
-        public void MouseEventListener(IEvent e)
+        public void MouseEventListener(object sender, IEvent e)
         {
             // cast e to MouseEvent
             MouseEvent mouseEvent = e as MouseEvent;
@@ -166,40 +194,57 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
             // Determine if mouse position is inside our collider, and select if it is
             //bool selected = m_collider.IsPointInside(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
-            bool selected = m_collider.DoesIntersect(mouseRay);
+            bool selected = m_collider.DoesIntersect(mouseRay) && Visible;
             if (!m_selected && selected)
             {
                 m_onSelectDelegate?.Invoke();
             }
-            m_selected = selected && Visible;
+            m_selected = selected;
 
             // If this is a mouse click event, call the click delegate
             if (m_selected && mouseEvent.Action == MouseAction.Down)
             {
-                m_onClickDelegate?.Invoke();
                 m_clicked = true;
             }
-            else if (mouseEvent.Action == MouseAction.Up)
+            else if (m_selected && m_clicked && mouseEvent.Action == MouseAction.Up)
+            {
+                m_onClickDelegate?.Invoke();
+                m_clicked = false;
+            }
+            else
             {
                 m_clicked = false;
             }
         }
 
-        public IGraphicsObject[] Children
+        public T[] GetChildren<T>()
+        where T : IGameObject
+        {
+            return (
+                from obj in m_objects
+                where obj is T
+                select (T)obj
+            ).ToArray();
+        }
+
+        public bool Visible
         {
             get
             {
-                return m_objects;
+                return m_visible;
+            }
+            set
+            {
+                m_visible = value;
+                m_text.Visible = value;
             }
         }
 
-        public bool Visible { get; set; }
-
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
+        public (string, EventManager.EventHandler)[] Subscribers
         {
             get
             {
-                return m_eventListeners;
+                return m_eventSubscribers;
             }
         }
     }

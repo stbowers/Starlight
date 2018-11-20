@@ -95,10 +95,12 @@ namespace StarlightGame.Graphics.Scenes
 
         public void OnStarMouseOver(Star star)
         {
+            Console.WriteLine("Star selected");
         }
 
         public void OnStarMouseExit(Star star)
         {
+            Console.WriteLine("Star unselected");
         }
 
         public void OnStarClicked(Star star)

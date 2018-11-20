@@ -1,4 +1,5 @@
-﻿using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
+﻿using System.Linq;
+using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Math;
 using StarlightEngine.Graphics.Objects;
 using StarlightEngine.Events;
@@ -15,7 +16,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         // Objects
         Vulkan2DRect m_fill;
         Vulkan2DRectOutline m_outline;
-        IVulkanObject[] m_objects;
+        IGraphicsObject[] m_objects;
 
         public Vulkan2DProgressBar(VulkanAPIManager apiManager, FVec2 position, FVec2 size, float percentFilled, FVec4 color)
         {
@@ -27,7 +28,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_fill = new Vulkan2DRect(apiManager, position, fillSize, color);
             m_outline = new Vulkan2DRectOutline(apiManager, position, size, color);
 
-            m_objects = new IVulkanObject[] { m_fill, m_outline };
+            m_objects = new IGraphicsObject[] { m_fill, m_outline };
             m_fill.Visible = true;
             m_outline.Visible = true;
         }
@@ -74,12 +75,12 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
-        public void AddObject(IGraphicsObject obj)
+        public void AddObject(IGameObject obj)
         {
 
         }
 
-        public void RemoveObject(IGraphicsObject obj)
+        public void RemoveObject(IGameObject obj)
         {
 
         }
@@ -96,6 +97,25 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             FVec2 fillSize = new FVec2(fill * m_size.X(), m_size.Y());
 
             m_fill.UpdateSize(fillSize);
+        }
+
+        public T[] GetChildren<T>()
+        where T : IGameObject
+        {
+            return
+            (
+                from obj in m_objects
+                where obj is T
+                select (T)obj
+            ).ToArray();
+        }
+
+        public void ChildUpdated(IGameObject child)
+        {
+            if (m_parent != null)
+            {
+                m_parent.ChildUpdated(this);
+            }
         }
 
         public IGraphicsObject[] Children
@@ -115,19 +135,9 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
             set
             {
-                if (!value)
-                {
-                    int x = 1;
-                }
                 m_visible = value;
-            }
-        }
-
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
-        {
-            get
-            {
-                return new(EventManager.HandleEventDelegate, EventType)[] { };
+                m_fill.Visible = value;
+                m_outline.Visible = value;
             }
         }
     }

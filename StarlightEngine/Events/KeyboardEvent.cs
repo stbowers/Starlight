@@ -61,11 +61,11 @@ namespace StarlightEngine.Events
         #endregion
 
         #region IEvent Implementation
-        public EventType Type
+        public static string ID
         {
             get
             {
-                return EventType.Keyboard;
+                return "SE_KEYBOARD_EVENT";
             }
         }
         #endregion

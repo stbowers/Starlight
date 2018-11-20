@@ -137,6 +137,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             System.Buffer.BlockCopy(indices, 0, m_meshData, 96, 6 * 4);
 
             m_mesh.UpdateMesh(m_meshData, 0, m_meshData.Length - (6 * 4), 6);
+
+            if (m_parent != null)
+            {
+                m_parent.ChildUpdated(this);
+            }
         }
 
         public Rect2D ClipArea { get; set; }
@@ -186,13 +191,20 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_mesh.DrawMesh(commandBuffer, swapchainIndex);
         }
 
-        public bool Visible { get; set; }
-
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
+        bool m_visible;
+        public bool Visible
         {
             get
             {
-                return new(EventManager.HandleEventDelegate, EventType)[] { };
+                return m_visible;
+            }
+            set
+            {
+                m_visible = value;
+                if (m_parent != null)
+                {
+                    m_parent.ChildUpdated(this);
+                }
             }
         }
     }

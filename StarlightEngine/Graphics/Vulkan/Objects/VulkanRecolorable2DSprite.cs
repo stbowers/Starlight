@@ -157,13 +157,5 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         }
 
         public bool Visible { get; set; }
-
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
-        {
-            get
-            {
-                return new(EventManager.HandleEventDelegate, EventType)[] { };
-            }
-        }
     }
 }

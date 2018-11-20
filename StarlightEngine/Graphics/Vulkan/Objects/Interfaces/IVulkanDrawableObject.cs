@@ -12,7 +12,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Interfaces
 	 * BindableComponents: For each renderpass the same index in BindableComponents should be a list of components to bind before calling the draw function
 	 * Draw: called to draw the object, given the current commandbuffer, pipeline, renderpass, and bound sets draw the geometry for the renderpass at drawIndex
 	 */
-    public interface IVulkanDrawableObject : IVulkanObject
+    public interface IVulkanDrawableObject : IVulkanObject, IGraphicsObject
     {
         RenderPass[] RenderPasses { get; }
         VulkanPipeline[] Pipelines { get; }

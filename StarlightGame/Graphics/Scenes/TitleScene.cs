@@ -59,7 +59,7 @@ namespace StarlightGame.Graphics.Scenes
             m_yAxis = new Vulkan3DLine(apiManager, origin, new FVec3(0, 100, 0), new FVec4(0.0f, 1.0f, 0.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
             m_zAxis = new Vulkan3DLine(apiManager, origin, new FVec3(0, 0, 100), new FVec4(0.0f, 0.0f, 1.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
             m_mouseRay = new Vulkan3DLine(apiManager, origin, new FVec3(1, -10, 10), new FVec4(1.0f, 1.0f, .2f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
-            m_eventManager.AddListener(MouseRayEventHander, EventType.Mouse);
+            m_eventManager.Subscribe(MouseEvent.ID, MouseRayEventHander);
             AddObject(m_xAxis);
             AddObject(m_yAxis);
             AddObject(m_zAxis);
@@ -168,7 +168,7 @@ namespace StarlightGame.Graphics.Scenes
         bool m_rightButtonDown = false;
         bool m_leftButtonDown = false;
         FVec3 m_cameraPosition = new FVec3(-5.0f, -.5f, 3.0f);
-        public void MouseRayEventHander(IEvent e)
+        public void MouseRayEventHander(object sender, IEvent e)
         {
             // cast e to MouseEvent
             MouseEvent mouseEvent = e as MouseEvent;

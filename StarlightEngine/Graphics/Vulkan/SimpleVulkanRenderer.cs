@@ -14,6 +14,10 @@ namespace StarlightEngine.Graphics.Vulkan
         VulkanPipeline m_clearPipeline;
 
         Scene m_currentScene;
+        int m_lastSceneHashCode;
+        bool m_sceneInvalidated;
+        IGraphicsObject[] m_sceneGraphicsObjects;
+        VulkanCore.CommandBuffer m_sceneCommands;
 
         // special objects
         IRendererSpecialObjectRefs m_specialObjectRefs;
@@ -23,11 +27,13 @@ namespace StarlightEngine.Graphics.Vulkan
         {
             m_apiManager = apiManager;
             m_clearPipeline = clearPipeline;
+            //m_sceneCommands = m_apiManager.CreateGraphicsCommandBuffers(1, CommandBufferLevel.Secondary)[0];
         }
 
         public void DisplayScene(Scene scene)
         {
             m_currentScene = scene;
+            m_sceneInvalidated = true;
         }
 
         public void SetSpecialObjectReferences(IRendererSpecialObjectRefs refs)
@@ -45,6 +51,7 @@ namespace StarlightEngine.Graphics.Vulkan
             int currentFrame;
             CommandBuffer commandBuffer = m_apiManager.StartRecordingSwapchainCommandBuffer(out currentFrame);
 
+            // Create render pass info
             RenderPassBeginInfo renderPassInfo = new RenderPassBeginInfo();
             renderPassInfo.RenderPass = m_clearPipeline.GetRenderPass();
             renderPassInfo.Framebuffer = m_clearPipeline.GetFramebuffer(currentFrame);
@@ -65,46 +72,63 @@ namespace StarlightEngine.Graphics.Vulkan
 
             renderPassInfo.ClearValues = new[] { colorClearValue, depthClearValue };
 
+            // Clear the screen
             commandBuffer.CmdBeginRenderPass(renderPassInfo);
             commandBuffer.CmdSetScissor(renderPassInfo.RenderArea);
             commandBuffer.CmdEndRenderPass();
 
-            // Render scene
-            IGraphicsObject[] sceneObjects = m_currentScene.Children;
-            foreach (IGraphicsObject graphicsObject in sceneObjects)
+            // Update scene
+            m_currentScene.Update();
+
+            // if the scene changed, rerecord buffers
+            m_sceneInvalidated = true;
+            if (m_lastSceneHashCode != m_currentScene.GetHashCode() || m_sceneInvalidated)
             {
-                // Call object's update function
-                graphicsObject.Update();
+                m_lastSceneHashCode = m_currentScene.GetHashCode();
+                m_sceneInvalidated = true;
 
-                if (graphicsObject is IVulkanDrawableObject && graphicsObject.Visible)
+                // TODO: This is a bit of a hack since we can't start a render pass in secondary buffers, so therefore the secondary scene commands buffer is never actually used
+                m_sceneCommands = commandBuffer;
+
+                // Get new list of scene objects
+                m_sceneGraphicsObjects = m_currentScene.GetChildren<IGraphicsObject>();
+
+                // Render scene
+                foreach (IGraphicsObject graphicsObject in m_sceneGraphicsObjects)
                 {
-                    IVulkanDrawableObject drawableObject = graphicsObject as IVulkanDrawableObject;
-                    for (int renderPassIndex = 0; renderPassIndex < drawableObject.RenderPasses.Length; renderPassIndex++)
+                    if (graphicsObject is IVulkanDrawableObject && graphicsObject.Visible)
                     {
-                        // Start render pass and bind pipeline
-                        VulkanPipeline pipeline = drawableObject.Pipelines[renderPassIndex];
-
-                        renderPassInfo.RenderPass = drawableObject.RenderPasses[renderPassIndex];
-                        renderPassInfo.Framebuffer = pipeline.GetFramebuffer(currentFrame);
-
-                        renderPassInfo.RenderArea = drawableObject.ClipArea;
-
-                        commandBuffer.CmdBeginRenderPass(renderPassInfo);
-                        commandBuffer.CmdSetScissor(renderPassInfo.RenderArea);
-                        commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, pipeline.GetPipeline());
-
-                        IVulkanBindableComponent[] bindings = drawableObject.BindableComponents[renderPassIndex];
-                        List<int> boundSets = new List<int>();
-                        foreach (IVulkanBindableComponent binding in bindings)
+                        IVulkanDrawableObject drawableObject = graphicsObject as IVulkanDrawableObject;
+                        for (int renderPassIndex = 0; renderPassIndex < drawableObject.RenderPasses.Length; renderPassIndex++)
                         {
-                            binding.BindComponent(commandBuffer, currentFrame);
-                        }
-                        drawableObject.Draw(commandBuffer, currentFrame);
+                            // Start render pass and bind pipeline
+                            VulkanPipeline pipeline = drawableObject.Pipelines[renderPassIndex];
 
-                        commandBuffer.CmdEndRenderPass();
+                            renderPassInfo.RenderPass = drawableObject.RenderPasses[renderPassIndex];
+                            renderPassInfo.Framebuffer = pipeline.GetFramebuffer(currentFrame);
+
+                            renderPassInfo.RenderArea = drawableObject.ClipArea;
+
+                            m_sceneCommands.CmdBeginRenderPass(renderPassInfo);
+                            m_sceneCommands.CmdSetScissor(renderPassInfo.RenderArea);
+                            m_sceneCommands.CmdBindPipeline(PipelineBindPoint.Graphics, pipeline.GetPipeline());
+
+                            IVulkanBindableComponent[] bindings = drawableObject.BindableComponents[renderPassIndex];
+                            List<int> boundSets = new List<int>();
+                            foreach (IVulkanBindableComponent binding in bindings)
+                            {
+                                binding.BindComponent(m_sceneCommands, currentFrame);
+                            }
+                            drawableObject.Draw(m_sceneCommands, currentFrame);
+
+                            m_sceneCommands.CmdEndRenderPass();
+                        }
                     }
                 }
             }
+
+            // Call scene command buffer
+            //commandBuffer.CmdExecuteCommand(m_sceneCommands);
 
             renderPassInfo.RenderArea.Offset.X = 0;
             renderPassInfo.RenderArea.Offset.Y = 0;
@@ -113,10 +137,13 @@ namespace StarlightEngine.Graphics.Vulkan
             if (m_specialObjectFlags.HasFlag(IRendererSpecialObjectFlags.RenderDebugOverlay))
             {
                 List<IGraphicsObject> debugOverlayObjects = new List<IGraphicsObject>();
-                debugOverlayObjects.Add(m_specialObjectRefs.DebugOverlay);
+                if (m_specialObjectRefs.DebugOverlay is IGraphicsObject)
+                {
+                    debugOverlayObjects.Add(m_specialObjectRefs.DebugOverlay as IGraphicsObject);
+                }
                 if (m_specialObjectRefs.DebugOverlay is IParent)
                 {
-                    debugOverlayObjects.AddRange((m_specialObjectRefs.DebugOverlay as IParent).Children);
+                    debugOverlayObjects.AddRange((m_specialObjectRefs.DebugOverlay as IParent).GetChildren<IGraphicsObject>());
                 }
                 foreach (IGraphicsObject obj in debugOverlayObjects)
                 {

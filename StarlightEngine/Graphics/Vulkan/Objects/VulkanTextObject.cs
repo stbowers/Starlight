@@ -125,6 +125,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_meshData = new byte[meshDataSize];
             System.Buffer.BlockCopy(m_textMesh.meshBufferData, 0, m_meshData, 0, meshDataSize);
             m_mesh.UpdateMesh(m_meshData, m_textMesh.vboOffset, m_textMesh.iboOffset, m_textMesh.numVertices);
+            if (m_parent != null)
+            {
+                m_parent.ChildUpdated(this);
+            }
         }
 
         public void Update()
@@ -182,13 +186,20 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_mesh.DrawMesh(commandBuffer, swapchainIndex);
         }
 
-        public bool Visible { get; set; }
-
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
+        bool m_visible;
+        public bool Visible
         {
             get
             {
-                return new(EventManager.HandleEventDelegate, EventType)[] { };
+                return m_visible;
+            }
+            set
+            {
+                m_visible = value;
+                if (m_parent != null)
+                {
+                    m_parent.ChildUpdated(this);
+                }
             }
         }
     }

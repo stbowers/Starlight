@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using StarlightEngine.Graphics.Objects;
 using StarlightEngine.Math;
 using StarlightEngine.Events;
@@ -8,8 +9,8 @@ namespace StarlightEngine.Graphics.Scenes
 {
     public class Scene : IParent
     {
-        List<IGraphicsObject> m_objects = new List<IGraphicsObject>();
-        List<(EventManager.HandleEventDelegate, EventType)> m_eventListeners = new List<(EventManager.HandleEventDelegate, EventType)>();
+        // list of objects belonging to this scene
+        List<IGameObject> m_objects = new List<IGameObject>();
 
         // Camera
         Camera m_camera;
@@ -19,6 +20,14 @@ namespace StarlightEngine.Graphics.Scenes
 
         // Scale matrix for UI elements in this scene
         FMat4 m_uiScale;
+
+        // Caches for children, event subscribers and graphics objects
+        List<IGameObject> m_children;
+        List<IGraphicsObject> m_childGraphicsObjects;
+        List<ISubscriberObject> m_childSubscriptionObjects;
+
+        // Hash code - updated if any object in the scene is updated, tells the renderer to redraw the scene
+        int m_hashCode = 0;
 
         /// <summary>
         /// Create a scene with a camera and specified fov
@@ -97,41 +106,120 @@ namespace StarlightEngine.Graphics.Scenes
         /// <summary>
         /// Adds an object to this scene
         /// </summary>
-        public void AddObject(IGraphicsObject obj)
+        public void AddObject(IGameObject obj)
         {
             m_objects.Add(obj);
             obj.SetParent(this);
+            UpdateChildrenList();
+            m_hashCode++;
         }
 
-        public void RemoveObject(IGraphicsObject obj)
+        public void RemoveObject(IGameObject obj)
         {
             m_objects.Remove(obj);
             obj.SetParent(null);
+            UpdateChildrenList();
+            m_hashCode++;
         }
 
-        public IGraphicsObject[] Children
+        public void Update()
         {
-            get
+            // update direct children
+            foreach (IGameObject obj in m_objects)
             {
-                List<IGraphicsObject> objects = new List<IGraphicsObject>();
-                foreach (IGraphicsObject obj in m_objects)
-                {
-                    if (obj.Visible)
-                    {
-                        objects.Add(obj);
-                        if (obj is IParent)
-                        {
-                            objects.AddRange((obj as IParent).Children);
-                        }
-                    }
-                }
-                return objects.ToArray();
+                obj.Update();
             }
         }
 
-        public List<(EventManager.HandleEventDelegate, EventType)> GetEventListeners()
+        public void SetParent(IParent parent)
         {
-            return m_eventListeners;
+
+        }
+
+        public void ChildUpdated(IGameObject child)
+        {
+            UpdateChildrenList();
+            m_hashCode++;
+        }
+
+        private void UpdateChildrenList()
+        {
+            m_children = new List<IGameObject>();
+            m_childGraphicsObjects = new List<IGraphicsObject>();
+            m_childSubscriptionObjects = new List<ISubscriberObject>();
+            foreach (IGameObject obj in m_objects)
+            {
+                m_children.Add(obj);
+
+                if (obj is IParent)
+                {
+                    m_children.AddRange((obj as IParent).GetChildren<IGameObject>());
+                }
+            }
+
+            foreach (IGameObject child in m_children)
+            {
+                IGraphicsObject graphicsObject = child as IGraphicsObject;
+                ISubscriberObject subscriberObject = child as ISubscriberObject;
+
+                if (graphicsObject != null)
+                {
+                    if (graphicsObject.Visible)
+                    {
+                        m_childGraphicsObjects.Add(graphicsObject);
+                    }
+                }
+
+                if (subscriberObject != null)
+                {
+                    m_childSubscriptionObjects.Add(subscriberObject);
+                }
+            }
+        }
+
+        public T[] GetChildren<T>()
+        where T : IGameObject
+        {
+            if (typeof(T) == typeof(IGameObject))
+            {
+                return (from obj in m_children select (T)obj).ToArray();
+            }
+            else if (typeof(T) == typeof(IGraphicsObject))
+            {
+                return (from obj in m_childGraphicsObjects select (T)obj).ToArray();
+            }
+            else if (typeof(T) == typeof(ISubscriberObject))
+            {
+                return (from obj in m_childSubscriptionObjects select (T)obj).ToArray();
+            }
+            else
+            {
+                return (from obj in m_children where obj is T select (T)obj).ToArray();
+            }
+        }
+
+        public (string, EventManager.EventHandler)[] GetEventSubscriptions()
+        {
+            return (
+                from subscriberObject in m_childSubscriptionObjects
+                from eventSubscription in subscriberObject.Subscribers
+                select eventSubscription
+            ).ToArray();
+        }
+
+        public override int GetHashCode()
+        {
+            return m_hashCode;
+        }
+
+        public bool Visible
+        {
+            get
+            {
+                return true;
+            }
+            set
+            { }
         }
     }
 }

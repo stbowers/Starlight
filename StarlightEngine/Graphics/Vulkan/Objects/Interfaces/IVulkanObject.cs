@@ -7,7 +7,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Interfaces
     /* Component of IGraphicsObjects which can be rendered by a Vulkan renderer. Gives access to any objects that might
 	 * be required to render the object
 	 */
-    public interface IVulkanObject : IGraphicsObject
+    public interface IVulkanObject : IGameObject
     {
         /// <summary>
         /// Update the mvp data used to draw this object. The final transformation

@@ -60,11 +60,11 @@ namespace StarlightEngine.Events
         #endregion
 
         #region IEvent Implementation
-        public EventType Type
+        public static string ID
         {
             get
             {
-                return EventType.Mouse;
+                return "SE_MOUSE_EVENT";
             }
         }
         #endregion

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using StarlightEngine.Events;
 using StarlightEngine.Math;
@@ -76,6 +77,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void Update()
         {
+            foreach (IGameObject obj in m_objects)
+            {
+                obj.Update();
+            }
         }
 
         public virtual void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
@@ -124,7 +129,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
         }
 
-        public void AddObject(IGraphicsObject obj)
+        public void AddObject(IGameObject obj)
         {
             IVulkanObject vulkanObject = obj as IVulkanObject;
             if (vulkanObject != null)
@@ -138,7 +143,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
-        public void RemoveObject(IGraphicsObject obj)
+        public void RemoveObject(IGameObject obj)
         {
             IVulkanObject vulkanObject = obj as IVulkanObject;
             if (vulkanObject != null)
@@ -176,35 +181,35 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             }
         }
 
-        public IGraphicsObject[] Children
+        public void ChildUpdated(IGameObject child)
         {
-            get
+            if (m_parent != null)
             {
-                List<IGraphicsObject> children = new List<IGraphicsObject>();
-                foreach (IGraphicsObject obj in m_objects)
-                {
-                    if (obj.Visible)
-                    {
-                        children.Add(obj);
-                        if (obj is IParent)
-                        {
-                            children.AddRange((obj as IParent).Children);
-                        }
-                    }
-                }
-                return children.ToArray();
+                m_parent.ChildUpdated(this);
             }
+        }
+
+        public T[] GetChildren<T>()
+        where T : IGameObject
+        {
+            List<IGameObject> children = new List<IGameObject>();
+            foreach (IGameObject obj in m_objects)
+            {
+                children.Add(obj);
+                if (obj is IParent)
+                {
+                    children.AddRange((obj as IParent).GetChildren<IGameObject>());
+                }
+            }
+
+            return
+            (
+                from child in children
+                where child is T
+                select (T)child
+            ).ToArray();
         }
 
         public bool Visible { get; set; }
-
-        protected (EventManager.HandleEventDelegate, EventType)[] m_eventListeners;
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
-        {
-            get
-            {
-                return m_eventListeners;
-            }
-        }
     }
 }

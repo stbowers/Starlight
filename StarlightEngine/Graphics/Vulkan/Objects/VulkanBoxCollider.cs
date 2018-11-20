@@ -89,13 +89,5 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
                 return new IGraphicsObject[] { };
             }
         }
-
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
-        {
-            get
-            {
-                return new(EventManager.HandleEventDelegate, EventType)[] { };
-            }
-        }
     }
 }

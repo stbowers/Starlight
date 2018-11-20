@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using StarlightEngine.Graphics.Objects;
 using StarlightEngine.Graphics.Vulkan;
 using StarlightEngine.Graphics.Vulkan.Objects;
@@ -12,7 +13,7 @@ namespace StarlightGame.Graphics.Objects
     /// <summary>
     /// A graphical representaiton of a star system for the map screen
     /// </summary>
-    public class Star : IVulkanObject
+    public class Star : IVulkanObject, ISubscriberObject, IParent
     {
         #region Private members
         VulkanAPIManager m_apiManager;
@@ -24,7 +25,7 @@ namespace StarlightGame.Graphics.Objects
         // Objects
         Vulkan2DSprite m_sprite;
         VulkanBoxCollider m_collider;
-        IGraphicsObject[] m_objects;
+        IVulkanObject[] m_objects;
 
         // Callbacks
         MouseDelegate m_mouseClickDelegate;
@@ -36,7 +37,7 @@ namespace StarlightGame.Graphics.Objects
         bool m_clicked;
 
         // Event listeners
-        (EventManager.HandleEventDelegate, EventType)[] m_eventListeners;
+        (string, EventManager.EventHandler)[] m_eventSubscribers;
 
         // Object matrices
         FMat4 m_projectionMatrix;
@@ -65,18 +66,31 @@ namespace StarlightGame.Graphics.Objects
             m_sprite = new Vulkan2DSprite(m_apiManager, starTexture, system.Location, new FVec2(.03f, .03f));
             m_collider = new VulkanBoxCollider(system.Location, new FVec2(.03f, .03f));
 
-            m_objects = new IGraphicsObject[] { m_sprite, m_collider };
+            m_objects = new IVulkanObject[] { m_sprite, m_collider };
 
             m_mouseClickDelegate = clickDelegate;
             m_mouseOverDelegate = mouseOverDelegate;
             m_mouseExitDelegate = mouseExitDelegate;
 
-            m_eventListeners = new(EventManager.HandleEventDelegate, EventType)[] { (MouseEventListener, EventType.Mouse) };
+            m_eventSubscribers = new(string, EventManager.EventHandler)[] { (MouseEvent.ID, MouseEventListener) };
+
+            Visible = true;
         }
 
         public void Update()
         {
+            foreach (IGameObject obj in m_objects)
+            {
+                obj.Update();
+            }
+        }
 
+        public void ChildUpdated(IGameObject child)
+        {
+            if (m_parent != null)
+            {
+                m_parent.ChildUpdated(this);
+            }
         }
 
         public FMat4 UIScale
@@ -116,17 +130,17 @@ namespace StarlightGame.Graphics.Objects
             }
         }
 
-        public void AddObject(IGraphicsObject obj)
+        public void AddObject(IGameObject obj)
         {
 
         }
 
-        public void RemoveObject(IGraphicsObject obj)
+        public void RemoveObject(IGameObject obj)
         {
 
         }
 
-        public void MouseEventListener(IEvent e)
+        public void MouseEventListener(object sender, IEvent e)
         {
             // e is mouse event
             MouseEvent mouseEvent = e as MouseEvent;
@@ -140,7 +154,7 @@ namespace StarlightGame.Graphics.Objects
 
             // Determine if mouse position is inside our collider, and select if it is
             //bool selected = m_collider.IsPointInside(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
-            bool selected = m_collider.DoesIntersect(mouseRay);
+            bool selected = m_collider.DoesIntersect(mouseRay) && Visible;
             if (!m_selected && selected)
             {
                 m_mouseOverDelegate?.Invoke(this);
@@ -154,10 +168,14 @@ namespace StarlightGame.Graphics.Objects
             // If this is a mouse click event, call the click delegate
             if (m_selected && mouseEvent.Action == MouseAction.Down)
             {
-                m_mouseClickDelegate?.Invoke(this);
                 m_clicked = true;
             }
-            else if (mouseEvent.Action == MouseAction.Up)
+            else if (m_clicked && mouseEvent.Action == MouseAction.Up)
+            {
+                m_mouseClickDelegate?.Invoke(this);
+                m_clicked = false;
+            }
+            else
             {
                 m_clicked = false;
             }
@@ -180,21 +198,39 @@ namespace StarlightGame.Graphics.Objects
             m_collider.UpdateMVPData(projection, view, modelTransform);
         }
 
-        public IGraphicsObject[] Children
+        public T[] GetChildren<T>()
+        where T : IGameObject
+        {
+            return
+            (
+                from obj in m_objects
+                where obj is T
+                select (T)obj
+            ).ToArray();
+        }
+
+        bool m_visible;
+        public bool Visible
         {
             get
             {
-                return m_objects;
+                return m_visible;
+            }
+            set
+            {
+                m_visible = value;
+                foreach (IGameObject obj in m_objects)
+                {
+                    obj.Visible = value;
+                }
             }
         }
 
-        public bool Visible { get; set; }
-
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
+        public (string, EventManager.EventHandler)[] Subscribers
         {
             get
             {
-                return m_eventListeners;
+                return m_eventSubscribers;
             }
         }
     }

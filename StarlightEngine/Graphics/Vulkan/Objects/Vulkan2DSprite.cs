@@ -86,6 +86,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             clipArea.Offset.Y = 0;
             clipArea.Extent = m_apiManager.GetSwapchainImageExtent();
             ClipArea = clipArea;
+
+            Visible = true;
         }
 
         public Rect2D ClipArea { get; set; }
@@ -144,13 +146,20 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_mesh.DrawMesh(commandBuffer, swapchainIndex);
         }
 
-        public bool Visible { get; set; }
-
-        public (EventManager.HandleEventDelegate, EventType)[] EventListeners
+        bool m_visible;
+        public bool Visible
         {
             get
             {
-                return new(EventManager.HandleEventDelegate, EventType)[] { };
+                return m_visible;
+            }
+            set
+            {
+                m_visible = value;
+                if (m_parent != null)
+                {
+                    m_parent.ChildUpdated(this);
+                }
             }
         }
     }

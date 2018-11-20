@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using StarlightEngine.Math;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightEngine.Events;
+using StarlightEngine.Graphics.Objects;
 
 namespace StarlightEngine.Graphics.Vulkan.Objects
 {
     /// <summary>
     /// Varient of a canvas which forms a list which can be scrolled
     /// </summary>
-    public class VulkanScrollableObjectList : VulkanCanvas
+    public class VulkanScrollableObjectList : VulkanCanvas, ISubscriberObject
     {
         EventManager m_eventManager;
         List<(IVulkanObject, float)> m_objectsInList = new List<(IVulkanObject, float)>();
@@ -18,15 +19,25 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         float m_scrollBias;
         bool m_scrollEnabled;
 
+        (string, EventManager.EventHandler)[] m_subscribers;
+
         public VulkanScrollableObjectList(FVec2 position, FVec2 size) :
         base(position, size, new FVec2(2, 2), false)
         {
             m_maxHeight = size.Y();
 
-            m_eventListeners = new(EventManager.HandleEventDelegate, EventType)[] { (MouseEventHandler, EventType.Mouse) };
+            m_subscribers = new(string, EventManager.EventHandler)[] { (MouseEvent.ID, MouseEventHandler) };
         }
 
-        public void MouseEventHandler(IEvent e)
+        public (string, EventManager.EventHandler)[] Subscribers
+        {
+            get
+            {
+                return m_subscribers;
+            }
+        }
+
+        public void MouseEventHandler(object sender, IEvent e)
         {
             MouseEvent mouseEvent = e as MouseEvent;
 

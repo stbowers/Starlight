@@ -15,7 +15,7 @@ namespace StarlightEngine.Graphics
 	 */
     public struct IRendererSpecialObjectRefs
     {
-        public IGraphicsObject DebugOverlay;
+        public IGameObject DebugOverlay;
     }
 
     /* Classes implementing this interface can be used to render IGraphicsObjects

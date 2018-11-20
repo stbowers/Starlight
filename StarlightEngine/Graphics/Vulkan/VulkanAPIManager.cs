@@ -1000,6 +1000,14 @@ namespace StarlightEngine.Graphics.Vulkan
             }
         }
 
+        public CommandBuffer[] CreateGraphicsCommandBuffers(int count, CommandBufferLevel level)
+        {
+            CommandBufferAllocateInfo allocInfo = new CommandBufferAllocateInfo();
+            allocInfo.CommandBufferCount = count;
+            allocInfo.Level = level;
+            return m_graphicsCommandPool.AllocateBuffers(allocInfo);
+        }
+
         /* Free a buffer
 		 */
         public void FreeAllocation(VmaAllocation allocation)
@@ -1081,7 +1089,8 @@ namespace StarlightEngine.Graphics.Vulkan
             m_swapchainBufferLocks[index].ExitLock();
         }
 
-        public bool DoesThreadOwnSwapchainLock(int index){
+        public bool DoesThreadOwnSwapchainLock(int index)
+        {
             return m_swapchainBufferLocks[index].IsLockedByThread();
         }
 
@@ -1112,7 +1121,7 @@ namespace StarlightEngine.Graphics.Vulkan
 
             // get lock for queue
             ThreadLock.EnterMultiple(m_queueLocks[m_graphicsQueue.Handle], m_inFlightFenceLocks[m_currentFrame]);
-			m_frameInFlight[m_currentFrame] = true;
+            m_frameInFlight[m_currentFrame] = true;
             m_graphicsQueue.Submit(submitInfo, m_inFlightFences[m_currentFrame]);
             ThreadLock.ExitMultiple(m_queueLocks[m_graphicsQueue.Handle], m_inFlightFenceLocks[m_currentFrame]);
             m_poolLocks[m_swapchainCommandBuffers[m_currentFrame].Parent.Handle].ExitLock();
@@ -1131,7 +1140,7 @@ namespace StarlightEngine.Graphics.Vulkan
             // wait for frame to finish rendering
             m_inFlightFenceLocks[m_currentFrame].EnterLock();
             m_inFlightFences[m_currentFrame].Wait();
-			m_frameInFlight[m_currentFrame] = false;
+            m_frameInFlight[m_currentFrame] = false;
             m_inFlightFenceLocks[m_currentFrame].ExitLock();
 
             // unlock mutex
