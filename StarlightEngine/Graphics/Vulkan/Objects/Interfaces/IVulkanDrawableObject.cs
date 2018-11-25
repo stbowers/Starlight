@@ -18,7 +18,5 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Interfaces
         VulkanPipeline[] Pipelines { get; }
         IVulkanBindableComponent[][] BindableComponents { get; }
         void Draw(CommandBuffer commandBuffer, int swapchainIndex);
-
-        VulkanCore.Rect2D ClipArea { get; set; }
     }
 }

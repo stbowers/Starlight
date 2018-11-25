@@ -99,6 +99,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public void SetParent(IParent parent)
         {
             m_parent = parent;
+            UpdateMVPData(parent.Projection, parent.View, parent.Model);
+            if (parent is IVulkanObject)
+            {
+                ClipArea = (parent as IVulkanObject).ClipArea;
+            }
         }
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)

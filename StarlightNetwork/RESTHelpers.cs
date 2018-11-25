@@ -24,7 +24,7 @@ namespace StarlightNetwork
         // GET: server details
         // DELETE: remove server
 
-        public static async RESTResponse GetAsync(string uri)
+        public static async Task<RESTResponse> GetAsync(string uri)
         {
             HttpRequestMessage request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
@@ -35,7 +35,7 @@ namespace StarlightNetwork
 
             Stream responseStream = await response.Content.ReadAsStreamAsync();
 
-            return JsonHelpers.CreateFromJsonStream<RESTResponse>(responseStream);
+            return null;
         }
 
         public static void RegisterGetCallback(string uri, GetCallback getCallback)

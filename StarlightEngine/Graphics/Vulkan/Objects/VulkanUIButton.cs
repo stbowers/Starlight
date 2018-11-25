@@ -36,6 +36,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         IParent m_parent;
         bool m_visible;
+        VulkanCore.Rect2D m_clipArea;
 
         public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null, bool center = true)
         {
@@ -130,7 +131,14 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public void SetParent(IParent parent)
         {
             m_parent = parent;
-            UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
+            if (parent != null)
+            {
+                UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
+                if (parent is IVulkanObject)
+                {
+                    ClipArea = (parent as IVulkanObject).ClipArea;
+                }
+            }
         }
 
         public FMat4 Projection
@@ -162,6 +170,21 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             get
             {
                 return (m_parent != null) ? m_parent.UIScale : FMat4.Identity;
+            }
+        }
+
+        public VulkanCore.Rect2D ClipArea
+        {
+            get
+            {
+                return m_clipArea;
+            }
+            set
+            {
+                m_clipArea = value;
+                m_text.ClipArea = value;
+                m_mouseClickHighlight.ClipArea = value;
+                m_mouseOverHighlight.ClipArea = value;
             }
         }
 

@@ -18,5 +18,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Interfaces
         /// <param name="view">View matrix - transforms world space into camera space</param>
         /// <param name="modelTransform">Model transform matrix - transforms this object's space into world space</param>
         void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform);
+
+        VulkanCore.Rect2D ClipArea { get; set; }
     }
 }

@@ -28,10 +28,6 @@ namespace StarlightGame
 
         public static void Main(string[] args)
         {
-            Task<string> index = RESTHelpers.GetAsync("http://www.google.com");
-            index.Wait();
-            Console.WriteLine(index.Result);
-
             RNG.SeedRNG(1337);
 
             // Name main thread for debugging

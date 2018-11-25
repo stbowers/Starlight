@@ -48,6 +48,8 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_modelTransformInverse = FMat4.Invert(modelTransform);
         }
 
+        public VulkanCore.Rect2D ClipArea { get; set; }
+
         public bool IsPointInside(FVec3 point)
         {
             FVec4 v = m_transform * new FVec4(point.X(), point.Y(), point.Z(), 1);

@@ -49,6 +49,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             m_parent = parent;
             UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
+            if (parent is IVulkanObject)
+            {
+                ClipArea = (parent as IVulkanObject).ClipArea;
+            }
         }
 
         public FMat4 Projection
@@ -89,6 +93,21 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             m_fill.UpdateMVPData(projection, view, modelTransform);
             m_outline.UpdateMVPData(projection, view, modelTransform);
+        }
+
+        VulkanCore.Rect2D m_clipArea;
+        public VulkanCore.Rect2D ClipArea
+        {
+            get
+            {
+                return m_clipArea;
+            }
+            set
+            {
+                m_clipArea = value;
+                m_fill.ClipArea = value;
+                m_outline.ClipArea = value;
+            }
         }
 
         public void UpdatePercentage(float newPercentage)

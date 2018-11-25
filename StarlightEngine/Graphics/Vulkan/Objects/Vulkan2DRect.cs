@@ -111,7 +111,14 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public void SetParent(IParent parent)
         {
             m_parent = parent;
-            UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
+            if (m_parent != null)
+            {
+                UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
+                if (parent is IVulkanObject)
+                {
+                    ClipArea = (parent as IVulkanObject).ClipArea;
+                }
+            }
         }
 
         public void UpdateSize(FVec2 newSize)

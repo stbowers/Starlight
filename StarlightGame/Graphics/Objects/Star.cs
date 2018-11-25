@@ -42,6 +42,8 @@ namespace StarlightGame.Graphics.Objects
         // Object matrices
         FMat4 m_projectionMatrix;
         FMat4 m_viewMatrix;
+
+        VulkanCore.Rect2D m_clipArea;
         #endregion
 
         #region Delegates
@@ -127,6 +129,22 @@ namespace StarlightGame.Graphics.Objects
             get
             {
                 return m_parent.Model;
+            }
+        }
+
+        public VulkanCore.Rect2D ClipArea
+        {
+            get
+            {
+                return m_clipArea;
+            }
+            set
+            {
+                m_clipArea = value;
+                foreach (IVulkanObject obj in m_objects)
+                {
+                    obj.ClipArea = value;
+                }
             }
         }
 

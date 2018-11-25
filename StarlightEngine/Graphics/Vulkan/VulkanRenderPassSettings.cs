@@ -1,6 +1,6 @@
 using System;
 
-namespace StarlightEngine.Graphics.Vulkan.Objects
+namespace StarlightEngine.Graphics.Vulkan
 {
     public struct VulkanRenderPassSettings
     {

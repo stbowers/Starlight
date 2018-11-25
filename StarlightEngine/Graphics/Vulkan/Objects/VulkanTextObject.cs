@@ -147,6 +147,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         {
             m_parent = parent;
             UpdateMVPData(m_parent.Projection, m_parent.View, m_parent.Model);
+            if (parent is IVulkanObject)
+            {
+                ClipArea = (parent as IVulkanObject).ClipArea;
+            }
         }
 
         public RenderPass[] RenderPasses

@@ -104,10 +104,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             foreach (IVulkanObject child in m_objects)
             {
                 child.UpdateMVPData(m_projectionMatrix, m_viewMatrix, m_modelTransform * m_modelMatrix);
-                if (child is IVulkanDrawableObject)
-                {
-                    (child as IVulkanDrawableObject).ClipArea = m_clipArea;
-                }
+                child.ClipArea = m_clipArea;
             }
         }
 
@@ -178,6 +175,18 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             get
             {
                 return m_modelTransform * m_modelMatrix;
+            }
+        }
+
+        public VulkanCore.Rect2D ClipArea
+        {
+            get
+            {
+                return m_clipArea;
+            }
+            set
+            {
+                // ignore setting clip area
             }
         }
 
