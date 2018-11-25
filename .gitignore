@@ -3,6 +3,10 @@ StarlightEngine/bin
 StarlightEngine/obj
 StarlightGame/bin
 StarlightGame/obj
+StarlightNetwork/bin
+StarlightNetwork/obj
+StarlightServer/bin
+StarlightServer/obj
 .vscode
 .vs
 dumps

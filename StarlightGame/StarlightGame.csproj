@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StarlightEngine\StarlightEngine.csproj" />
+    <ProjectReference Include="..\StarlightNetwork\StarlightNetwork.csproj" />
   </ItemGroup>
 
   <ItemGroup>
