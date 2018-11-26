@@ -26,10 +26,10 @@ namespace StarlightGame.Graphics.Scenes
         VulkanUIButton m_optionsButton;
         VulkanUIButton m_exitGameButton;
 
-        Vulkan3DLine m_xAxis;
-        Vulkan3DLine m_yAxis;
-        Vulkan3DLine m_zAxis;
-        Vulkan3DLine m_mouseRay;
+        //Vulkan3DLine m_xAxis;
+        //Vulkan3DLine m_yAxis;
+        //Vulkan3DLine m_zAxis;
+        //Vulkan3DLine m_mouseRay;
 
         // Animation thread
         Thread m_animationThread;
@@ -55,15 +55,15 @@ namespace StarlightGame.Graphics.Scenes
             //m_canvas = new VulkanCanvas(FVec3.Zero, Quaternion.Identity, Projection, Camera.View);
 
             FVec3 origin = new FVec3(0, 0, 0);
-            m_xAxis = new Vulkan3DLine(apiManager, origin, new FVec3(100, 0, 0), new FVec4(1.0f, 0.0f, 0.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
-            m_yAxis = new Vulkan3DLine(apiManager, origin, new FVec3(0, 100, 0), new FVec4(0.0f, 1.0f, 0.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
-            m_zAxis = new Vulkan3DLine(apiManager, origin, new FVec3(0, 0, 100), new FVec4(0.0f, 0.0f, 1.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
-            m_mouseRay = new Vulkan3DLine(apiManager, origin, new FVec3(1, -10, 10), new FVec4(1.0f, 1.0f, .2f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
-            m_eventManager.Subscribe(MouseEvent.ID, MouseRayEventHander);
-            AddObject(m_xAxis);
-            AddObject(m_yAxis);
-            AddObject(m_zAxis);
-            AddObject(m_mouseRay);
+            //m_xAxis = new Vulkan3DLine(apiManager, origin, new FVec3(100, 0, 0), new FVec4(1.0f, 0.0f, 0.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
+            //m_yAxis = new Vulkan3DLine(apiManager, origin, new FVec3(0, 100, 0), new FVec4(0.0f, 1.0f, 0.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
+            //m_zAxis = new Vulkan3DLine(apiManager, origin, new FVec3(0, 0, 100), new FVec4(0.0f, 0.0f, 1.0f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
+            //m_mouseRay = new Vulkan3DLine(apiManager, origin, new FVec3(1, -10, 10), new FVec4(1.0f, 1.0f, .2f, 1.0f), new FMat4(1.0f), Camera.View, Projection);
+            //m_eventManager.Subscribe(MouseEvent.ID, MouseRayEventHander);
+            //AddObject(m_xAxis);
+            //AddObject(m_yAxis);
+            //AddObject(m_zAxis);
+            //AddObject(m_mouseRay);
 
             //m_background = new Vulkan2DSprite(apiManager, "./assets/bricks.jpg", new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f));
             //AddObject(0, m_background);
@@ -71,13 +71,13 @@ namespace StarlightGame.Graphics.Scenes
 
             VulkanTextureCreateInfo createInfo = new VulkanTextureCreateInfo();
             createInfo.APIManager = m_apiManager;
-            createInfo.FileName = "./assets/Title.png";
-            createInfo.EnableMipmap = true;
+            createInfo.FileName = "./assets/Title3.png";
+            createInfo.EnableMipmap = false;
             createInfo.MagFilter = VulkanCore.Filter.Nearest;
             createInfo.MinFilter = VulkanCore.Filter.Nearest;
             createInfo.AnisotropyEnable = true;
             createInfo.MaxAnisotropy = 16;
-            VulkanTexture titleTexture = VulkanTextureCache.GetTexture("./assets/Title.png", createInfo);
+            VulkanTexture titleTexture = VulkanTextureCache.GetTexture("./assets/Title3.png", createInfo);
             m_title = new Vulkan2DSprite(apiManager, titleTexture, new FVec2(-.75f, -.75f), new FVec2(1.5f, 1.0f), 0.0f);
             //AddObject(1, m_title);
             m_canvas.AddObject(m_title);
@@ -102,6 +102,17 @@ namespace StarlightGame.Graphics.Scenes
             m_exitGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Exit Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), exitGameButtonClicked);
             m_exitGameButton.Visible = false;
             m_canvas.AddObject(m_exitGameButton);
+
+            // background
+            VulkanTextureCreateInfo backgroundTextureInfo = new VulkanTextureCreateInfo();
+            backgroundTextureInfo.APIManager = m_apiManager;
+            backgroundTextureInfo.EnableMipmap = false;
+            backgroundTextureInfo.MagFilter = VulkanCore.Filter.Linear;
+            backgroundTextureInfo.MinFilter = VulkanCore.Filter.Linear;
+            backgroundTextureInfo.FileName = "./assets/Nebula.jpg";
+            VulkanTexture backgroundTexture = VulkanTextureCache.GetTexture(backgroundTextureInfo.FileName, backgroundTextureInfo);
+            Vulkan2DSprite background = new Vulkan2DSprite(m_apiManager, backgroundTexture, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f), 1.0f);
+            m_canvas.AddObject(background);
 
             AddObject(m_canvas);
 
@@ -165,23 +176,23 @@ namespace StarlightGame.Graphics.Scenes
             m_apiManager.GetWindowManager().CloseWindow();
         }
 
-        bool m_rightButtonDown = false;
-        bool m_leftButtonDown = false;
-        FVec3 m_cameraPosition = new FVec3(-5.0f, -.5f, 3.0f);
-        public void MouseRayEventHander(object sender, IEvent e)
-        {
-            // cast e to MouseEvent
-            MouseEvent mouseEvent = e as MouseEvent;
+        //bool m_rightButtonDown = false;
+        //bool m_leftButtonDown = false;
+        //FVec3 m_cameraPosition = new FVec3(-5.0f, -.5f, 3.0f);
+        //public void MouseRayEventHander(object sender, IEvent e)
+        //{
+        //    // cast e to MouseEvent
+        //    MouseEvent mouseEvent = e as MouseEvent;
 
-            // Get ray from camera to mouse position on screen
-            FVec3 start = FMat4.UnProject(Projection, Camera.View, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
-            FVec3 end = FMat4.UnProject(Projection, Camera.View, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 1.0f));
+        //    // Get ray from camera to mouse position on screen
+        //    FVec3 start = FMat4.UnProject(Projection, Camera.View, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
+        //    FVec3 end = FMat4.UnProject(Projection, Camera.View, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 1.0f));
 
-            //start = (m_buttonCollider.Transform * FMat4.Invert(m_canvas.Model) * new FVec4(start.X(), start.Y(), start.Z(), 1.0f)).XYZ();
-            //end = (m_buttonCollider.Transform * FMat4.Invert(m_canvas.Model) * new FVec4(end.X(), end.Y(), end.Z(), 1.0f)).XYZ();
+        //    //start = (m_buttonCollider.Transform * FMat4.Invert(m_canvas.Model) * new FVec4(start.X(), start.Y(), start.Z(), 1.0f)).XYZ();
+        //    //end = (m_buttonCollider.Transform * FMat4.Invert(m_canvas.Model) * new FVec4(end.X(), end.Y(), end.Z(), 1.0f)).XYZ();
 
-            m_mouseRay.UpdateLine(start, new FVec3(0, 0, 0));
-            //m_mouseRay.UpdateLine(new FVec3(0, 0, 0), end);
-        }
+        //    m_mouseRay.UpdateLine(start, new FVec3(0, 0, 0));
+        //    //m_mouseRay.UpdateLine(new FVec3(0, 0, 0), end);
+        //}
     }
 }
