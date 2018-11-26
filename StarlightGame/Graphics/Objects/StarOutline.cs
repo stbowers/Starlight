@@ -27,6 +27,7 @@ namespace StarlightGame.Graphics.Objects
 
         GameCore.GameState m_gameState;
         StarSystem m_currentSystem;
+        Star m_currentStar;
 
         public StarOutline(VulkanAPIManager apiManager, GameCore.GameState gameState) :
         base(new FVec2(.6f, -.8f), new FVec2(.4f, 1.5f), new FVec2(2.0f, 2.0f))
@@ -75,16 +76,31 @@ namespace StarlightGame.Graphics.Objects
 
         }
 
-        public void FocusSystem(StarSystem system)
+        public void FocusSystem(Star star)
         {
-            m_currentSystem = system;
-            m_systemNameText.UpdateText(StaticFonts.Font_Arial, system.Name, 20);
+            m_currentSystem = star.System;
+            m_currentStar = star;
+            m_systemNameText.UpdateText(StaticFonts.Font_Arial, m_currentSystem.Name, 20);
 
-            if (system.Owner == null)
+            // Get current project
+            string currentProject = "";
+            if (m_currentSystem.CurrentProject != null)
+            {
+                // TODO: check player's visibility of system before updating text
+                currentProject += m_currentSystem.CurrentProject.Description;
+            }
+            else
+            {
+                currentProject = "No Project";
+            }
+            m_currentProjectText.UpdateText(StaticFonts.Font_Arial, currentProject, 16);
+
+            if (m_currentSystem.Owner == null)
             {
                 m_systemStatusText.UpdateText(StaticFonts.Font_Arial, "Unclaimed", 20);
                 m_claimSystemButton.Visible = true;
                 m_colonizeSystemButton.Visible = false;
+                m_projectsList.ClearList();
             }
             else
             {
@@ -97,12 +113,12 @@ namespace StarlightGame.Graphics.Objects
                 {
                     status += "Claimed by: ";
                 }
-                status += system.Owner.Name;
+                status += m_currentSystem.Owner.Name;
                 m_systemStatusText.UpdateText(StaticFonts.Font_Arial, status, 8);
                 m_claimSystemButton.Visible = false;
-                if (system.Owner == m_gameState.PlayerEmpire)
+                if (m_currentSystem.Owner == m_gameState.PlayerEmpire)
                 {
-                    if (system.Colonized)
+                    if (m_currentSystem.Colonized)
                     {
                         m_colonizeSystemButton.Visible = false;
                     }
@@ -123,26 +139,20 @@ namespace StarlightGame.Graphics.Objects
                     if (project.CanStart(m_gameState.PlayerEmpire, m_currentSystem))
                     {
                         string projectText = string.Format("[{0}] {1}", attributes.Turns, attributes.ProjectDescription);
-                        VulkanUIButton projectButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, projectText, 16, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, .25f), center: false, onClickDelegate: () => { Console.WriteLine("Building"); });
+                        VulkanUIButton projectButton = new VulkanUIButton(
+                            m_apiManager, StaticFonts.Font_Arial, projectText, 16, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, .25f), center: false,
+                            onClickDelegate: () =>
+                            {
+                                // start project
+                                project.Start(m_gameState.PlayerEmpire, m_currentSystem);
+
+                                // update project text
+                                m_currentProjectText.UpdateText(StaticFonts.Font_Arial, project.Description, 16);
+                            }
+                        );
                         m_projectsList.AddToList(projectButton, .25f);
                     }
                 }
-                Vulkan2DRect listrect0 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(0, 0, 0, 1));
-                m_projectsList.AddToList(listrect0, .4f);
-                Vulkan2DRect listrect1 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(0, 0, 1, 1));
-                m_projectsList.AddToList(listrect1, .4f);
-                Vulkan2DRect listrect2 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(0, 1, 0, 1));
-                m_projectsList.AddToList(listrect2, .4f);
-                Vulkan2DRect listrect3 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(0, 1, 1, 1));
-                m_projectsList.AddToList(listrect3, .4f);
-                Vulkan2DRect listrect4 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(1, 0, 0, 1));
-                m_projectsList.AddToList(listrect4, .4f);
-                Vulkan2DRect listrect5 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(1, 0, 1, 1));
-                m_projectsList.AddToList(listrect5, .4f);
-                Vulkan2DRect listrect6 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(1, 1, 0, 1));
-                m_projectsList.AddToList(listrect6, .4f);
-                Vulkan2DRect listrect7 = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, .4f), new FVec4(1, 1, 1, 1));
-                m_projectsList.AddToList(listrect7, .4f);
             }
         }
 
@@ -153,7 +163,9 @@ namespace StarlightGame.Graphics.Objects
             {
                 lastClick = m_timer.Elapsed.TotalSeconds;
                 m_currentSystem.Owner = m_gameState.PlayerEmpire;
-                FocusSystem(m_currentSystem);
+                // recolor star
+                m_currentStar.UpdateOwner(m_gameState.PlayerEmpire);
+                FocusSystem(m_currentStar);
             }
         }
 
@@ -163,7 +175,9 @@ namespace StarlightGame.Graphics.Objects
             {
                 lastClick = m_timer.Elapsed.TotalSeconds;
                 m_currentSystem.Colonized = true;
-                FocusSystem(m_currentSystem);
+                // recolor star
+                m_currentStar.UpdateOwner(m_gameState.PlayerEmpire);
+                FocusSystem(m_currentStar);
             }
         }
     }

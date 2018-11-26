@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using StarlightGame.GameCore.Field.Galaxy;
 using StarlightGame.GameCore.Ships;
+using StarlightEngine.Math;
 
 namespace StarlightGame.GameCore
 {
@@ -12,9 +13,14 @@ namespace StarlightGame.GameCore
         List<StarSystem> m_ownedSystems = new List<StarSystem>();
         List<IShip> m_ownedShips = new List<IShip>();
 
-        public Empire(string name)
+        FVec4 m_primaryColor;
+        FVec4 m_secondaryColor;
+
+        public Empire(string name, FVec4 primaryColor, FVec4 secondaryColor)
         {
             m_name = name;
+            m_primaryColor = primaryColor;
+            m_secondaryColor = secondaryColor;
         }
 
         public string Name
@@ -30,6 +36,22 @@ namespace StarlightGame.GameCore
             get
             {
                 return m_ownedShips;
+            }
+        }
+
+        public FVec4 PrimaryColor
+        {
+            get
+            {
+                return m_primaryColor;
+            }
+        }
+
+        public FVec4 SecondaryColor
+        {
+            get
+            {
+                return m_secondaryColor;
             }
         }
 

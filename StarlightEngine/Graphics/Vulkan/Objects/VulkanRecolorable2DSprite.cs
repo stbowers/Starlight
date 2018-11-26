@@ -102,13 +102,23 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public Rect2D ClipArea { get; set; }
 
+        public void UpdateRecolorSettings(FVec4 fromColor1, FVec4 toColor1, FVec4 fromColor2, FVec4 toColor2)
+        {
+            System.Buffer.BlockCopy(fromColor1.Bytes, 0, m_recolorData, 0, 4 * 4);
+            System.Buffer.BlockCopy(toColor1.Bytes, 0, m_recolorData, 1 * (4 * 4), 4 * 4);
+            System.Buffer.BlockCopy(fromColor2.Bytes, 0, m_recolorData, 2 * (4 * 4), 4 * 4);
+            System.Buffer.BlockCopy(toColor2.Bytes, 0, m_recolorData, 3 * (4 * 4), 4 * 4);
+            m_recolorUniform.UpdateUniformBuffer(m_recolorData);
+            m_parent?.ChildUpdated(this);
+        }
+
         public void Update()
         {
         }
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
-            FMat4 mvp = projection * view * modelTransform * m_parent.UIScale * m_modelMatrix;
+            FMat4 mvp = projection * view * modelTransform * m_modelMatrix;
 
             System.Buffer.BlockCopy(mvp.Bytes, 0, m_mvpData, 0, 4 * 4 * 4);
             m_mvpUniform.UpdateUniformBuffer(m_mvpData);

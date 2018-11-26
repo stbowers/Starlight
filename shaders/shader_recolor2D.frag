@@ -36,6 +36,9 @@ bool areVectorsSame(vec3 a, vec3 b, float maxDistance){
 
 void main() {
 	vec4 inColor = texture(texSampler, texCoord);
+	if (inColor.a < 0.01f){
+		discard;
+	}
 	if (areVectorsSame(inColor.xyz, recolorSettings.fromColor1.xyz, .01)){
 		outColor = vec4(recolorSettings.toColor1.xyz, inColor.a);
 	} else if (areVectorsSame(inColor.xyz, recolorSettings.fromColor2.xyz, .01)){

@@ -26,11 +26,11 @@ namespace StarlightGame.GameCore
         /// <summary>
         /// Creates a new game state - initialized for a new game
         /// </summary>
-        public GameState(string playerName)
+        public GameState(string playerName, FVec4 playerPrimaryColor, FVec4 playerSecondaryColor)
         {
             m_rng = RNG.GetRNG();
             m_field = new GameField();
-            m_playerEmpire = new Empire(playerName);
+            m_playerEmpire = new Empire(playerName, playerPrimaryColor, playerSecondaryColor);
 
             Assembly searchAssembly = Assembly.GetAssembly(typeof(GameState));
             m_availableProjects.AddRange(

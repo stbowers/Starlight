@@ -37,6 +37,9 @@ namespace StarlightGame.GameCore.Projects
             canBuild &= starSystem.Owner == empire;
             canBuild &= starSystem.Colonized;
 
+            // the system must not already be building a colony ship
+            canBuild &= starSystem.CurrentProject != this;
+
             return canBuild;
         }
 
@@ -45,7 +48,7 @@ namespace StarlightGame.GameCore.Projects
         /// </summary>
         public void Start(Empire empire, StarSystem starSystem)
         {
-
+            starSystem.CurrentProject = this;
         }
 
         /// <summary>

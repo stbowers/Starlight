@@ -13,7 +13,7 @@ namespace StarlightGame.GameCore.Field.Galaxy
         #region Private Members
         string m_name;
         FVec2 m_location;
-        StarSystem[] m_neighbors;
+        List<StarSystem> m_neighbors = new List<StarSystem>();
         Empire m_owner;
         bool m_colonized;
         IProject m_currentProject;
@@ -49,6 +49,14 @@ namespace StarlightGame.GameCore.Field.Galaxy
             }
         }
 
+        public StarSystem[] Neighbors
+        {
+            get
+            {
+                return m_neighbors.ToArray();
+            }
+        }
+
         public Empire Owner
         {
             get
@@ -79,6 +87,25 @@ namespace StarlightGame.GameCore.Field.Galaxy
             {
                 return m_ships;
             }
+        }
+
+        public IProject CurrentProject
+        {
+            get
+            {
+                return m_currentProject;
+            }
+            set
+            {
+                m_currentProject = value;
+            }
+        }
+        #endregion
+
+        #region Public methods
+        public void AddNeighbor(StarSystem neighbor)
+        {
+            m_neighbors.Add(neighbor);
         }
         #endregion
 

@@ -7,6 +7,7 @@ using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 using StarlightGame.GameCore.Field.Galaxy;
 using StarlightEngine.Events;
 using StarlightEngine.Math;
+using StarlightGame.GameCore;
 
 namespace StarlightGame.Graphics.Objects
 {
@@ -23,7 +24,7 @@ namespace StarlightGame.Graphics.Objects
         StarSystem m_system;
 
         // Objects
-        Vulkan2DSprite m_sprite;
+        VulkanRecolorable2DSprite m_sprite;
         VulkanBoxCollider m_collider;
         IVulkanObject[] m_objects;
 
@@ -62,10 +63,13 @@ namespace StarlightGame.Graphics.Objects
             createInfo.MagFilter = VulkanCore.Filter.Nearest;
             createInfo.MinFilter = VulkanCore.Filter.Nearest;
 
-            createInfo.FileName = "./assets/Star.png";
+            createInfo.FileName = "./assets/Star-recolor.png";
             VulkanTexture starTexture = VulkanTextureCache.GetTexture(createInfo.FileName, createInfo);
 
-            m_sprite = new Vulkan2DSprite(m_apiManager, starTexture, system.Location, new FVec2(.03f, .03f));
+            m_sprite = new VulkanRecolorable2DSprite(m_apiManager, starTexture, system.Location, new FVec2(.05f, .05f),
+                new FVec4(0.0f, 0.0f, 0.0f, 1.0f), new FVec4(0.7f, 0.7f, 0.7f, 1.0f), // black to light gray
+                new FVec4(1.0f, 0.0f, 0.0f, 1.0f), new FVec4(0.2f, 0.2f, 0.2f, 1.0f) // red to dark gray
+            );
             m_collider = new VulkanBoxCollider(system.Location, new FVec2(.03f, .03f));
 
             m_objects = new IVulkanObject[] { m_sprite, m_collider };
@@ -77,6 +81,14 @@ namespace StarlightGame.Graphics.Objects
             m_eventSubscribers = new(string, EventManager.EventHandler)[] { (MouseEvent.ID, MouseEventListener) };
 
             Visible = true;
+        }
+
+        public void UpdateOwner(Empire owner)
+        {
+            m_sprite.UpdateRecolorSettings(
+                new FVec4(0.0f, 0.0f, 0.0f, 1.0f), owner.PrimaryColor, // black to empire primary
+                new FVec4(1.0f, 0.0f, 0.0f, 1.0f), owner.SecondaryColor // red to empire secondary
+            );
         }
 
         public void Update()

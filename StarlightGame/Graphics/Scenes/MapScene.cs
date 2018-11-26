@@ -26,7 +26,11 @@ namespace StarlightGame.Graphics.Scenes
         // Objects
         Vulkan2DSprite[] m_starSprites;
         StarOutline m_starOutline;
+        HyperlaneOverlay m_hyperlaneOverlay;
+
+        // Canvases
         VulkanCanvas m_canvas;
+        VulkanCanvas m_mapCanvas;
 
         // Animation thread
         Thread m_animationThread;
@@ -48,15 +52,13 @@ namespace StarlightGame.Graphics.Scenes
 
             m_canvas = new VulkanCanvas(new FVec2(-1, -1), new FVec2(2, 2), new FVec2(2, 2));
 
-            // Create sprite for each star
+            // Create map canvas
+            m_mapCanvas = new VulkanCanvas(new FVec2(-1.0f, -.9f), new FVec2(1.6f, 1.8f), new FVec2(2.0f, 2.0f), false);
+            m_canvas.AddObject(m_mapCanvas);
+
+            // create star sprites
             Console.WriteLine("Creating sprites...");
             Quadrant[] quadrants = m_gameState.Field.Quadrants;
-            List<Vulkan2DSprite> starSprites = new List<Vulkan2DSprite>();
-            VulkanTextureCreateInfo createInfo = new VulkanTextureCreateInfo();
-            createInfo.APIManager = m_apiManager;
-            createInfo.EnableMipmap = false;
-            createInfo.MagFilter = VulkanCore.Filter.Nearest;
-            createInfo.MinFilter = VulkanCore.Filter.Nearest;
             for (int i = 0; i < quadrants.Length; i++)
             {
                 for (int j = 0; j < 4; j++)
@@ -67,7 +69,7 @@ namespace StarlightGame.Graphics.Scenes
                         if (system != null)
                         {
                             Star newStar = new Star(m_apiManager, system, OnStarClicked, OnStarMouseOver, OnStarMouseExit);
-                            m_canvas.AddObject(newStar);
+                            m_mapCanvas.AddObject(newStar);
                         }
                     }
                 }
@@ -77,6 +79,21 @@ namespace StarlightGame.Graphics.Scenes
             // Create outline
             m_starOutline = new StarOutline(m_apiManager, gameState);
             m_canvas.AddObject(m_starOutline);
+
+            // Create hyperlane overlay
+            m_hyperlaneOverlay = new HyperlaneOverlay(m_apiManager, gameState.Field.Stars);
+            m_mapCanvas.AddObject(m_hyperlaneOverlay);
+
+            // Map background
+            VulkanTextureCreateInfo mapBackgroundTextureInfo = new VulkanTextureCreateInfo();
+            mapBackgroundTextureInfo.APIManager = m_apiManager;
+            mapBackgroundTextureInfo.EnableMipmap = false;
+            mapBackgroundTextureInfo.MagFilter = VulkanCore.Filter.Linear;
+            mapBackgroundTextureInfo.MinFilter = VulkanCore.Filter.Linear;
+            mapBackgroundTextureInfo.FileName = "./assets/Nebula2.jpg";
+            VulkanTexture mapBackgroundTexture = VulkanTextureCache.GetTexture(mapBackgroundTextureInfo.FileName, mapBackgroundTextureInfo);
+            Vulkan2DSprite mapBackground = new Vulkan2DSprite(m_apiManager, mapBackgroundTexture, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f), 1.0f);
+            m_canvas.AddObject(mapBackground);
 
             AddObject(m_canvas);
 
@@ -95,17 +112,15 @@ namespace StarlightGame.Graphics.Scenes
 
         public void OnStarMouseOver(Star star)
         {
-            Console.WriteLine("Star selected");
         }
 
         public void OnStarMouseExit(Star star)
         {
-            Console.WriteLine("Star unselected");
         }
 
         public void OnStarClicked(Star star)
         {
-            m_starOutline.FocusSystem(star.System);
+            m_starOutline.FocusSystem(star);
         }
     }
 }

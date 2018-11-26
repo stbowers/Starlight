@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using StarlightEngine.Math;
 
@@ -66,6 +68,21 @@ namespace StarlightGame.GameCore.Field.Galaxy
             get
             {
                 return m_sectors[x, y];
+            }
+        }
+        public StarSystem[] Stars
+        {
+            get
+            {
+                List<StarSystem> stars = new List<StarSystem>();
+                foreach (StarSystem system in m_sectors)
+                {
+                    if (system != null)
+                    {
+                        stars.Add(system);
+                    }
+                }
+                return stars.ToArray();
             }
         }
         #endregion
