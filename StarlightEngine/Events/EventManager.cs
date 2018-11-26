@@ -6,6 +6,7 @@ using System.Linq;
 using StarlightEngine.Graphics;
 using StarlightEngine.Math;
 using StarlightEngine.Threadding;
+using StarlightEngine.Graphics.Scenes;
 
 namespace StarlightEngine.Events
 {
@@ -15,8 +16,8 @@ namespace StarlightEngine.Events
     public class EventManager
     {
         IWindowManager m_windowManager;
+        Scene m_currentScene;
 
-        Stack<Dictionary<string, EventHandler>> m_subscribers = new Stack<Dictionary<string, EventHandler>>();
         Dictionary<string, EventHandler> m_globalSubscribers = new Dictionary<string, EventHandler>();
         public delegate void EventHandler(object sender, IEvent e);
 
@@ -51,46 +52,32 @@ namespace StarlightEngine.Events
             }
         }
 
-        public void PushSubscribers((string, EventHandler)[] subscribers)
+        public void SetScene(Scene currentScene)
         {
-            Dictionary<string, EventHandler> newSubscribers = new Dictionary<string, EventHandler>();
-            foreach ((string id, EventHandler handler) in subscribers)
-            {
-                if (newSubscribers.ContainsKey(id))
-                {
-                    newSubscribers[id] += handler;
-                }
-                else
-                {
-                    newSubscribers.Add(id, handler);
-                }
-            }
-            m_subscribers.Push(newSubscribers);
-        }
-
-        public void PopSubscribers()
-        {
-            if (m_subscribers.Count > 0)
-            {
-                m_subscribers.Pop();
-            }
+            m_currentScene = currentScene;
         }
 
         public void Notify(string id, object sender, IEvent e, float delay = 0.0f)
         {
-            Thread.Sleep((int)(delay * 1000));
-            if (m_subscribers.Count() != 0 && m_subscribers.Peek().ContainsKey(id))
+            EventHandler[] callbacks =
+            (
+                from pair in m_globalSubscribers
+                let subscription = (pair.Key, pair.Value)
+                where subscription.Item1 == id
+                select subscription.Item2
+            ).Union(
+                from subscription in m_currentScene.GetEventSubscriptions()
+                where subscription.Item1 == id
+                select subscription.Item2
+            ).ToArray();
+            if (callbacks.Length > 0)
             {
                 ThreadPool.QueueUserWorkItem((object o) =>
                 {
-                    if (m_globalSubscribers.ContainsKey(id))
+                    Thread.Sleep((int)(delay * 1000));
+                    foreach (EventHandler callback in callbacks)
                     {
-
-                        m_globalSubscribers[id].Invoke(sender, e);
-                    }
-                    if (m_subscribers.Peek().ContainsKey(id))
-                    {
-                        m_subscribers.Peek()[id].Invoke(sender, e);
+                        callback.Invoke(sender, e);
                     }
                 });
             }

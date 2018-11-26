@@ -5,7 +5,7 @@ using StarlightGame.GameCore.Field.Galaxy;
 
 namespace StarlightGame.GameCore.Projects
 {
-    [Project("Build a colony ship", 1)]
+    [Project("Build Colony Ship", 1)]
     public class ProjectBuildColonyShip : IProject
     {
         /// <summary>

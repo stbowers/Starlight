@@ -78,18 +78,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             transformedRay.ClipZ(0, 1);
             //System.Console.WriteLine("After clipping z: {0} <= t <= {1}", transformedRay.TMin, transformedRay.TMax);
 
+            // If after clipping we still have a segment, then that segment is inside the collision box
             bool intersect = transformedRay.IsSegment();
             return intersect;
         }
 
         public bool Visible { get; set; }
-
-        public IGraphicsObject[] Children
-        {
-            get
-            {
-                return new IGraphicsObject[] { };
-            }
-        }
     }
 }

@@ -22,14 +22,11 @@ namespace StarlightEngine.Graphics.Scenes
 		 */
         public void PushScene(Scene scene)
         {
-            // remove current event subscribers
-            m_eventManager.PopSubscribers();
-
             // Push new scene on stack
             m_scenes.Push(scene);
 
-            // add new scene event subscribers
-            m_eventManager.PushSubscribers(scene.GetEventSubscriptions());
+            // set event manager to use this scene
+            m_eventManager.SetScene(scene);
 
             // display scene
             m_renderer.DisplayScene(scene);
@@ -42,13 +39,10 @@ namespace StarlightEngine.Graphics.Scenes
             // pop scene
             Scene scene = m_scenes.Pop();
 
-            // remove scene's listeners
-            m_eventManager.PopSubscribers();
-
             if (m_scenes.Count > 0)
             {
-                // add listeners for the scene at the top of the stack
-                m_eventManager.PushSubscribers(m_scenes.Peek().GetEventSubscriptions());
+                // set event manager to use scene at top of stack
+                m_eventManager.SetScene(m_scenes.Peek());
 
                 // display the scene at the top of the stack
                 m_renderer.DisplayScene(m_scenes.Peek());

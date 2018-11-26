@@ -32,17 +32,19 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
         public delegate void OnSelectDelegate();
         OnClickDelegate m_onClickDelegate;
         OnSelectDelegate m_onSelectDelegate;
+        OnSelectDelegate m_onMouseEvent;
         (string, EventManager.EventHandler)[] m_eventSubscribers;
 
         IParent m_parent;
         bool m_visible;
         VulkanCore.Rect2D m_clipArea;
 
-        public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null, bool center = true)
+        public VulkanUIButton(VulkanAPIManager apiManager, AngelcodeFont font, string text, int fontSize, FVec2 location, FVec2 size, OnClickDelegate onClickDelegate = null, OnSelectDelegate onSelectDelegate = null, bool center = true, OnSelectDelegate onMouseEvent = null)
         {
             m_apiManager = apiManager;
             m_onClickDelegate = onClickDelegate;
             m_onSelectDelegate = onSelectDelegate;
+            m_onMouseEvent = onMouseEvent;
 
             // set up event listeners
             m_eventSubscribers = new(string, EventManager.EventHandler)[] { (MouseEvent.ID, MouseEventListener) };
@@ -205,6 +207,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
         public void MouseEventListener(object sender, IEvent e)
         {
+            m_onMouseEvent?.Invoke();
             // cast e to MouseEvent
             MouseEvent mouseEvent = e as MouseEvent;
 

@@ -133,6 +133,10 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             {
                 m_objects.Add(vulkanObject);
                 vulkanObject.SetParent(this);
+                if (m_parent != null)
+                {
+                    m_parent.ChildUpdated(this);
+                }
             }
             else
             {

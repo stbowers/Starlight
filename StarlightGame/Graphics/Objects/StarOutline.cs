@@ -64,11 +64,7 @@ namespace StarlightGame.Graphics.Objects
             AddObject(m_currentProjectText);
 
             m_projectsList = new VulkanScrollableObjectList(new FVec2(-.93f, -.70f), new FVec2(1.86f, .78f));
-            Vulkan2DRect testrect = new Vulkan2DRect(m_apiManager, new FVec2(-1, -1), new FVec2(2, 2), new FVec4(.5f, 0, .5f, 1));
-            m_projectsList.AddObject(testrect);
-
             AddObject(m_projectsList);
-
 
             m_claimSystemButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Claim System", 20, new FVec2(-.93f, .91f), new FVec2(1.86f, .09f), center: false, onClickDelegate: ClaimSystemButtonClicked);
             m_claimSystemButton.Visible = false;
@@ -127,8 +123,7 @@ namespace StarlightGame.Graphics.Objects
                     if (project.CanStart(m_gameState.PlayerEmpire, m_currentSystem))
                     {
                         string projectText = string.Format("[{0}] {1}", attributes.Turns, attributes.ProjectDescription);
-                        Console.WriteLine(projectText);
-                        VulkanUIButton projectButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, projectText, 20, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, .25f), center: false);
+                        VulkanUIButton projectButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, projectText, 16, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, .25f), center: false, onClickDelegate: () => { Console.WriteLine("Building"); });
                         m_projectsList.AddToList(projectButton, .25f);
                     }
                 }
@@ -154,7 +149,7 @@ namespace StarlightGame.Graphics.Objects
         double lastClick = 0.0f;
         public void ClaimSystemButtonClicked()
         {
-            if (m_timer.Elapsed.TotalSeconds - lastClick > .01)
+            if (m_timer.Elapsed.TotalSeconds - lastClick > .1)
             {
                 lastClick = m_timer.Elapsed.TotalSeconds;
                 m_currentSystem.Owner = m_gameState.PlayerEmpire;
@@ -164,7 +159,7 @@ namespace StarlightGame.Graphics.Objects
 
         public void ColonizeSystemButtonClicked()
         {
-            if (m_timer.Elapsed.TotalSeconds - lastClick > .01)
+            if (m_timer.Elapsed.TotalSeconds - lastClick > .1)
             {
                 lastClick = m_timer.Elapsed.TotalSeconds;
                 m_currentSystem.Colonized = true;
