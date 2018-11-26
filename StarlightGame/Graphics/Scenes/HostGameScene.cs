@@ -49,20 +49,17 @@ namespace StarlightGame.Graphics.Scenes
             AddObject(m_canvas);
         }
 
+        public Scene MapScene
+        {
+            set
+            {
+                m_mapScene = value;
+            }
+        }
+
         // Button callbacks
         public void onStartGameClicked()
         {
-            // make new gamestate
-            if (m_gameState == null)
-            {
-                m_gameState = new GameState(
-                    "United Federation of Planets",
-                    new FVec4(41.0f / 255.0f, 217.0f / 255.0f, 244.0f / 255.0f, 1.0f),
-                    new FVec4(41.0f / 255.0f, 129.0f / 255.0f, 244.0f / 255.0f, 1.0f)
-                );
-                m_mapScene = new MapScene(m_apiManager, m_sceneManager, m_eventManager, m_gameState);
-            }
-
             m_sceneManager.PushScene(m_mapScene);
         }
     }

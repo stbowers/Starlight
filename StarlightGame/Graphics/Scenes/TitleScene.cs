@@ -7,6 +7,8 @@ using StarlightEngine.Math;
 using StarlightEngine.Events;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 
+using StarlightGame.GameCore;
+
 namespace StarlightGame.Graphics.Scenes
 {
     public class TitleScene : Scene
@@ -34,8 +36,12 @@ namespace StarlightGame.Graphics.Scenes
         // Animation thread
         Thread m_animationThread;
 
+        // loading status flags
+        AutoResetEvent m_gameStateInitializedWaitHandle = new AutoResetEvent(false);
+
         // Children scenes
         Scene m_hostGameScene;
+        Scene m_mapScene;
 
         public TitleScene(VulkanAPIManager apiManager, SceneManager sceneManager, EventManager eventManager) :
         base(new Camera(new FVec3(0.0f, 0.0f, 1.5f), FVec3.Zero, FVec3.Up), (float)System.Math.PI / 2, apiManager.GetSwapchainImageExtent().Width, apiManager.GetSwapchainImageExtent().Height, 0.1f, 100.0f)
@@ -120,6 +126,19 @@ namespace StarlightGame.Graphics.Scenes
             m_animationThread = new Thread(AnimateTitleScreen);
             m_animationThread.Name = "Title scene animation";
             m_animationThread.Start();
+
+            // Start loading tasks
+            ThreadPool.QueueUserWorkItem((object obj) =>
+            {
+                GameState.State = new GameState(
+                    "United Federation of Planets",
+                    new FVec4(41.0f / 255.0f, 217.0f / 255.0f, 244.0f / 255.0f, 1.0f),
+                    new FVec4(41.0f / 255.0f, 129.0f / 255.0f, 244.0f / 255.0f, 1.0f)
+                );
+                m_mapScene = new MapScene(m_apiManager, m_sceneManager, m_eventManager, GameState.State);
+                ((HostGameScene)m_hostGameScene).MapScene = m_mapScene;
+                m_gameStateInitializedWaitHandle.Set();
+            });
         }
 
         // Animation
@@ -128,11 +147,19 @@ namespace StarlightGame.Graphics.Scenes
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            // animate loading bar
+            // animate loading bar to half way
             while (stopwatch.ElapsedMilliseconds / 1000.0f < 1.0f)
             {
-                m_loadingBar.Visible = true;
-                m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 1000.0f);
+                m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 1500.0f);
+                Thread.Sleep(1);
+            }
+            // wait for game state initialized
+            m_gameStateInitializedWaitHandle.WaitOne();
+            // animate loading bar rest of way
+            stopwatch.Restart();
+            while (stopwatch.ElapsedMilliseconds / 1000.0f < .25f)
+            {
+                m_loadingBar.UpdatePercentage(.75f + stopwatch.ElapsedMilliseconds / 1000.0f);
                 Thread.Sleep(1);
             }
             m_loadingBar.UpdatePercentage(1.0f);

@@ -20,6 +20,8 @@ namespace StarlightGame.GameCore
         Empire m_playerEmpire;
 
         List<(IProject, ProjectAttribute)> m_availableProjects = new List<(IProject, ProjectAttribute)>();
+
+        static GameState m_gameState;
         #endregion
 
         #region Constructors
@@ -63,6 +65,18 @@ namespace StarlightGame.GameCore
             get
             {
                 return m_availableProjects;
+            }
+        }
+
+        public static GameState State
+        {
+            get
+            {
+                return m_gameState;
+            }
+            set
+            {
+                m_gameState = value;
             }
         }
         #endregion
