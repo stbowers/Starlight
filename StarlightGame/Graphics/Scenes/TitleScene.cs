@@ -169,9 +169,9 @@ namespace StarlightGame.Graphics.Scenes
             stopwatch.Restart();
             FMat4 proj = new FMat4(1.0f);
             FMat4 view = new FMat4(1.0f);
-            while (stopwatch.ElapsedMilliseconds / 1000.0f < .75f)
+            while (stopwatch.ElapsedMilliseconds / 1000.0f < .5f)
             {
-                FMat4 shift = FMat4.Translate(new FVec3(0.0f, -(stopwatch.ElapsedMilliseconds / 1750.0f), 0.0f));
+                FMat4 shift = FMat4.Translate(new FVec3(0.0f, -(stopwatch.ElapsedMilliseconds / 1250.0f), 0.0f));
                 m_title.UpdateMVPData(m_canvas.Projection, m_canvas.View, m_canvas.Model * shift);
                 Thread.Sleep(1);
             }

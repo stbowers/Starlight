@@ -18,7 +18,7 @@ namespace StarlightGame.GameCore.Field.Galaxy
         bool m_colonized;
         IProject m_currentProject;
         int m_projectTurnsLeft;
-        List<IShip> m_ships;
+        List<IShip> m_ships = new List<IShip>();
         #endregion
 
         #region Constructors

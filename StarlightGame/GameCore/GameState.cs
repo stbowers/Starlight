@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Linq;
 
 using StarlightGame.GameCore.Field;
+using StarlightGame.GameCore.Field.Galaxy;
 using StarlightEngine.Math;
 using StarlightGame.GameCore.Projects;
 
@@ -31,9 +32,28 @@ namespace StarlightGame.GameCore
         public GameState(string playerName, FVec4 playerPrimaryColor, FVec4 playerSecondaryColor)
         {
             m_rng = RNG.GetRNG();
+
+            // create field
             m_field = new GameField();
+
+            // create player empire
             m_playerEmpire = new Empire(playerName, playerPrimaryColor, playerSecondaryColor);
 
+            // find a star for the player empire to start in (Quadrant 1)
+            int x = m_rng.Next() % 4;
+            int y = m_rng.Next() % 4;
+            StarSystem system = m_field.Quadrants[0][x, y];
+            while (system == null || system.Neighbors.Length == 0)
+            {
+                x = m_rng.Next() % 4;
+                y = m_rng.Next() % 4;
+                system = m_field.Quadrants[0][x, y];
+            }
+            system.Owner = m_playerEmpire;
+            system.Colonized = true;
+            Console.WriteLine("Player start: {0}", system.Name);
+
+            // search for and add new instances of any projects
             Assembly searchAssembly = Assembly.GetAssembly(typeof(GameState));
             m_availableProjects.AddRange(
                 from type in searchAssembly.GetTypes()

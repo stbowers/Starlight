@@ -66,9 +66,12 @@ namespace StarlightGame.Graphics.Objects
             createInfo.FileName = "./assets/Star-recolor.png";
             VulkanTexture starTexture = VulkanTextureCache.GetTexture(createInfo.FileName, createInfo);
 
+            // get colors of owner (or grey if no owner)
+            FVec4 primaryColor = (system.Owner != null) ? system.Owner.PrimaryColor : new FVec4(0.7f, 0.7f, 0.7f, 1.0f);
+            FVec4 secondaryColor = (system.Owner != null) ? system.Owner.SecondaryColor : new FVec4(0.2f, 0.2f, 0.2f, 1.0f);
             m_sprite = new VulkanRecolorable2DSprite(m_apiManager, starTexture, system.Location, new FVec2(.05f, .05f),
-                new FVec4(0.0f, 0.0f, 0.0f, 1.0f), new FVec4(0.7f, 0.7f, 0.7f, 1.0f), // black to light gray
-                new FVec4(1.0f, 0.0f, 0.0f, 1.0f), new FVec4(0.2f, 0.2f, 0.2f, 1.0f) // red to dark gray
+                new FVec4(0.0f, 0.0f, 0.0f, 1.0f), primaryColor,
+                new FVec4(1.0f, 0.0f, 0.0f, 1.0f), secondaryColor
             );
             m_collider = new VulkanBoxCollider(system.Location, new FVec2(.03f, .03f));
 
@@ -85,9 +88,12 @@ namespace StarlightGame.Graphics.Objects
 
         public void UpdateOwner(Empire owner)
         {
+            // get colors of owner (or grey if no owner)
+            FVec4 primaryColor = (owner != null) ? owner.PrimaryColor : new FVec4(0.7f, 0.7f, 0.7f, 1.0f);
+            FVec4 secondaryColor = (owner != null) ? owner.SecondaryColor : new FVec4(0.2f, 0.2f, 0.2f, 1.0f);
             m_sprite.UpdateRecolorSettings(
-                new FVec4(0.0f, 0.0f, 0.0f, 1.0f), owner.PrimaryColor, // black to empire primary
-                new FVec4(1.0f, 0.0f, 0.0f, 1.0f), owner.SecondaryColor // red to empire secondary
+                new FVec4(0.0f, 0.0f, 0.0f, 1.0f), primaryColor, // black to empire primary
+                new FVec4(1.0f, 0.0f, 0.0f, 1.0f), secondaryColor // red to empire secondary
             );
         }
 

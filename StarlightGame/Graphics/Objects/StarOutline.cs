@@ -7,6 +7,7 @@ using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 
 using StarlightGame.GameCore.Field.Galaxy;
 using StarlightGame.GameCore.Projects;
+using StarlightGame.GameCore.Ships;
 
 namespace StarlightGame.Graphics.Objects
 {
@@ -95,11 +96,23 @@ namespace StarlightGame.Graphics.Objects
             }
             m_currentProjectText.UpdateText(StaticFonts.Font_Arial, currentProject, 16);
 
+            // if there is no owner, allow the system to be claimed if there is a ship present
             if (m_currentSystem.Owner == null)
             {
                 m_systemStatusText.UpdateText(StaticFonts.Font_Arial, "Unclaimed", 20);
-                m_claimSystemButton.Visible = true;
-                m_colonizeSystemButton.Visible = false;
+
+                bool playerShipPresent = m_currentSystem.Ships.FindAll(ship => ship.Owner == m_gameState.PlayerEmpire).Count > 0;
+                if (playerShipPresent)
+                {
+                    m_claimSystemButton.Visible = true;
+                    m_colonizeSystemButton.Visible = false;
+                }
+                else
+                {
+                    m_claimSystemButton.Visible = false;
+                    m_colonizeSystemButton.Visible = false;
+                }
+
                 m_projectsList.ClearList();
             }
             else
@@ -116,6 +129,8 @@ namespace StarlightGame.Graphics.Objects
                 status += m_currentSystem.Owner.Name;
                 m_systemStatusText.UpdateText(StaticFonts.Font_Arial, status, 8);
                 m_claimSystemButton.Visible = false;
+
+                // determine if colonize system button is visible
                 if (m_currentSystem.Owner == m_gameState.PlayerEmpire)
                 {
                     if (m_currentSystem.Colonized)
@@ -124,6 +139,8 @@ namespace StarlightGame.Graphics.Objects
                     }
                     else
                     {
+                        // only allow colonization if there is a colony ship in the system
+                        bool colonyShipInSystem = m_currentSystem.Ships.FindAll(ship => ship.Owner == m_gameState.PlayerEmpire && ship is ColonyShip).Count > 0;
                         m_colonizeSystemButton.Visible = true;
                     }
                 }
@@ -148,6 +165,10 @@ namespace StarlightGame.Graphics.Objects
 
                                 // update project text
                                 m_currentProjectText.UpdateText(StaticFonts.Font_Arial, project.Description, 16);
+
+                                // clear project list, and refocus system (refresh list)
+                                m_projectsList.ClearList();
+                                FocusSystem(m_currentStar);
                             }
                         );
                         m_projectsList.AddToList(projectButton, .25f);
