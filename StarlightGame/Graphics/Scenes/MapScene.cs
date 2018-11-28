@@ -28,9 +28,13 @@ namespace StarlightGame.Graphics.Scenes
         StarOutline m_starOutline;
         HyperlaneOverlay m_hyperlaneOverlay;
 
+        VulkanUIButton m_nextTurnButton;
+        VulkanTextObject m_turnText;
+
         // Canvases
         VulkanCanvas m_canvas;
         VulkanCanvas m_mapCanvas;
+        VulkanCanvas m_statusCanvas;
 
         // Animation thread
         Thread m_animationThread;
@@ -94,6 +98,46 @@ namespace StarlightGame.Graphics.Scenes
             VulkanTexture mapBackgroundTexture = VulkanTextureCache.GetTexture(mapBackgroundTextureInfo.FileName, mapBackgroundTextureInfo);
             Vulkan2DSprite mapBackground = new Vulkan2DSprite(m_apiManager, mapBackgroundTexture, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f), 1.0f);
             m_canvas.AddObject(mapBackground);
+
+            // Status bar
+            m_statusCanvas = new VulkanCanvas(new FVec2(-1.0f, .9f), new FVec2(2.0f, .1f), new FVec2(2.0f, 2.0f), false);
+            m_canvas.AddObject(m_statusCanvas);
+
+            VulkanTextureCreateInfo statusBackgroundTextureInfo = new VulkanTextureCreateInfo();
+            statusBackgroundTextureInfo.APIManager = m_apiManager;
+            statusBackgroundTextureInfo.EnableMipmap = false;
+            statusBackgroundTextureInfo.MagFilter = VulkanCore.Filter.Nearest;
+            statusBackgroundTextureInfo.MinFilter = VulkanCore.Filter.Nearest;
+            statusBackgroundTextureInfo.FileName = "./assets/StatusBackground.png";
+            VulkanTexture statusBackgroundTexture = VulkanTextureCache.GetTexture(statusBackgroundTextureInfo.FileName, statusBackgroundTextureInfo);
+            Vulkan2DSprite statusBackground = new Vulkan2DSprite(m_apiManager, statusBackgroundTexture, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, 2.0f), 1.0f);
+            m_statusCanvas.AddObject(statusBackground);
+
+            m_nextTurnButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Next Turn", 16, new FVec2(.8f, -1.0f), new FVec2(.2f, 2.0f),
+                onClickDelegate: () =>
+                {
+                    // Tell game state we're done with our turn
+                    m_gameState.NextTurn();
+
+                    // Change button text while waiting for turn to process
+                    m_nextTurnButton.UpdateText(StaticFonts.Font_Arial, "Processing...", 14);
+                    m_nextTurnButton.Enabled = false;
+                }
+            );
+            m_statusCanvas.AddObject(m_nextTurnButton);
+
+            m_turnText = new VulkanTextObject(m_apiManager, StaticFonts.Font_Arial, "Turn: 1", 16, new FVec2(-.97f, -.5f), .2f);
+            m_statusCanvas.AddObject(m_turnText);
+
+            m_eventManager.Subscribe(GameEvent.NextTurnID, (object sender, IEvent e) =>
+            {
+                // update turn text
+                m_turnText.UpdateText(StaticFonts.Font_Arial, string.Format("Turn: {0}", m_gameState.Turn), 16);
+
+                // reset button text
+                m_nextTurnButton.UpdateText(StaticFonts.Font_Arial, "Next Turn", 16);
+                m_nextTurnButton.Enabled = true;
+            });
 
             AddObject(m_canvas);
 

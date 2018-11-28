@@ -21,11 +21,22 @@ namespace StarlightEngine.Events
         Dictionary<string, EventHandler> m_globalSubscribers = new Dictionary<string, EventHandler>();
         public delegate void EventHandler(object sender, IEvent e);
 
+        static EventManager m_staticEventManager;
+
         public EventManager(IWindowManager windowManager)
         {
             windowManager.SetKeyboardEventDelegate(OnKeyboardEvent);
             windowManager.SetMouseEventDelegate(OnMouseEvent);
             m_windowManager = windowManager;
+            m_staticEventManager = this;
+        }
+
+        public static EventManager StaticEventManager
+        {
+            get
+            {
+                return m_staticEventManager;
+            }
         }
 
         private void OnKeyboardEvent(Key key, KeyAction action, KeyModifiers modifiers)

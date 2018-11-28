@@ -40,10 +40,6 @@ namespace StarlightGame.Graphics.Objects
         // Event listeners
         (string, EventManager.EventHandler)[] m_eventSubscribers;
 
-        // Object matrices
-        FMat4 m_projectionMatrix;
-        FMat4 m_viewMatrix;
-
         VulkanCore.Rect2D m_clipArea;
         #endregion
 
@@ -73,7 +69,7 @@ namespace StarlightGame.Graphics.Objects
                 new FVec4(0.0f, 0.0f, 0.0f, 1.0f), primaryColor,
                 new FVec4(1.0f, 0.0f, 0.0f, 1.0f), secondaryColor
             );
-            m_collider = new VulkanBoxCollider(system.Location, new FVec2(.03f, .03f));
+            m_collider = new VulkanBoxCollider(system.Location, new FVec2(.05f, .05f));
 
             m_objects = new IVulkanObject[] { m_sprite, m_collider };
 
@@ -182,8 +178,8 @@ namespace StarlightGame.Graphics.Objects
             MouseEvent mouseEvent = e as MouseEvent;
 
             // Get ray from camera to mouse position on screen
-            FVec3 start = FMat4.UnProject(m_projectionMatrix, m_viewMatrix, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
-            FVec3 end = FMat4.UnProject(m_projectionMatrix, m_viewMatrix, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 1.0f));
+            FVec3 start = FMat4.UnProject(m_parent.Projection, m_parent.View, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
+            FVec3 end = FMat4.UnProject(m_parent.Projection, m_parent.View, new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 1.0f));
             //end = new FVec3(0, 0, 0);
             Ray mouseRay = new Ray(start, end - start);
             //Ray mouseRay = new Ray(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), -1.0f), new FVec3(0.0f, 0.0f, 1.0f));
@@ -227,9 +223,6 @@ namespace StarlightGame.Graphics.Objects
 
         public void UpdateMVPData(FMat4 projection, FMat4 view, FMat4 modelTransform)
         {
-            m_projectionMatrix = projection;
-            m_viewMatrix = view;
-
             m_sprite.UpdateMVPData(projection, view, modelTransform);
             m_collider.UpdateMVPData(projection, view, modelTransform);
         }

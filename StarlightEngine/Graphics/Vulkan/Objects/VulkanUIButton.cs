@@ -72,6 +72,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_collider.SetParent(this);
 
             Visible = true;
+            Enabled = true;
         }
 
         public void Update()
@@ -116,6 +117,11 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             {
                 m_parent.ChildUpdated(this);
             }
+        }
+
+        public void UpdateText(AngelcodeFont font, string text, int size)
+        {
+            m_text.UpdateText(font, text, size);
         }
 
         FMat4 m_view;
@@ -220,7 +226,7 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
 
             // Determine if mouse position is inside our collider, and select if it is
             //bool selected = m_collider.IsPointInside(new FVec3(mouseEvent.MousePosition.X(), mouseEvent.MousePosition.Y(), 0.0f));
-            bool selected = m_collider.DoesIntersect(mouseRay) && Visible;
+            bool selected = m_collider.DoesIntersect(mouseRay) && Visible && Enabled;
             if (!m_selected && selected)
             {
                 m_onSelectDelegate?.Invoke();
@@ -263,6 +269,21 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             {
                 m_visible = value;
                 m_text.Visible = value;
+            }
+        }
+
+        bool m_enabled;
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+                m_selected &= value;
+                m_clicked &= value;
             }
         }
 

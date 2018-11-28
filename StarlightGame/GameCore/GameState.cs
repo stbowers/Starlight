@@ -9,6 +9,8 @@ using StarlightGame.GameCore.Field.Galaxy;
 using StarlightEngine.Math;
 using StarlightGame.GameCore.Projects;
 
+using StarlightEngine.Events;
+
 namespace StarlightGame.GameCore
 {
     [Serializable()]
@@ -19,6 +21,8 @@ namespace StarlightGame.GameCore
 
         GameField m_field;
         Empire m_playerEmpire;
+
+        int m_turn;
 
         List<(IProject, ProjectAttribute)> m_availableProjects = new List<(IProject, ProjectAttribute)>();
 
@@ -63,6 +67,14 @@ namespace StarlightGame.GameCore
         }
         #endregion
 
+        #region Public Methods
+        public void NextTurn()
+        {
+            m_turn++;
+            EventManager.StaticEventManager.Notify(GameEvent.NextTurnID, this, new GameEvent(), .5f);
+        }
+        #endregion
+
         #region Properties
         public GameField Field
         {
@@ -97,6 +109,14 @@ namespace StarlightGame.GameCore
             set
             {
                 m_gameState = value;
+            }
+        }
+
+        public int Turn
+        {
+            get
+            {
+                return m_turn;
             }
         }
         #endregion
