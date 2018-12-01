@@ -21,12 +21,17 @@ namespace StarlightEngine.Interop
             string prefix = "";
             string suffix = "";
 
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 prefix = "lib";
                 suffix = ".so";
             }
-            else if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                prefix = "lib";
+                suffix = ".dylib";
+            }
+            else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 prefix = "";
                 suffix = ".dll";
