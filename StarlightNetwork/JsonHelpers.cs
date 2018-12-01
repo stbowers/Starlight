@@ -77,5 +77,14 @@ namespace StarlightNetwork
             jsonWriter.Flush();
 
         }
+
+        public static string SerializeToString(object value)
+        {
+            StringWriter stringWriter = new StringWriter();
+            JsonSerializer serializer = new JsonSerializer();
+            serializer.Serialize(stringWriter, value);
+            stringWriter.Flush();
+            return stringWriter.ToString();
+        }
     }
 }
