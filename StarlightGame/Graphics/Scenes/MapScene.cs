@@ -157,10 +157,12 @@ namespace StarlightGame.Graphics.Scenes
 
         public void OnStarMouseOver(Star star)
         {
+            m_eventManager.Notify(EngineEvent.SetMouseSelect, star, null);
         }
 
         public void OnStarMouseExit(Star star)
         {
+            m_eventManager.Notify(EngineEvent.SetMouseNormal, star, null);
         }
 
         public void OnStarClicked(Star star)

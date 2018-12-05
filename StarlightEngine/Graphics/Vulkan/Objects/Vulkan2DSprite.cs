@@ -114,6 +114,29 @@ namespace StarlightEngine.Graphics.Vulkan.Objects
             m_mvpUniform.UpdateUniformBuffer(m_mvpData);
         }
 
+        public void UpdatePositionScale(FVec2 newPosition, FVec2 newScale)
+        {
+            FVec4 topLeft = new FVec4(newPosition.X(), newPosition.Y(), 0.0f, 0.0f);
+            FVec4 topRight = new FVec4(newPosition.X() + newScale.X(), newPosition.Y(), 1.0f, 0.0f);
+            FVec4 bottomLeft = new FVec4(newPosition.X(), newPosition.Y() + newScale.Y(), 0.0f, 1.0f);
+            FVec4 bottomRight = new FVec4(newPosition.X() + newScale.X(), newPosition.Y() + newScale.Y(), 1.0f, 1.0f);
+            int[] indices = { 0, 1, 3, 3, 2, 0 };
+
+            m_meshData = new byte[(4 * 4 * 4) + (6 * 4)];
+            System.Buffer.BlockCopy(topLeft.Bytes, 0, m_meshData, 0, (int)topLeft.PrimativeSizeOf);
+            System.Buffer.BlockCopy(topRight.Bytes, 0, m_meshData, (int)topLeft.PrimativeSizeOf, (int)topLeft.PrimativeSizeOf);
+            System.Buffer.BlockCopy(bottomLeft.Bytes, 0, m_meshData, 2 * (int)topLeft.PrimativeSizeOf, (int)topLeft.PrimativeSizeOf);
+            System.Buffer.BlockCopy(bottomRight.Bytes, 0, m_meshData, 3 * (int)topLeft.PrimativeSizeOf, (int)topLeft.PrimativeSizeOf);
+            System.Buffer.BlockCopy(indices, 0, m_meshData, 4 * (int)topLeft.PrimativeSizeOf, 6 * 4);
+
+            m_mesh.UpdateMesh(m_meshData, 0, 4 * 4 * 4, 6);
+        }
+
+        public void UpdateTexture(VulkanTexture newTexture)
+        {
+            m_texture.UpdateTexture(newTexture);
+        }
+
         public RenderPass[] RenderPasses
         {
             get

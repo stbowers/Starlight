@@ -38,6 +38,20 @@ namespace StarlightEngine.Graphics.Vulkan.Objects.Components
             m_apiManager.ReleaseDeviceIdleLock();
         }
 
+        public void UpdateTexture(VulkanTexture newTexture)
+        {
+            m_texture = newTexture;
+
+            DescriptorImageInfo imageInfo = new DescriptorImageInfo();
+            imageInfo.Sampler = m_texture.Sampler;
+            imageInfo.ImageView = m_texture.ImageView;
+            imageInfo.ImageLayout = ImageLayout.ShaderReadOnlyOptimal;
+
+            m_apiManager.WaitForDeviceIdleAndLock();
+            m_textureSamplerSet.UpdateSetBinding(m_binding, null, imageInfo, DescriptorType.CombinedImageSampler);
+            m_apiManager.ReleaseDeviceIdleLock();
+        }
+
         public VulkanPipeline Pipeline
         {
             get

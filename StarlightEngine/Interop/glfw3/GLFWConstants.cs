@@ -32,6 +32,9 @@ namespace StarlightEngine.Interop.glfw3
         public const int GLFW_MOUSE_BUTTON_LEFT = GLFW_MOUSE_BUTTON_1;
         public const int GLFW_MOUSE_BUTTON_RIGHT = GLFW_MOUSE_BUTTON_2;
         public const int GLFW_MOUSE_BUTTON_MIDDLE = GLFW_MOUSE_BUTTON_3;
+
+        public const int GLFW_CURSOR = 0x00033001;
+        public const int GLFW_CURSOR_DISABLED = 0x00034003;
         #endregion
     }
 }

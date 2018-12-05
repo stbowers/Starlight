@@ -31,6 +31,8 @@ namespace StarlightEngine.Interop.glfw3
         static PFglfwSetWindowShouldClose m_glfwSetWindowShouldClose;
         static PFglfwWindowShouldClose m_glfwWindowShouldClose;
 
+        static PFglfwSetInputMode m_glfwSetInputMode;
+
         static PFglfwCreateWindowSurface m_glfwCreateWindowSurface;
         static PFglfwGetRequiredInstanceExtensions m_glfwGetRequiredInstanceExtensions;
         #endregion
@@ -58,6 +60,8 @@ namespace StarlightEngine.Interop.glfw3
 
             m_glfwSetWindowShouldClose = m_nativelib.GetDelegateForUnmanagedFunction<PFglfwSetWindowShouldClose>("glfwSetWindowShouldClose");
             m_glfwWindowShouldClose = m_nativelib.GetDelegateForUnmanagedFunction<PFglfwWindowShouldClose>("glfwWindowShouldClose");
+
+            m_glfwSetInputMode = m_nativelib.GetDelegateForUnmanagedFunction<PFglfwSetInputMode>("glfwSetInputMode");
 
             m_glfwCreateWindowSurface = m_nativelib.GetDelegateForUnmanagedFunction<PFglfwCreateWindowSurface>("glfwCreateWindowSurface");
             m_glfwGetRequiredInstanceExtensions = m_nativelib.GetDelegateForUnmanagedFunction<PFglfwGetRequiredInstanceExtensions>("glfwGetRequiredInstanceExtensions");
@@ -133,6 +137,11 @@ namespace StarlightEngine.Interop.glfw3
             return m_glfwWindowShouldClose(window);
         }
 
+        public static void glfwSetInputMode(IntPtr window, int mode, int value)
+        {
+            m_glfwSetInputMode(window, mode, value);
+        }
+
         // Vulkan functions
         public static int glfwCreateWindowSurface(IntPtr instance, IntPtr window, IntPtr allocator, out IntPtr surface)
         {
@@ -180,6 +189,8 @@ namespace StarlightEngine.Interop.glfw3
         private delegate void PFglfwSetWindowShouldClose(IntPtr window, int value);
         [return: MarshalAs(UnmanagedType.Bool)]
         private delegate bool PFglfwWindowShouldClose(IntPtr window);
+
+        private delegate void PFglfwSetInputMode(IntPtr window, int mode, int value);
 
         // Vulkan functions
         private delegate int PFglfwCreateWindowSurface(IntPtr instance, IntPtr window, IntPtr allocator, out IntPtr surface);
