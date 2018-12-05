@@ -1,16 +1,16 @@
+using System;
 using System.Threading;
-using System.Diagnostics;
-using StarlightEngine.Graphics.Vulkan;
-using StarlightEngine.Graphics.Scenes;
-using StarlightEngine.Graphics.Vulkan.Objects;
 using StarlightEngine.Math;
 using StarlightEngine.Events;
+using StarlightEngine.Graphics.Scenes;
+using StarlightEngine.Graphics.Vulkan;
+using StarlightEngine.Graphics.Vulkan.Objects;
 using StarlightGame.GameCore;
 using StarlightGame.Network;
 
 namespace StarlightGame.Graphics.Scenes
 {
-    public class HostGameScene : Scene
+    public class JoinGameScene : Scene
     {
         VulkanAPIManager m_apiManager;
         SceneManager m_sceneManager;
@@ -20,8 +20,7 @@ namespace StarlightGame.Graphics.Scenes
 
         // Objects
         VulkanCanvas m_canvas;
-        VulkanUIButton m_startGameButton;
-        VulkanUIButton m_backButton;
+        VulkanUIButton m_joinGameButton;
         VulkanTextObject m_gameIDText;
 
         // Sub-scenes
@@ -30,7 +29,9 @@ namespace StarlightGame.Graphics.Scenes
         // Animation thread
         Thread m_animationThread;
 
-        public HostGameScene(VulkanAPIManager apiManager, SceneManager sceneManager, EventManager eventManager) :
+        int m_gameID;
+
+        public JoinGameScene(VulkanAPIManager apiManager, SceneManager sceneManager, EventManager eventManager) :
         base(new Camera(new FVec3(0.0f, 0.0f, 2.0f), FVec3.Zero, FVec3.Up), (float)System.Math.PI / 2, apiManager.GetSwapchainImageExtent().Width, apiManager.GetSwapchainImageExtent().Height, 0.1f, 100.0f)
         {
             /* Layers:
@@ -48,8 +49,11 @@ namespace StarlightGame.Graphics.Scenes
             m_canvas.AddObject(m_gameIDText);
 
             // start game button
-            m_startGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Start Game", 20, new FVec2(-.1f, 0.1f), new FVec2(.4f, .1f), onStartGameClicked, center: false);
-            m_canvas.AddObject(m_startGameButton);
+            m_joinGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Join Game", 20, new FVec2(-.1f, 0.1f), new FVec2(.4f, .1f), onJoinGameClicked, center: false);
+            m_canvas.AddObject(m_joinGameButton);
+
+            // Add subscriber for join command
+            m_eventManager.Subscribe(EngineEvent.CommandSentID, onCommandEntered);
 
             // Add canvas to scene
             AddObject(m_canvas);
@@ -57,17 +61,37 @@ namespace StarlightGame.Graphics.Scenes
 
         public void SetGameID(int gameID)
         {
+            m_gameID = gameID;
             m_gameIDText.UpdateText(StaticFonts.Font_Arial, string.Format("Game ID: {0}", gameID), 20);
         }
 
         // Button callbacks
-        public void onStartGameClicked()
+        public void onJoinGameClicked()
         {
-            // Send start game request to server
-            Client.StaticClient.StartGame();
+            // Create client
+            new Client("http://localhost:5001", m_gameID);
+
+            // Join game
+            Empire playerEmpire = new Empire("Romulan Star Empire", new FVec4(1.0f, .2f, 0.0f, 1.0f), new FVec4(1.0f, .4f, 0.0f, 1.0f));
+            Client.StaticClient.JoinGame(playerEmpire);
+            Console.WriteLine("Joining game...");
 
             m_mapScene = new MapScene(m_apiManager, m_sceneManager, m_eventManager, GameState.State);
             m_sceneManager.PushScene(m_mapScene);
+        }
+
+        public void onCommandEntered(object sender, IEvent e)
+        {
+            EngineEvent engineEvent = (EngineEvent)e;
+
+            string[] parts = engineEvent.Data.Split(" ");
+
+            if (parts[0] == "join")
+            {
+                int gameID = Int32.Parse(parts[1]);
+
+                SetGameID(gameID);
+            }
         }
     }
 }

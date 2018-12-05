@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using StarlightNetwork;
 using System.Threading.Tasks;
@@ -6,62 +7,57 @@ using System.Runtime.Serialization;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using Newtonsoft.Json;
 
 namespace StarlightServer
 {
     class Program
     {
-        class Book
-        {
-            public int ID;
-            public string Title;
-            public string Description;
-            public int PageCount;
-            public string Excerpt;
-            public string PublishDate;
-        }
+        static Dictionary<int, Server> m_games = new Dictionary<int, Server>();
 
-        [Serializable]
-        class TestJSONObject : ISerializable
-        {
-            public string Name;
-            private int m_num;
-
-            public TestJSONObject(string name, int num)
-            {
-                Name = name;
-                m_num = num;
-            }
-
-            public TestJSONObject(SerializationInfo serializationInfo, StreamingContext streamingContext)
-            {
-                Name = serializationInfo.GetString("NameValue");
-                m_num = (int)serializationInfo.GetValue("Number", typeof(int));
-            }
-
-            public void GetObjectData(SerializationInfo serializationInfo, StreamingContext streamingContext)
-            {
-                serializationInfo.AddValue("NameValue", Name);
-                serializationInfo.AddValue("Number", m_num);
-            }
-        }
         static void Main(string[] args)
         {
-            TestJSONObject testobj = new TestJSONObject("Test", 5);
-            string test = JsonHelpers.SerializeToString(testobj);
-            Console.WriteLine(test);
+            Console.WriteLine("Starting server...");
 
-            RESTServer server = new RESTServer(new[] { "http://localhost:25565/" });
-            server.AddRequestHandler("GET:/Servers", (HttpListenerRequest request, HttpListenerResponse response) =>
+            // Start a server on port 5001
+            RESTServer server = new RESTServer(new[] { "http://localhost:5001/" });
+
+            // Add a POST handler for /Servers endpoint (create new server)
+            server.AddRequestHandler("POST:/Servers", (HttpListenerRequest request, HttpListenerResponse response) =>
             {
-                StreamWriter streamWriter = new StreamWriter(response.OutputStream);
-                streamWriter.Write(JsonHelpers.SerializeToString(testobj));
-                streamWriter.Flush();
-            });
+                Console.WriteLine("New game request");
+                JsonSerializer serializer = new JsonSerializer();
 
-            Task<TestJSONObject> testobjdl = RESTHelpers.GetJSONObjectAsync<TestJSONObject>("http://localhost:25565/Servers");
-            testobjdl.Wait();
-            Console.WriteLine(testobjdl.Result.Name);
+                // Get state from request
+                StreamReader streamReader = new StreamReader(request.InputStream);
+                GameState state = (GameState)serializer.Deserialize(streamReader, typeof(GameState));
+
+                // Get new id for server
+                int id = 0;
+                lock (m_games)
+                {
+                    while (true)
+                    {
+                        if (m_games.ContainsKey(id))
+                        {
+                            id++;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Using ID {0}", id);
+                            m_games.Add(id, new Server(server, state, id));
+                            break;
+                        }
+                    }
+                }
+
+                // send ID as response
+                Console.WriteLine("Sending response to client - 200 OK");
+                StreamWriter streamWriter = new StreamWriter(response.OutputStream);
+                serializer.Serialize(streamWriter, id);
+                streamWriter.Flush();
+                response.StatusCode = 200;
+            });
         }
     }
 }

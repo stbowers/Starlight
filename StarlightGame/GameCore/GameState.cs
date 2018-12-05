@@ -21,6 +21,7 @@ namespace StarlightGame.GameCore
 
         GameField m_field;
         Empire m_playerEmpire;
+        List<Empire> m_empires = new List<Empire>();
 
         int m_turn;
 
@@ -42,6 +43,7 @@ namespace StarlightGame.GameCore
 
             // create player empire
             m_playerEmpire = new Empire(playerName, playerPrimaryColor, playerSecondaryColor);
+            m_empires.Add(m_playerEmpire);
 
             // find a star for the player empire to start in (Quadrant 1)
             int x = m_rng.Next() % 4;
@@ -90,6 +92,10 @@ namespace StarlightGame.GameCore
             {
                 return m_playerEmpire;
             }
+            set
+            {
+                m_playerEmpire = value;
+            }
         }
 
         public List<(IProject, ProjectAttribute)> AvailableProjects
@@ -125,15 +131,26 @@ namespace StarlightGame.GameCore
         // Serialization function
         public void GetObjectData(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
-            serializationInfo.AddValue("m_field", m_field);
+            serializationInfo.AddValue("Field", m_field);
+            serializationInfo.AddValue("Empires", m_empires);
+            serializationInfo.AddValue("Turn", m_turn);
         }
 
         // Deserialization constructor
         public GameState(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
-            m_rng = new Random();
+            m_rng = RNG.GetRNG();
 
-            m_field = (GameField)serializationInfo.GetValue("m_field", typeof(GameField));
+            m_field = (GameField)serializationInfo.GetValue("Field", typeof(GameField));
+            m_empires = (List<Empire>)serializationInfo.GetValue("Empires", typeof(List<Empire>));
+            m_turn = (int)serializationInfo.GetInt32("Turn");
+        }
+
+        public void UpdateFromServer(GameState serverGameState)
+        {
+            m_field = serverGameState.m_field;
+            m_empires = serverGameState.m_empires;
+            m_turn = serverGameState.m_turn;
         }
         #endregion
     }

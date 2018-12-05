@@ -16,6 +16,9 @@ namespace StarlightEngine.Math
         {
         }
 
+        public BasicVector(int m, byte[] data, SimpleOperations<T> operations) : base(1, m, data, operations)
+        { }
+
         public T this[int n]
         {
             get
@@ -95,6 +98,9 @@ namespace StarlightEngine.Math
         public FVec(int m, float[] data) : base(m, data, FloatOperations.Operations)
         {
         }
+
+        public FVec(int m, byte[] data) : base(m, data, FloatOperations.Operations)
+        { }
 
         public FVec(int m, BasicMatrix<float> copyFrom) : base(m, copyFrom.Data, FloatOperations.Operations)
         {
@@ -213,6 +219,10 @@ namespace StarlightEngine.Math
         }
 
         public FVec4(float[] data) : base(4, data)
+        {
+        }
+
+        public FVec4(byte[] data) : base(4, data)
         {
         }
 

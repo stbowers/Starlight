@@ -153,7 +153,7 @@ namespace StarlightGame.GameCore.Field
         // Serialization function
         public void GetObjectData(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
-            serializationInfo.AddValue("m_quadrants", m_quadrants);
+            serializationInfo.AddValue("Quadrants", m_quadrants);
         }
 
         // Deserialization constructor
@@ -161,7 +161,7 @@ namespace StarlightGame.GameCore.Field
         {
             m_rng = RNG.GetRNG();
 
-            m_quadrants = (Quadrant[])serializationInfo.GetValue("m_quadrants", typeof(Quadrant[]));
+            m_quadrants = (Quadrant[])serializationInfo.GetValue("Quadrants", typeof(Quadrant[]));
         }
         #endregion
     }

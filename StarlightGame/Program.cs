@@ -117,6 +117,15 @@ namespace StarlightGame
                         fpsText.UpdateText(StaticFonts.Font_Arial, string.Format("FPS: {0:0.##}", ((framesDrawn * 1000L) / (float)msElapsed)), 20);
                         framesDrawn = 0;
                     }
+
+                    // Check for console input
+                    if (Console.KeyAvailable)
+                    {
+                        string input = Console.ReadLine();
+                        EngineEvent e = new EngineEvent();
+                        e.Data = input;
+                        eventManager.Notify(EngineEvent.CommandSentID, Console.In, e);
+                    }
                 }
             }
             catch (Exception e)

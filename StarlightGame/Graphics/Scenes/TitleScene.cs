@@ -8,6 +8,7 @@ using StarlightEngine.Events;
 using StarlightEngine.Graphics.Vulkan.Objects.Interfaces;
 
 using StarlightGame.GameCore;
+using StarlightGame.Network;
 
 namespace StarlightGame.Graphics.Scenes
 {
@@ -36,11 +37,9 @@ namespace StarlightGame.Graphics.Scenes
         // Animation thread
         Thread m_animationThread;
 
-        // loading status flags
-        AutoResetEvent m_gameStateInitializedWaitHandle = new AutoResetEvent(false);
-
         // Children scenes
         Scene m_hostGameScene;
+        Scene m_joinGameScene;
         Scene m_mapScene;
 
         public TitleScene(VulkanAPIManager apiManager, SceneManager sceneManager, EventManager eventManager) :
@@ -99,12 +98,18 @@ namespace StarlightGame.Graphics.Scenes
             m_hostGameButton.Visible = false;
             m_canvas.AddObject(m_hostGameButton);
 
+            // Join Game
+            m_joinGameScene = new JoinGameScene(m_apiManager, m_sceneManager, m_eventManager);
             m_joinGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Join Game", 20, new FVec2(-.1f, -.2f), new FVec2(.2f, .1f), joinGameButtonClicked);
             m_joinGameButton.Visible = false;
             m_canvas.AddObject(m_joinGameButton);
+
+            // Options
             m_optionsButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Options", 20, new FVec2(-.1f, -.1f), new FVec2(.2f, .1f), optionsButtonClicked);
             m_optionsButton.Visible = false;
             m_canvas.AddObject(m_optionsButton);
+
+            // Exit Game
             m_exitGameButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Exit Game", 20, new FVec2(-.1f, 0.0f), new FVec2(.2f, .1f), exitGameButtonClicked);
             m_exitGameButton.Visible = false;
             m_canvas.AddObject(m_exitGameButton);
@@ -126,19 +131,6 @@ namespace StarlightGame.Graphics.Scenes
             m_animationThread = new Thread(AnimateTitleScreen);
             m_animationThread.Name = "Title scene animation";
             m_animationThread.Start();
-
-            // Start loading tasks
-            ThreadPool.QueueUserWorkItem((object obj) =>
-            {
-                GameState.State = new GameState(
-                    "United Federation of Planets",
-                    new FVec4(41.0f / 255.0f, 217.0f / 255.0f, 244.0f / 255.0f, 1.0f),
-                    new FVec4(41.0f / 255.0f, 129.0f / 255.0f, 244.0f / 255.0f, 1.0f)
-                );
-                m_mapScene = new MapScene(m_apiManager, m_sceneManager, m_eventManager, GameState.State);
-                ((HostGameScene)m_hostGameScene).MapScene = m_mapScene;
-                m_gameStateInitializedWaitHandle.Set();
-            });
         }
 
         // Animation
@@ -153,8 +145,6 @@ namespace StarlightGame.Graphics.Scenes
                 m_loadingBar.UpdatePercentage(stopwatch.ElapsedMilliseconds / 1500.0f);
                 Thread.Sleep(1);
             }
-            // wait for game state initialized
-            m_gameStateInitializedWaitHandle.WaitOne();
             // animate loading bar rest of way
             stopwatch.Restart();
             while (stopwatch.ElapsedMilliseconds / 1000.0f < .25f)
@@ -187,11 +177,25 @@ namespace StarlightGame.Graphics.Scenes
         // Button delegates
         public void onHostGameClicked()
         {
+            // Create game state
+            GameState.State = new GameState(
+                "United Federation of Planets",
+                new FVec4(0.1f, 0.8f, 1.0f, 1.0f),
+                new FVec4(0.0f, 0.0f, 1.0f, 1.0f)
+                );
+
+            // set up server client
+            new Client("http://localhost:5001", GameState.State);
+
+            // update host game scene
+            ((HostGameScene)m_hostGameScene).SetGameID(Client.StaticClient.GameID);
+
             m_sceneManager.PushScene(m_hostGameScene);
         }
 
         public void joinGameButtonClicked()
         {
+            m_sceneManager.PushScene(m_joinGameScene);
         }
 
         public void optionsButtonClicked()

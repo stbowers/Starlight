@@ -141,6 +141,11 @@ namespace StarlightEngine.Math
             data.CopyTo(m_data, 0);
         }
 
+        public BasicMatrix(int n, int m, byte[] data, SimpleOperations<T> operations) : this(n, m, operations)
+        {
+            Buffer.BlockCopy(data, 0, m_data, 0, m_data.Length);
+        }
+
         public T[] Data
         {
             get
@@ -601,17 +606,17 @@ namespace StarlightEngine.Math
             return perspectiveMatrix;
         }
 
-		/// <summary>
-		/// Returns a world space point for the given screen space coordinates
-		/// <summary>
+        /// <summary>
+        /// Returns a world space point for the given screen space coordinates
+        /// <summary>
         public static FVec3 UnProject(FMat4 projection, FMat4 view, FVec3 screenCoordinates)
         {
-			FMat4 invertProjection = FMat4.Invert(projection * view);
-			FVec4 worldSpaceVector = invertProjection * new FVec4(screenCoordinates.X(), screenCoordinates.Y(), screenCoordinates.Z(), 1.0f);
-			worldSpaceVector[0] *= (1 / worldSpaceVector.W());
-			worldSpaceVector[1] *= (1 / worldSpaceVector.W());
-			worldSpaceVector[2] *= (1 / worldSpaceVector.W());
-			return worldSpaceVector.XYZ();
+            FMat4 invertProjection = FMat4.Invert(projection * view);
+            FVec4 worldSpaceVector = invertProjection * new FVec4(screenCoordinates.X(), screenCoordinates.Y(), screenCoordinates.Z(), 1.0f);
+            worldSpaceVector[0] *= (1 / worldSpaceVector.W());
+            worldSpaceVector[1] *= (1 / worldSpaceVector.W());
+            worldSpaceVector[2] *= (1 / worldSpaceVector.W());
+            return worldSpaceVector.XYZ();
         }
 
         public static FMat4 Rotate(float angle, FVec3 axis)

@@ -49,11 +49,11 @@ namespace StarlightNetwork
             }
         }
 
-        public static async Task<int> PostStringAsync(string uri, string content, Encoding encoding, string mediaType)
+        public static async Task<HttpResponseMessage> PostStringAsync(string uri, string content, Encoding encoding, string mediaType)
         {
             StringContent httpContent = new StringContent(content, encoding, mediaType);
             HttpResponseMessage response = await PostAsync(uri, httpContent);
-            return (int)response.StatusCode;
+            return response;
         }
 
         public static async Task<T> GetJSONObjectAsync<T>(string uri)
@@ -62,7 +62,7 @@ namespace StarlightNetwork
             return JsonHelpers.CreateFromJsonString<T>(json);
         }
 
-        public static async Task<int> PostJSONObjectAsync<T>(string uri, T data)
+        public static async Task<HttpResponseMessage> PostJSONObjectAsync<T>(string uri, T data)
         {
             return await PostStringAsync(uri, JsonHelpers.SerializeToString(data), Encoding.UTF8, "application/json");
         }

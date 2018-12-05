@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 using StarlightGame.GameCore.Field.Galaxy;
@@ -7,7 +8,8 @@ using StarlightEngine.Math;
 
 namespace StarlightGame.GameCore
 {
-    public class Empire
+    [Serializable]
+    public class Empire : ISerializable
     {
         string m_name;
         List<StarSystem> m_ownedSystems = new List<StarSystem>();
@@ -59,5 +61,21 @@ namespace StarlightGame.GameCore
         {
             m_ownedSystems.Add(system);
         }
+
+        #region Serialization Functions
+        public void GetObjectData(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        {
+            serializationInfo.AddValue("Name", Name);
+            serializationInfo.AddValue("PrimaryColor", PrimaryColor.Bytes);
+            serializationInfo.AddValue("SecondaryColor", SecondaryColor.Bytes);
+        }
+
+        public Empire(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        {
+            m_name = serializationInfo.GetString("Name");
+            m_primaryColor = new FVec4((byte[])serializationInfo.GetValue("PrimaryColor", typeof(byte[])));
+            m_secondaryColor = new FVec4((byte[])serializationInfo.GetValue("SecondaryColor", typeof(byte[])));
+        }
+        #endregion
     }
 }
