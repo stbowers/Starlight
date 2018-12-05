@@ -91,13 +91,24 @@ namespace StarlightGame.GameCore.Field.Galaxy
         // Serialization function
         public void GetObjectData(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
-
+            serializationInfo.AddValue("Stars", m_sectors);
         }
 
         // Deserialization constructor
         public Quadrant(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
+            m_sectors = (StarSystem[,])serializationInfo.GetValue("Stars", typeof(StarSystem[,]));
+        }
 
+        /// <summary>
+        /// Calls the rebuild function for each star in the quadrant
+        /// </summary>
+        public void RebuildQuadrant(List<StarSystem> systems, List<Empire> empires)
+        {
+            foreach (StarSystem system in m_sectors)
+            {
+                system?.Rebuild(systems, empires);
+            }
         }
         #endregion
     }

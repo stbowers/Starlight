@@ -29,7 +29,7 @@ namespace StarlightGame.Graphics.Scenes
         HyperlaneOverlay m_hyperlaneOverlay;
 
         VulkanUIButton m_nextTurnButton;
-        VulkanTextObject m_turnText;
+        VulkanTextObject m_statusText;
 
         // Canvases
         VulkanCanvas m_canvas;
@@ -126,13 +126,14 @@ namespace StarlightGame.Graphics.Scenes
             );
             m_statusCanvas.AddObject(m_nextTurnButton);
 
-            m_turnText = new VulkanTextObject(m_apiManager, StaticFonts.Font_Arial, "Turn: 1", 16, new FVec2(-.97f, -.5f), .2f);
-            m_statusCanvas.AddObject(m_turnText);
+            string statusText = string.Format("[{0}] Turn: {1}", m_gameState.PlayerEmpire.Name, m_gameState.Turn);
+            m_statusText = new VulkanTextObject(m_apiManager, StaticFonts.Font_Arial, statusText, 16, new FVec2(-.97f, -.5f), 1.5f);
+            m_statusCanvas.AddObject(m_statusText);
 
             m_eventManager.Subscribe(GameEvent.NextTurnID, (object sender, IEvent e) =>
             {
                 // update turn text
-                m_turnText.UpdateText(StaticFonts.Font_Arial, string.Format("Turn: {0}", m_gameState.Turn), 16);
+                m_statusText.UpdateText(StaticFonts.Font_Arial, string.Format("[{0}] Turn: {1}", m_gameState.PlayerEmpire.Name, m_gameState.Turn), 16);
 
                 // reset button text
                 m_nextTurnButton.UpdateText(StaticFonts.Font_Arial, "Next Turn", 16);

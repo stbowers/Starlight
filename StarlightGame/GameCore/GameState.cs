@@ -66,6 +66,8 @@ namespace StarlightGame.GameCore
                 where Attribute.IsDefined(type, typeof(ProjectAttribute))
                 select ((IProject)type.GetConstructor(new Type[] { }).Invoke(null), (ProjectAttribute)Attribute.GetCustomAttribute(type, typeof(ProjectAttribute)))
             );
+
+            m_turn = 1;
         }
         #endregion
 
@@ -144,6 +146,9 @@ namespace StarlightGame.GameCore
             m_field = (GameField)serializationInfo.GetValue("Field", typeof(GameField));
             m_empires = (List<Empire>)serializationInfo.GetValue("Empires", typeof(List<Empire>));
             m_turn = (int)serializationInfo.GetInt32("Turn");
+
+            // Rebuild field after deserializing
+            m_field.RebuildField(m_empires);
         }
 
         public void UpdateFromServer(GameState serverGameState)
@@ -151,6 +156,9 @@ namespace StarlightGame.GameCore
             m_field = serverGameState.m_field;
             m_empires = serverGameState.m_empires;
             m_turn = serverGameState.m_turn;
+
+            // Rebuild field
+            m_field.RebuildField(m_empires);
         }
         #endregion
     }

@@ -117,6 +117,9 @@ namespace StarlightEngine.Math
         {
         }
 
+        public FVec2(byte[] data) : base(2, data)
+        { }
+
         public FVec2(BasicMatrix<float> copyFrom) : base(2, copyFrom)
         {
         }

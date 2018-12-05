@@ -33,7 +33,24 @@ namespace StarlightServer
         {
             if (m_open)
             {
+                // Add the empire
                 m_state.Empires.Add(empire);
+
+                // Get a random star to make the empire's start
+                Random rng = new Random();
+                int quadrant = rng.Next() % 4;
+                Quadrant q = m_state.Field.Quadrants[quadrant];
+                int starIndexX = rng.Next() % q.Stars.GetLength(0);
+                int starIndexY = rng.Next() % q.Stars.GetLength(1);
+                while (q.Stars[starIndexX, starIndexY] == null || q.Stars[starIndexX, starIndexY].Owner != null)
+                {
+                    starIndexX = rng.Next() % q.Stars.GetLength(0);
+                    starIndexY = rng.Next() % q.Stars.GetLength(1);
+                }
+                Star s = q.Stars[starIndexX, starIndexY];
+                s.Owner = empire.Name;
+                s.Colonized = true;
+                Console.WriteLine("Starting {0} in system: {1}", empire.Name, s.Name);
             }
 
             // Wait for game to start

@@ -14,7 +14,9 @@ namespace StarlightGame.GameCore.Field.Galaxy
         string m_name;
         FVec2 m_location;
         List<StarSystem> m_neighbors = new List<StarSystem>();
+        string[] m_neighborNames;
         Empire m_owner;
+        string m_ownerName;
         bool m_colonized;
         IProject m_currentProject;
         int m_projectTurnsLeft;
@@ -113,13 +115,35 @@ namespace StarlightGame.GameCore.Field.Galaxy
         // Serialization function
         public void GetObjectData(SerializationInfo info, StreamingContext streamingContext)
         {
-
+            info.AddValue("Name", m_name);
+            info.AddValue("Location", m_location.Data);
+            string[] neighbors = m_neighbors.ConvertAll((star) => star.Name).ToArray();
+            info.AddValue("Neighbors", neighbors);
+            info.AddValue("Owner", m_owner?.Name);
+            info.AddValue("Colonized", m_colonized);
         }
 
         // Deserialization constructor
-        public StarSystem(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        public StarSystem(SerializationInfo info, StreamingContext streamingContext)
         {
+            m_name = (string)info.GetValue("Name", typeof(string));
+            m_location = new FVec2((float[])info.GetValue("Location", typeof(float[])));
+            m_neighborNames = (string[])info.GetValue("Neighbors", typeof(string[]));
+            m_ownerName = (string)info.GetValue("Owner", typeof(string));
+            m_colonized = (bool)info.GetValue("Colonized", typeof(bool));
+        }
 
+        /// <summary>
+        /// Rebuilds references to systems, empires, and ships after deserializing a system (seperate method since everything must be deserialized before calling)
+        /// </summary>
+        public void Rebuild(List<StarSystem> systems, List<Empire> empires)
+        {
+            foreach (string neighbor in m_neighborNames)
+            {
+                m_neighbors.Add(systems.Find((system) => system.Name == neighbor));
+            }
+
+            m_owner = empires.Find((empire) => empire.Name == m_ownerName);
         }
         #endregion
     }

@@ -21,12 +21,21 @@ namespace StarlightServer
     public class Empire
     {
         public string Name;
-        public byte[] PrimaryColor;
-        public byte[] SecondaryColor;
+        public float[] PrimaryColor;
+        public float[] SecondaryColor;
     }
 
     public class Quadrant
     {
+        public Star[,] Stars;
+    }
 
+    public class Star
+    {
+        public string Name;
+        public float[] Location;
+        public string[] Neighbors;
+        public string Owner;
+        public bool Colonized;
     }
 }

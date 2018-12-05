@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using StarlightEngine.Math;
@@ -162,6 +163,18 @@ namespace StarlightGame.GameCore.Field
             m_rng = RNG.GetRNG();
 
             m_quadrants = (Quadrant[])serializationInfo.GetValue("Quadrants", typeof(Quadrant[]));
+        }
+
+        /// <summary>
+        /// Rebuilds the stars in the field after deserialization
+        /// </summary>
+        public void RebuildField(List<Empire> empires)
+        {
+            List<StarSystem> systems = new List<StarSystem>(Stars);
+            foreach (Quadrant quadrant in m_quadrants)
+            {
+                quadrant.RebuildQuadrant(systems, empires);
+            }
         }
         #endregion
     }
