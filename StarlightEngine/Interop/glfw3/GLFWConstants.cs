@@ -35,6 +35,7 @@ namespace StarlightEngine.Interop.glfw3
 
         public const int GLFW_CURSOR = 0x00033001;
         public const int GLFW_CURSOR_DISABLED = 0x00034003;
+        public const int GLFW_CURSOR_HIDDEN = 0x00034002;
         #endregion
     }
 }

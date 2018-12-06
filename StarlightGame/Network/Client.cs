@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
+using StarlightEngine.Events;
 using StarlightGame.GameCore;
 using StarlightNetwork;
 
@@ -66,6 +67,9 @@ namespace StarlightGame.Network
 
         public void JoinGame(Empire empire)
         {
+            // Update the player empire
+            m_gameState.PlayerEmpire = empire;
+
             // Send POST request to /Servers/<id>/Join with the empire as json
             Task<HttpResponseMessage> response = RESTHelpers.PostJSONObjectAsync(m_serverURL + "/Servers/" + m_gameID + "/Join", empire);
             response.Wait();
@@ -81,15 +85,13 @@ namespace StarlightGame.Network
 
             // Update our own game state
             m_gameState.UpdateFromServer(JsonHelpers.CreateFromJsonStream<GameState>(responseStream.Result));
-
-            // Update the player empire
-            m_gameState.PlayerEmpire = empire;
         }
 
         public void StartGame()
         {
             // Send POST request to /Servers/<id>/StartGame
             Task<HttpResponseMessage> response = RESTHelpers.PostAsync(m_serverURL + "/Servers/" + m_gameID + "/StartGame", new StringContent(""));
+            response.Wait();
 
             if (response.Result.StatusCode != HttpStatusCode.OK)
             {
@@ -102,6 +104,30 @@ namespace StarlightGame.Network
 
             // Update our own game state
             m_gameState.UpdateFromServer(JsonHelpers.CreateFromJsonStream<GameState>(responseStream.Result));
+        }
+
+        public void NextTurn()
+        {
+            // Send POST request to /Servers/<id>/EndTurn with modified game state
+            Task<HttpResponseMessage> response = RESTHelpers.PostJSONObjectAsync(m_serverURL + "/Servers/" + m_gameID + "/EndTurn", m_gameState);
+
+            // Blocks until the all players have ended their turn, and then the server will respond with the new game state
+            response.Wait();
+
+            if (response.Result.StatusCode != HttpStatusCode.OK)
+            {
+                Console.WriteLine("Error ending turn");
+            }
+
+            // Response is the game state
+            Task<System.IO.Stream> responseStream = response.Result.Content.ReadAsStreamAsync();
+            responseStream.Wait();
+
+            // Update our own game state
+            m_gameState.UpdateFromServer(JsonHelpers.CreateFromJsonStream<GameState>(responseStream.Result));
+
+            // Notify next turn event
+            EventManager.StaticEventManager.Notify(GameEvent.NextTurnID, this, null);
         }
 
         public int GameID

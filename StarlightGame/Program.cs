@@ -28,7 +28,7 @@ namespace StarlightGame
 
         public static void Main(string[] args)
         {
-            RNG.SeedRNG(1337);
+            RNG.SeedRNG(DateTime.Now.GetHashCode());
 
             // Name main thread for debugging
             System.Threading.Thread.CurrentThread.Name = "Main Thread";
@@ -99,32 +99,31 @@ namespace StarlightGame
             mouseTextureInfo.EnableMipmap = false;
             mouseTextureInfo.MinFilter = VulkanCore.Filter.Nearest;
             mouseTextureInfo.MagFilter = VulkanCore.Filter.Nearest;
+
             mouseTextureInfo.FileName = "./assets/Cursor-normal.png";
-            VulkanTexture mouseTexture = VulkanTextureCache.GetTexture(mouseTextureInfo.FileName, mouseTextureInfo);
+            VulkanTexture normalTexture = VulkanTextureCache.GetTexture(mouseTextureInfo.FileName, mouseTextureInfo);
+            mouseTextureInfo.FileName = "./assets/Cursor-select.png";
+            VulkanTexture selectCursor = VulkanTextureCache.GetTexture(mouseTextureInfo.FileName, mouseTextureInfo);
+            mouseTextureInfo.FileName = "./assets/Cursor-loading.png";
+            VulkanTexture loadingCursor = VulkanTextureCache.GetTexture(mouseTextureInfo.FileName, mouseTextureInfo);
 
             float mouseWidth = 64.0f / 1280.0f;
             float mouseHeight = 64.0f / 720.0f;
-            Vulkan2DSprite mouseSprite = new Vulkan2DSprite(apiManager, mouseTexture, new FVec2(0.0f, 0.0f), new FVec2(1.3f * mouseWidth, 1.3f * mouseHeight));
+            Vulkan2DSprite mouseSprite = new Vulkan2DSprite(apiManager, normalTexture, new FVec2(0.0f, 0.0f), new FVec2(1.3f * mouseWidth, 1.3f * mouseHeight));
             debugCanvas.AddObject(mouseSprite);
 
             eventManager.Subscribe(EngineEvent.SetMouseNormal, (object sender, IEvent e) =>
             {
-                mouseTextureInfo.FileName = "./assets/Cursor-normal.png";
-                VulkanTexture normalTexture = VulkanTextureCache.GetTexture(mouseTextureInfo.FileName, mouseTextureInfo);
                 mouseSprite.UpdateTexture(normalTexture);
             });
 
             eventManager.Subscribe(EngineEvent.SetMouseSelect, (object sender, IEvent e) =>
             {
-                mouseTextureInfo.FileName = "./assets/Cursor-select.png";
-                VulkanTexture selectCursor = VulkanTextureCache.GetTexture(mouseTextureInfo.FileName, mouseTextureInfo);
                 mouseSprite.UpdateTexture(selectCursor);
             });
 
             eventManager.Subscribe(EngineEvent.SetMouseLoading, (object sender, IEvent e) =>
             {
-                mouseTextureInfo.FileName = "./assets/Cursor-loading.png";
-                VulkanTexture loadingCursor = VulkanTextureCache.GetTexture(mouseTextureInfo.FileName, mouseTextureInfo);
                 mouseSprite.UpdateTexture(loadingCursor);
             });
 

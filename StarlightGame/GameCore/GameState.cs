@@ -71,14 +71,6 @@ namespace StarlightGame.GameCore
         }
         #endregion
 
-        #region Public Methods
-        public void NextTurn()
-        {
-            m_turn++;
-            EventManager.StaticEventManager.Notify(GameEvent.NextTurnID, this, new GameEvent(), .5f);
-        }
-        #endregion
-
         #region Properties
         public GameField Field
         {
@@ -143,6 +135,14 @@ namespace StarlightGame.GameCore
         {
             m_rng = RNG.GetRNG();
 
+            // search for and add new instances of any projects
+            Assembly searchAssembly = Assembly.GetAssembly(typeof(GameState));
+            m_availableProjects.AddRange(
+                from type in searchAssembly.GetTypes()
+                where Attribute.IsDefined(type, typeof(ProjectAttribute))
+                select ((IProject)type.GetConstructor(new Type[] { }).Invoke(null), (ProjectAttribute)Attribute.GetCustomAttribute(type, typeof(ProjectAttribute)))
+            );
+
             m_field = (GameField)serializationInfo.GetValue("Field", typeof(GameField));
             m_empires = (List<Empire>)serializationInfo.GetValue("Empires", typeof(List<Empire>));
             m_turn = (int)serializationInfo.GetInt32("Turn");
@@ -156,6 +156,9 @@ namespace StarlightGame.GameCore
             m_field = serverGameState.m_field;
             m_empires = serverGameState.m_empires;
             m_turn = serverGameState.m_turn;
+
+            // reset player empire
+            m_playerEmpire = m_empires.Find((empire) => empire.Name == m_playerEmpire.Name);
 
             // Rebuild field
             m_field.RebuildField(m_empires);

@@ -12,6 +12,8 @@ namespace StarlightGame.Graphics.Objects
 {
     public class HyperlaneOverlay : IVulkanObject, IParent
     {
+        const float X_OFFSET = .025f;
+        const float Y_OFFSET = .025f;
         VulkanAPIManager m_apiManager;
 
         List<Vulkan3DLine> m_lines = new List<Vulkan3DLine>();
@@ -26,7 +28,7 @@ namespace StarlightGame.Graphics.Objects
             {
                 foreach (StarSystem neighbor in system.Neighbors)
                 {
-                    Vulkan3DLine hyperlane = new Vulkan3DLine(apiManager, new FVec3(system.Location.X(), system.Location.Y(), 0.0f), new FVec3(neighbor.Location.X(), neighbor.Location.Y(), 0.0f), new FVec4(0.0f, 0.15f, 1.0f, 1.0f), FMat4.Identity, FMat4.Identity, FMat4.Identity);
+                    Vulkan3DLine hyperlane = new Vulkan3DLine(apiManager, new FVec3(system.Location.X() + X_OFFSET, system.Location.Y() + Y_OFFSET, 0.0f), new FVec3(neighbor.Location.X() + X_OFFSET, neighbor.Location.Y() + Y_OFFSET, 0.0f), new FVec4(0.0f, 0.15f, 1.0f, 1.0f), FMat4.Identity, FMat4.Identity, FMat4.Identity);
                     m_lines.Add(hyperlane);
                     hyperlane.SetParent(this);
                 }

@@ -12,6 +12,7 @@ using StarlightGame.GameCore;
 using StarlightGame.GameCore.Field;
 using StarlightGame.GameCore.Field.Galaxy;
 using StarlightGame.Graphics.Objects;
+using StarlightGame.Network;
 
 namespace StarlightGame.Graphics.Scenes
 {
@@ -117,7 +118,7 @@ namespace StarlightGame.Graphics.Scenes
                 onClickDelegate: () =>
                 {
                     // Tell game state we're done with our turn
-                    m_gameState.NextTurn();
+                    Client.StaticClient.NextTurn();
 
                     // Change button text while waiting for turn to process
                     m_nextTurnButton.UpdateText(StaticFonts.Font_Arial, "Processing...", 14);

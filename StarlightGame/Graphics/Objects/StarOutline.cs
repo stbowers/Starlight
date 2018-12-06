@@ -153,6 +153,7 @@ namespace StarlightGame.Graphics.Objects
                 m_projectsList.ClearList();
                 foreach ((IProject project, ProjectAttribute attributes) in m_gameState.AvailableProjects)
                 {
+                    Console.WriteLine("Checking {0}", attributes.ProjectDescription);
                     if (project.CanStart(m_gameState.PlayerEmpire, m_currentSystem))
                     {
                         string projectText = string.Format("[{0}] {1}", attributes.Turns, attributes.ProjectDescription);

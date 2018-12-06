@@ -52,7 +52,7 @@ namespace StarlightEngine.Graphics.GLFW
             GLFWNativeFunctions.glfwSetScrollCallback(m_window, Marshal.GetFunctionPointerForDelegate(m_scrollDelegate));
 
             // don't render mouse
-            GLFWNativeFunctions.glfwSetInputMode(m_window, GLFWConstants.GLFW_CURSOR, GLFWConstants.GLFW_CURSOR_DISABLED);
+            GLFWNativeFunctions.glfwSetInputMode(m_window, GLFWConstants.GLFW_CURSOR, GLFWConstants.GLFW_CURSOR_HIDDEN);
         }
 
         private delegate void GLFWKeyFun(IntPtr window, int key, int scancode, int action, int mods);

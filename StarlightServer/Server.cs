@@ -16,6 +16,11 @@ namespace StarlightServer
         bool m_open;
         ManualResetEvent m_waitStart = new ManualResetEvent(false);
 
+        // players waiting for next turn
+        int m_playersWaiting = 0;
+        object m_processTurnLock = new object();
+        ManualResetEvent m_waitNextTurn = new ManualResetEvent(false);
+
         public Server(RESTServer server, GameState state, int gameID)
         {
             m_server = server;
@@ -27,6 +32,7 @@ namespace StarlightServer
             server.AddRequestHandler(string.Format("GET:/Servers/{0}", m_gameID), RequestGetState);
             server.AddRequestHandler(string.Format("POST:/Servers/{0}/Join", m_gameID), RequestPostJoin);
             server.AddRequestHandler(string.Format("POST:/Servers/{0}/StartGame", m_gameID), RequestPostStartGame);
+            server.AddRequestHandler(string.Format("POST:/Servers/{0}/EndTurn", m_gameID), RequestPostEndTurn);
         }
 
         public void JoinGame(Empire empire)
@@ -61,6 +67,31 @@ namespace StarlightServer
         {
             m_open = false;
             m_waitStart.Set();
+        }
+
+        public void EndTurn(GameState modifiedGameState, Empire empire)
+        {
+            bool wait = false;
+            lock (m_processTurnLock)
+            {
+                m_playersWaiting++;
+                wait = m_playersWaiting == m_state.Empires.Count;
+
+                // If we're the first player to wait, increment the turn
+                if (m_playersWaiting == 1)
+                {
+                    m_state.Turn++;
+                }
+            }
+
+            if (wait)
+            {
+                m_waitNextTurn.WaitOne();
+            }
+            else
+            {
+                m_waitNextTurn.Set();
+            }
         }
 
         public bool IsOpen()
@@ -159,6 +190,24 @@ namespace StarlightServer
                 // Return error code
                 response.StatusCode = (int)HttpStatusCode.Gone;
             }
+        }
+
+        public void RequestPostEndTurn(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            // Request:
+            // POST:/Servers/<id>/EndTurn
+            // Content: the modified game state and the empire ending their turn
+            // Response:
+            // Once all players have ended their turn, respond with the new game state
+
+            JsonSerializer serializer = new JsonSerializer();
+            StreamReader streamReader = new StreamReader(request.InputStream);
+
+            GameState modifiedState = (GameState)serializer.Deserialize(streamReader, typeof(GameState));
+            Empire empire = (Empire)serializer.Deserialize(streamReader, typeof(Empire));
+
+            // submit modified state, which will block until all players have ended their turn
+            EndTurn(modifiedState, empire);
         }
 
         #endregion
