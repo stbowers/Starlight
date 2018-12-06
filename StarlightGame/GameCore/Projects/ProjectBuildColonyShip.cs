@@ -5,9 +5,17 @@ using StarlightGame.GameCore.Field.Galaxy;
 
 namespace StarlightGame.GameCore.Projects
 {
-    [Project("Build Colony Ship", 1)]
+    [Project("Build Colony Ship", 3)]
     public class ProjectBuildColonyShip : IProject
     {
+        public string ID
+        {
+            get
+            {
+                return "StarlightProject.BuildColonyShip";
+            }
+        }
+
         /// <summary>
         /// The description while working on the project
         /// </summary>
@@ -32,18 +40,13 @@ namespace StarlightGame.GameCore.Projects
                 where ship is ColonyShip
                 select ship
             ).Count() == 0;
-            Console.WriteLine("Checking if empire already has colony ship... {0}", canBuild);
 
             // the empire must have a colony in the given system
             canBuild &= starSystem.Owner == empire;
-            Console.WriteLine("Owner: {0}", starSystem.Owner.Name);
-            Console.WriteLine("Checking if empire owns system... {0}", canBuild);
             canBuild &= starSystem.Colonized;
-            Console.WriteLine("Checking if empire has colony in system... {0}", canBuild);
 
             // the system must not already be building a colony ship
             canBuild &= starSystem.CurrentProject != this;
-            Console.WriteLine("Checking if system is already building colony ship... {0}", canBuild);
 
             return canBuild;
         }

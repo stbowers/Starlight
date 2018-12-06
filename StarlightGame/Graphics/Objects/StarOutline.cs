@@ -80,6 +80,8 @@ namespace StarlightGame.Graphics.Objects
         public void FocusSystem(Star star)
         {
             m_currentSystem = star.System;
+            // Get the system from the game state, since it's probably changed since then
+            m_currentSystem = Array.Find(m_gameState.Field.Stars, (_star) => _star.Name == star.System.Name);
             m_currentStar = star;
             m_systemNameText.UpdateText(StaticFonts.Font_Arial, m_currentSystem.Name, 20);
 
@@ -153,7 +155,6 @@ namespace StarlightGame.Graphics.Objects
                 m_projectsList.ClearList();
                 foreach ((IProject project, ProjectAttribute attributes) in m_gameState.AvailableProjects)
                 {
-                    Console.WriteLine("Checking {0}", attributes.ProjectDescription);
                     if (project.CanStart(m_gameState.PlayerEmpire, m_currentSystem))
                     {
                         string projectText = string.Format("[{0}] {1}", attributes.Turns, attributes.ProjectDescription);

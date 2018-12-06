@@ -19,6 +19,7 @@ namespace StarlightGame.GameCore.Field.Galaxy
         string m_ownerName;
         bool m_colonized;
         IProject m_currentProject;
+        string m_currentProjectID;
         int m_projectTurnsLeft;
         List<IShip> m_ships = new List<IShip>();
         #endregion
@@ -121,6 +122,7 @@ namespace StarlightGame.GameCore.Field.Galaxy
             info.AddValue("Neighbors", neighbors);
             info.AddValue("Owner", m_owner?.Name);
             info.AddValue("Colonized", m_colonized);
+            info.AddValue("Project", m_currentProject?.ID);
         }
 
         // Deserialization constructor
@@ -131,12 +133,13 @@ namespace StarlightGame.GameCore.Field.Galaxy
             m_neighborNames = (string[])info.GetValue("Neighbors", typeof(string[]));
             m_ownerName = (string)info.GetValue("Owner", typeof(string));
             m_colonized = (bool)info.GetValue("Colonized", typeof(bool));
+            m_currentProjectID = (string)info.GetValue("Project", typeof(string));
         }
 
         /// <summary>
         /// Rebuilds references to systems, empires, and ships after deserializing a system (seperate method since everything must be deserialized before calling)
         /// </summary>
-        public void Rebuild(List<StarSystem> systems, List<Empire> empires)
+        public void Rebuild(List<StarSystem> systems, List<Empire> empires, List<IProject> projects)
         {
             foreach (string neighbor in m_neighborNames)
             {
@@ -144,6 +147,13 @@ namespace StarlightGame.GameCore.Field.Galaxy
             }
 
             m_owner = empires.Find((empire) => empire.Name == m_ownerName);
+
+            if (m_currentProjectID != "")
+            {
+                Console.WriteLine("Looking for project id {0}", m_currentProjectID);
+                m_currentProject = projects.Find((project) => project.ID == m_currentProjectID);
+                Console.WriteLine("Found: {0}", m_currentProject != null);
+            }
         }
         #endregion
     }

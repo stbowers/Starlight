@@ -9,6 +9,11 @@ namespace StarlightGame.GameCore.Projects
     public interface IProject
     {
         /// <summary>
+        /// A unique id for the project
+        /// </summary>
+        string ID { get; }
+
+        /// <summary>
         /// The description while working on the project
         /// </summary>
         string Description { get; }

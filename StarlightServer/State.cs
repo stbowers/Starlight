@@ -37,6 +37,7 @@ namespace StarlightServer
         public string[] Neighbors;
         public string Owner;
         public bool Colonized;
+        public string Project;
     }
 
     public class NextTurnData

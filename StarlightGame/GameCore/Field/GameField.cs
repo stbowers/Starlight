@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using StarlightEngine.Math;
 using StarlightGame.GameCore.Field.Galaxy;
+using StarlightGame.GameCore.Projects;
 
 namespace StarlightGame.GameCore.Field
 {
@@ -168,12 +169,12 @@ namespace StarlightGame.GameCore.Field
         /// <summary>
         /// Rebuilds the stars in the field after deserialization
         /// </summary>
-        public void RebuildField(List<Empire> empires)
+        public void RebuildField(List<Empire> empires, List<IProject> projects)
         {
             List<StarSystem> systems = new List<StarSystem>(Stars);
             foreach (Quadrant quadrant in m_quadrants)
             {
-                quadrant.RebuildQuadrant(systems, empires);
+                quadrant.RebuildQuadrant(systems, empires, projects);
             }
         }
         #endregion

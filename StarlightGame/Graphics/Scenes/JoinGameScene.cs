@@ -68,6 +68,10 @@ namespace StarlightGame.Graphics.Scenes
         // Button callbacks
         public void onJoinGameClicked()
         {
+            // Disable button and change text
+            m_joinGameButton.UpdateText(StaticFonts.Font_Arial, "Waiting for Game to Start...", 16);
+            m_joinGameButton.Enabled = false;
+
             // Create client
             new Client("http://localhost:5001", m_gameID);
 

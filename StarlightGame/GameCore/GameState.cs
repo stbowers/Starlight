@@ -148,7 +148,7 @@ namespace StarlightGame.GameCore
             m_turn = (int)serializationInfo.GetInt32("Turn");
 
             // Rebuild field after deserializing
-            m_field.RebuildField(m_empires);
+            m_field.RebuildField(m_empires, m_availableProjects.ConvertAll((element) => element.Item1));
         }
 
         public void UpdateFromServer(GameState serverGameState)
@@ -161,7 +161,7 @@ namespace StarlightGame.GameCore
             m_playerEmpire = m_empires.Find((empire) => empire.Name == m_playerEmpire.Name);
 
             // Rebuild field
-            m_field.RebuildField(m_empires);
+            m_field.RebuildField(m_empires, m_availableProjects.ConvertAll((element) => element.Item1));
         }
         #endregion
     }

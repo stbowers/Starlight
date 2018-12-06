@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using StarlightEngine.Math;
+using StarlightGame.GameCore.Projects;
 
 namespace StarlightGame.GameCore.Field.Galaxy
 {
@@ -103,11 +104,11 @@ namespace StarlightGame.GameCore.Field.Galaxy
         /// <summary>
         /// Calls the rebuild function for each star in the quadrant
         /// </summary>
-        public void RebuildQuadrant(List<StarSystem> systems, List<Empire> empires)
+        public void RebuildQuadrant(List<StarSystem> systems, List<Empire> empires, List<IProject> projects)
         {
             foreach (StarSystem system in m_sectors)
             {
-                system?.Rebuild(systems, empires);
+                system?.Rebuild(systems, empires, projects);
             }
         }
         #endregion

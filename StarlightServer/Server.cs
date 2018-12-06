@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +14,7 @@ namespace StarlightServer
     {
         RESTServer m_server;
         GameState m_state;
+        GameState m_workingState; // A working copy of the state used to merge updates from clients
         int m_gameID;
         bool m_open;
         ManualResetEvent m_waitStart = new ManualResetEvent(false);
@@ -77,25 +80,78 @@ namespace StarlightServer
                 m_playersWaiting++;
                 wait = m_playersWaiting < m_state.Empires.Count;
 
-                // If we're the first player to wait, increment the turn
+                // If we're the first player to wait, increment the turn and create a new working copy of the state
                 if (m_playersWaiting == 1)
                 {
                     m_state.Turn++;
+                    m_workingState = JsonHelpers.CreateFromJsonString<GameState>(JsonHelpers.SerializeToString(m_state));
                 }
+
+                // Apply our changes to the working state
+                MergeState(modifiedGameState);
 
                 m_waitNextTurn.Reset();
             }
 
             if (wait)
             {
+                // Wait for turn to process (last player to end turn will merge their changes and then update the state from the working copy)
                 m_waitNextTurn.WaitOne();
             }
             else
             {
                 lock (m_processTurnLock)
                 {
+                    // Replace upstream state with working state
+                    m_state = m_workingState;
+
+                    // Notify other threads that the turn has finished processing
                     m_waitNextTurn.Set();
+
+                    // Reset playersWaiting count
                     m_playersWaiting = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Merges two game states, assuming updatedState is a modified version of the global state.
+        /// </summary>
+        void MergeState(GameState updatedState)
+        {
+            // Search through each star system to look for changes
+            for (int q = 0; q < 4; q++)
+            {
+                for (int x = 0; x < 4; x++)
+                {
+                    for (int y = 0; y < 4; y++)
+                    {
+                        Star upstream = m_state.Field.Quadrants[q].Stars[x, y];
+                        Star working = m_workingState.Field.Quadrants[q].Stars[x, y];
+                        Star merge = updatedState.Field.Quadrants[q].Stars[x, y];
+
+                        // First check if the system exists
+                        if (upstream != null && working != null && merge != null)
+                        {
+                            // Look for changes in:
+                            // Project
+                            if (merge.Project != upstream.Project)
+                            {
+                                // If the project has already been changed, we have a conflict, otherwise udpate it now
+                                if (upstream.Project != working.Project)
+                                {
+                                    Console.WriteLine("Project conflict! Upstream: {0}, Working: {1}, Merge: {2}", upstream.Project, working.Project, merge.Project);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Updating project");
+                                    working.Project = merge.Project;
+                                }
+                            }
+
+                            // Ships
+                        }
+                    }
                 }
             }
         }
@@ -215,8 +271,6 @@ namespace StarlightServer
 
             // submit modified state, which will block until all players have ended their turn
             EndTurn(data.GameState, data.Empire);
-
-            Console.WriteLine("{0} starting new turn on {1}", data.Empire.Name, m_gameID);
 
             // return new state
             StreamWriter streamWriter = new StreamWriter(response.OutputStream);
