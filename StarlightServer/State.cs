@@ -38,4 +38,10 @@ namespace StarlightServer
         public string Owner;
         public bool Colonized;
     }
+
+    public class NextTurnData
+    {
+        public GameState GameState;
+        public Empire Empire;
+    }
 }

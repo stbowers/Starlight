@@ -75,13 +75,15 @@ namespace StarlightServer
             lock (m_processTurnLock)
             {
                 m_playersWaiting++;
-                wait = m_playersWaiting == m_state.Empires.Count;
+                wait = m_playersWaiting < m_state.Empires.Count;
 
                 // If we're the first player to wait, increment the turn
                 if (m_playersWaiting == 1)
                 {
                     m_state.Turn++;
                 }
+
+                m_waitNextTurn.Reset();
             }
 
             if (wait)
@@ -90,7 +92,11 @@ namespace StarlightServer
             }
             else
             {
-                m_waitNextTurn.Set();
+                lock (m_processTurnLock)
+                {
+                    m_waitNextTurn.Set();
+                    m_playersWaiting = 0;
+                }
             }
         }
 
@@ -203,11 +209,19 @@ namespace StarlightServer
             JsonSerializer serializer = new JsonSerializer();
             StreamReader streamReader = new StreamReader(request.InputStream);
 
-            GameState modifiedState = (GameState)serializer.Deserialize(streamReader, typeof(GameState));
-            Empire empire = (Empire)serializer.Deserialize(streamReader, typeof(Empire));
+            NextTurnData data = (NextTurnData)serializer.Deserialize(streamReader, typeof(NextTurnData));
+
+            Console.WriteLine("{0} ending turn on game {1}", data.Empire.Name, m_gameID);
 
             // submit modified state, which will block until all players have ended their turn
-            EndTurn(modifiedState, empire);
+            EndTurn(data.GameState, data.Empire);
+
+            Console.WriteLine("{0} starting new turn on {1}", data.Empire.Name, m_gameID);
+
+            // return new state
+            StreamWriter streamWriter = new StreamWriter(response.OutputStream);
+            serializer.Serialize(streamWriter, m_state);
+            streamWriter.Flush();
         }
 
         #endregion

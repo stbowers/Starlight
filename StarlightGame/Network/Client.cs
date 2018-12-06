@@ -1,10 +1,13 @@
 using System;
+using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
 using StarlightEngine.Events;
 using StarlightGame.GameCore;
 using StarlightNetwork;
+using Newtonsoft.Json;
 
 namespace StarlightGame.Network
 {
@@ -108,8 +111,10 @@ namespace StarlightGame.Network
 
         public void NextTurn()
         {
-            // Send POST request to /Servers/<id>/EndTurn with modified game state
-            Task<HttpResponseMessage> response = RESTHelpers.PostJSONObjectAsync(m_serverURL + "/Servers/" + m_gameID + "/EndTurn", m_gameState);
+            Console.WriteLine("Next turn for {0}", m_gameState.PlayerEmpire.Name);
+            // Send POST request to /Servers/<id>/EndTurn with modified game state and empire
+            string data = string.Format("{{\"GameState\":{0},\"Empire\":{1}}}", JsonHelpers.SerializeToString(m_gameState), JsonHelpers.SerializeToString(m_gameState.PlayerEmpire));
+            Task<HttpResponseMessage> response = RESTHelpers.PostStringAsync(m_serverURL + "/Servers/" + m_gameID + "/EndTurn", data, Encoding.UTF8, "application/json");
 
             // Blocks until the all players have ended their turn, and then the server will respond with the new game state
             response.Wait();
@@ -126,8 +131,10 @@ namespace StarlightGame.Network
             // Update our own game state
             m_gameState.UpdateFromServer(JsonHelpers.CreateFromJsonStream<GameState>(responseStream.Result));
 
+            Console.WriteLine("Sending next turn event");
+
             // Notify next turn event
-            EventManager.StaticEventManager.Notify(GameEvent.NextTurnID, this, null);
+            EventManager.StaticEventManager.Notify(GameEvent.NextTurnID, this, null, .1f);
         }
 
         public int GameID

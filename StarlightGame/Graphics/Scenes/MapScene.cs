@@ -117,12 +117,12 @@ namespace StarlightGame.Graphics.Scenes
             m_nextTurnButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Next Turn", 16, new FVec2(.8f, -1.0f), new FVec2(.2f, 2.0f),
                 onClickDelegate: () =>
                 {
-                    // Tell game state we're done with our turn
-                    Client.StaticClient.NextTurn();
-
                     // Change button text while waiting for turn to process
                     m_nextTurnButton.UpdateText(StaticFonts.Font_Arial, "Processing...", 14);
                     m_nextTurnButton.Enabled = false;
+
+                    // Tell game state we're done with our turn
+                    Client.StaticClient.NextTurn();
                 }
             );
             m_statusCanvas.AddObject(m_nextTurnButton);
