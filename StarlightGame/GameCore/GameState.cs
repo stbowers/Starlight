@@ -8,6 +8,7 @@ using StarlightGame.GameCore.Field;
 using StarlightGame.GameCore.Field.Galaxy;
 using StarlightEngine.Math;
 using StarlightGame.GameCore.Projects;
+using StarlightGame.GameCore.Ships;
 
 using StarlightEngine.Events;
 
@@ -58,6 +59,11 @@ namespace StarlightGame.GameCore
             system.Owner = m_playerEmpire;
             system.Colonized = true;
             Console.WriteLine("Player start: {0}", system.Name);
+
+            // Start player with a science ship
+            IShip scienceShip = new ScienceShip(m_playerEmpire, "USS Voyager");
+            m_playerEmpire.Ships.Add(scienceShip);
+            system.AddShip(scienceShip);
 
             // search for and add new instances of any projects
             Assembly searchAssembly = Assembly.GetAssembly(typeof(GameState));
@@ -120,6 +126,23 @@ namespace StarlightGame.GameCore
             }
         }
         #endregion
+
+        /// <summary>
+        /// process a turn (called from Client.cs after submitting turn to server)
+        /// </summary>
+        public void ProcessTurn()
+        {
+            foreach (Quadrant quadrant in m_field.Quadrants)
+            {
+                foreach (StarSystem system in quadrant.Stars.Cast<StarSystem>())
+                {
+                    if (system != null)
+                    {
+                        system.ProcessTurn();
+                    }
+                }
+            }
+        }
 
         #region Serialization
         // Serialization function

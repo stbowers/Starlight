@@ -144,8 +144,20 @@ namespace StarlightServer
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Updating project");
                                     working.Project = merge.Project;
+                                }
+                            }
+
+                            // Project time
+                            if (merge.ProjectTurnsLeft != upstream.ProjectTurnsLeft)
+                            {
+                                if (upstream.ProjectTurnsLeft != working.ProjectTurnsLeft)
+                                {
+                                    Console.WriteLine("Project turns left conflict! Upstream: {0}, Working: {1}, Merge: {2}", upstream.ProjectTurnsLeft, working.ProjectTurnsLeft, merge.ProjectTurnsLeft);
+                                }
+                                else
+                                {
+                                    working.ProjectTurnsLeft = merge.ProjectTurnsLeft;
                                 }
                             }
 

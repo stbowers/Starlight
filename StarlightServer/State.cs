@@ -23,6 +23,7 @@ namespace StarlightServer
         public string Name;
         public float[] PrimaryColor;
         public float[] SecondaryColor;
+        public List<Ship> Ships;
     }
 
     public class Quadrant
@@ -38,6 +39,14 @@ namespace StarlightServer
         public string Owner;
         public bool Colonized;
         public string Project;
+        public int ProjectTurnsLeft;
+        public List<(string, int)> Ships;
+    }
+
+    public class Ship
+    {
+        public string Name;
+        public string Type;
     }
 
     public class NextTurnData

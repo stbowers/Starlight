@@ -57,6 +57,7 @@ namespace StarlightGame.GameCore.Projects
         public void Start(Empire empire, StarSystem starSystem)
         {
             starSystem.CurrentProject = this;
+            starSystem.ProjectTurnsLeft = 3;
         }
 
         /// <summary>
@@ -64,7 +65,7 @@ namespace StarlightGame.GameCore.Projects
         /// </summary>
         public void FinishProject(Empire empire, StarSystem starSystem)
         {
-            IShip newColonyShip = new ColonyShip(empire);
+            IShip newColonyShip = new ColonyShip(empire, "USS Enterprise");
             empire.Ships.Add(newColonyShip);
             starSystem.Ships.Add(newColonyShip);
         }

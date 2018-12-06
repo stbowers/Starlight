@@ -3,12 +3,17 @@ using System.Runtime.Serialization;
 
 namespace StarlightGame.GameCore.Ships
 {
-    public class ColonyShip : IShip
+    [Serializable]
+    /// <summary>
+    /// Interop class which can be deserialized from the server's ship, and then converted into the proper ship type
+    /// </summary>
+    public class BasicShip : IShip
     {
         Empire m_owner;
         string m_name;
+        string m_type;
 
-        public ColonyShip(Empire owner, string name)
+        public BasicShip(Empire owner, string name)
         {
             m_owner = owner;
         }
@@ -35,7 +40,7 @@ namespace StarlightGame.GameCore.Ships
         {
             get
             {
-                return "Colony Ship";
+                return m_type;
             }
         }
 
@@ -45,9 +50,22 @@ namespace StarlightGame.GameCore.Ships
             info.AddValue("Type", Type);
         }
 
-        public ColonyShip(SerializationInfo info, StreamingContext context)
+        public BasicShip(SerializationInfo info, StreamingContext context)
         {
             m_name = (string)info.GetValue("Name", typeof(string));
+            m_type = (string)info.GetValue("Type", typeof(string));
+        }
+
+        public IShip ToProperShipType(){
+            switch (m_type){
+                case "Colony Ship":
+                    return new ColonyShip(m_owner, m_name);
+                    break;
+                case "Science Ship":
+                    return new ScienceShip(m_owner, m_name);
+                    break;
+            }
+            return this;
         }
     }
 }

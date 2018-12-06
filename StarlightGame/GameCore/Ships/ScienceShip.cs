@@ -3,12 +3,13 @@ using System.Runtime.Serialization;
 
 namespace StarlightGame.GameCore.Ships
 {
-    public class ColonyShip : IShip
+    [Serializable]
+    public class ScienceShip : IShip
     {
         Empire m_owner;
         string m_name;
 
-        public ColonyShip(Empire owner, string name)
+        public ScienceShip(Empire owner, string name)
         {
             m_owner = owner;
         }
@@ -35,7 +36,7 @@ namespace StarlightGame.GameCore.Ships
         {
             get
             {
-                return "Colony Ship";
+                return "Science Ship";
             }
         }
 
@@ -45,7 +46,7 @@ namespace StarlightGame.GameCore.Ships
             info.AddValue("Type", Type);
         }
 
-        public ColonyShip(SerializationInfo info, StreamingContext context)
+        public ScienceShip(SerializationInfo info, StreamingContext context)
         {
             m_name = (string)info.GetValue("Name", typeof(string));
         }

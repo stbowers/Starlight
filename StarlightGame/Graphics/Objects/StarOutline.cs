@@ -68,6 +68,9 @@ namespace StarlightGame.Graphics.Objects
             m_projectsList = new VulkanScrollableObjectList(new FVec2(-.93f, -.70f), new FVec2(1.86f, .78f));
             AddObject(m_projectsList);
 
+            m_shipsList = new VulkanScrollableObjectList(new FVec2(-.93f, 0.1f), new FVec2(1.86f, .78f));
+            AddObject(m_shipsList);
+
             m_claimSystemButton = new VulkanUIButton(m_apiManager, StaticFonts.Font_Arial, "Claim System", 20, new FVec2(-.93f, .91f), new FVec2(1.86f, .09f), center: false, onClickDelegate: ClaimSystemButtonClicked);
             m_claimSystemButton.Visible = false;
             AddObject(m_claimSystemButton);
@@ -103,7 +106,7 @@ namespace StarlightGame.Graphics.Objects
             {
                 m_systemStatusText.UpdateText(StaticFonts.Font_Arial, "Unclaimed", 20);
 
-                bool playerShipPresent = m_currentSystem.Ships.FindAll(ship => ship.Owner == m_gameState.PlayerEmpire).Count > 0;
+                bool playerShipPresent = m_currentSystem.Ships.FindAll(ship => ship.GetOwner() == m_gameState.PlayerEmpire).Count > 0;
                 if (playerShipPresent)
                 {
                     m_claimSystemButton.Visible = true;
@@ -142,7 +145,7 @@ namespace StarlightGame.Graphics.Objects
                     else
                     {
                         // only allow colonization if there is a colony ship in the system
-                        bool colonyShipInSystem = m_currentSystem.Ships.FindAll(ship => ship.Owner == m_gameState.PlayerEmpire && ship is ColonyShip).Count > 0;
+                        bool colonyShipInSystem = m_currentSystem.Ships.FindAll(ship => ship.GetOwner() == m_gameState.PlayerEmpire && ship is ColonyShip).Count > 0;
                         m_colonizeSystemButton.Visible = true;
                     }
                 }
@@ -175,6 +178,20 @@ namespace StarlightGame.Graphics.Objects
                         );
                         m_projectsList.AddToList(projectButton, .25f);
                     }
+                }
+
+                // Make list of ships
+                m_shipsList.ClearList();
+                foreach (IShip ship in m_currentSystem.Ships)
+                {
+                    string shipText = string.Format("{0} ({1})", ship.Name, ship.Type);
+                    VulkanUIButton shipButton = new VulkanUIButton(
+                        m_apiManager, StaticFonts.Font_Arial, shipText, 16, new FVec2(-1.0f, -1.0f), new FVec2(2.0f, .25f), center: false,
+                        onClickDelegate: () =>
+                        {
+                        }
+                    );
+                    m_shipsList.AddToList(shipButton, .25f);
                 }
             }
         }

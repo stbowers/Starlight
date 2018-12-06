@@ -130,6 +130,7 @@ namespace StarlightGame.Network
 
             // Update our own game state
             m_gameState.UpdateFromServer(JsonHelpers.CreateFromJsonStream<GameState>(responseStream.Result));
+            m_gameState.ProcessTurn();
 
             Console.WriteLine("Sending next turn event");
 

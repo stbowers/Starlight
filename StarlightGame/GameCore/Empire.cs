@@ -62,12 +62,18 @@ namespace StarlightGame.GameCore
             m_ownedSystems.Add(system);
         }
 
+        public void AddShip(IShip ship)
+        {
+            m_ownedShips.Add(ship);
+        }
+
         #region Serialization Functions
         public void GetObjectData(SerializationInfo serializationInfo, StreamingContext streamingContext)
         {
             serializationInfo.AddValue("Name", Name);
             serializationInfo.AddValue("PrimaryColor", PrimaryColor.Data);
             serializationInfo.AddValue("SecondaryColor", SecondaryColor.Data);
+            serializationInfo.AddValue("Ships", m_ownedShips);
         }
 
         public Empire(SerializationInfo serializationInfo, StreamingContext streamingContext)
@@ -75,6 +81,11 @@ namespace StarlightGame.GameCore
             m_name = serializationInfo.GetString("Name");
             m_primaryColor = new FVec4((float[])serializationInfo.GetValue("PrimaryColor", typeof(float[])));
             m_secondaryColor = new FVec4((float[])serializationInfo.GetValue("SecondaryColor", typeof(float[])));
+            m_ownedShips = ((List<BasicShip>)serializationInfo.GetValue("Ships", typeof(List<BasicShip>))).ConvertAll((ship) => ship.ToProperShipType());
+            foreach (IShip ship in m_ownedShips)
+            {
+                ship.SetOwner(this);
+            }
         }
         #endregion
     }

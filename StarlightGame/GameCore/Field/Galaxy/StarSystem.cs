@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using StarlightEngine.Math;
@@ -21,7 +22,8 @@ namespace StarlightGame.GameCore.Field.Galaxy
         IProject m_currentProject;
         string m_currentProjectID;
         int m_projectTurnsLeft;
-        List<IShip> m_ships = new List<IShip>();
+        List<(Empire, int)> m_ships = new List<(Empire, int)>();
+        List<(string, int)> m_deserializedShips;
         #endregion
 
         #region Constructors
@@ -88,7 +90,13 @@ namespace StarlightGame.GameCore.Field.Galaxy
         {
             get
             {
-                return m_ships;
+                List<IShip> ships = (
+                    from pair in m_ships
+                    let empire = pair.Item1
+                    let shipIndex = pair.Item2
+                    select empire.Ships[shipIndex]
+                ).ToList();
+                return ships;
             }
         }
 
@@ -103,12 +111,43 @@ namespace StarlightGame.GameCore.Field.Galaxy
                 m_currentProject = value;
             }
         }
+
+        public int ProjectTurnsLeft
+        {
+            get
+            {
+                return m_projectTurnsLeft;
+            }
+            set
+            {
+                m_projectTurnsLeft = value;
+            }
+        }
         #endregion
 
         #region Public methods
         public void AddNeighbor(StarSystem neighbor)
         {
             m_neighbors.Add(neighbor);
+        }
+
+        public void ProcessTurn()
+        {
+            if (m_currentProject != null)
+            {
+                m_projectTurnsLeft--;
+                Console.WriteLine("{0} turns left: {1}", m_currentProject.Description, m_projectTurnsLeft);
+                if (m_projectTurnsLeft == 0)
+                {
+                    m_currentProject.FinishProject(GameState.State.PlayerEmpire, this);
+                    m_currentProject = null;
+                }
+            }
+        }
+
+        public void AddShip(IShip ship)
+        {
+            m_ships.Add((ship.GetOwner(), ship.GetOwner().Ships.IndexOf(ship)));
         }
         #endregion
 
@@ -123,6 +162,12 @@ namespace StarlightGame.GameCore.Field.Galaxy
             info.AddValue("Owner", m_owner?.Name);
             info.AddValue("Colonized", m_colonized);
             info.AddValue("Project", m_currentProject?.ID);
+            info.AddValue("ProjectTurnsLeft", m_projectTurnsLeft);
+            List<(string, int)> serializedShips = (
+                from pair in m_ships
+                select (pair.Item1.Name, pair.Item2)
+            ).ToList();
+            info.AddValue("Ships", serializedShips);
         }
 
         // Deserialization constructor
@@ -134,6 +179,8 @@ namespace StarlightGame.GameCore.Field.Galaxy
             m_ownerName = (string)info.GetValue("Owner", typeof(string));
             m_colonized = (bool)info.GetValue("Colonized", typeof(bool));
             m_currentProjectID = (string)info.GetValue("Project", typeof(string));
+            m_projectTurnsLeft = (int)info.GetValue("ProjectTurnsLeft", typeof(int));
+            m_deserializedShips = (List<(string, int)>)info.GetValue("Ships", typeof(List<(string, int)>));
         }
 
         /// <summary>
@@ -150,9 +197,12 @@ namespace StarlightGame.GameCore.Field.Galaxy
 
             if (m_currentProjectID != "")
             {
-                Console.WriteLine("Looking for project id {0}", m_currentProjectID);
                 m_currentProject = projects.Find((project) => project.ID == m_currentProjectID);
-                Console.WriteLine("Found: {0}", m_currentProject != null);
+            }
+
+            foreach ((string empireName, int shipIndex) in m_deserializedShips)
+            {
+                m_ships.Add((empires.Find((empire) => empire.Name == empireName), shipIndex));
             }
         }
         #endregion
