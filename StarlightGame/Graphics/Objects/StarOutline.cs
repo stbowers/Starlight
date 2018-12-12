@@ -106,17 +106,8 @@ namespace StarlightGame.Graphics.Objects
             {
                 m_systemStatusText.UpdateText(StaticFonts.Font_Arial, "Unclaimed", 20);
 
-                bool playerShipPresent = m_currentSystem.Ships.FindAll(ship => ship.GetOwner() == m_gameState.PlayerEmpire).Count > 0;
-                if (playerShipPresent)
-                {
-                    m_claimSystemButton.Visible = true;
-                    m_colonizeSystemButton.Visible = false;
-                }
-                else
-                {
-                    m_claimSystemButton.Visible = false;
-                    m_colonizeSystemButton.Visible = false;
-                }
+                m_claimSystemButton.Visible = true;
+                m_colonizeSystemButton.Visible = false;
 
                 m_projectsList.ClearList();
             }

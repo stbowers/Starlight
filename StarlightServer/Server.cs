@@ -134,6 +134,32 @@ namespace StarlightServer
                         if (upstream != null && working != null && merge != null)
                         {
                             // Look for changes in:
+                            // Ownership
+                            if (merge.Owner != upstream.Owner)
+                            {
+                                if (upstream.Owner != working.Owner)
+                                {
+                                    Console.WriteLine("Ownership conflict");
+                                }
+                                else
+                                {
+                                    working.Owner = merge.Owner;
+                                }
+                            }
+
+                            // Colonized Status
+                            if (merge.Colonized != upstream.Colonized)
+                            {
+                                if (upstream.Colonized != working.Colonized)
+                                {
+                                    Console.WriteLine("Colony conflict");
+                                }
+                                else
+                                {
+                                    working.Colonized = merge.Colonized;
+                                }
+                            }
+
                             // Project
                             if (merge.Project != upstream.Project)
                             {

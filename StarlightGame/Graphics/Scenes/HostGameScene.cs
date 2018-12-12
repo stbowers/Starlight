@@ -63,6 +63,9 @@ namespace StarlightGame.Graphics.Scenes
         // Button callbacks
         public void onStartGameClicked()
         {
+            m_startGameButton.UpdateText(StaticFonts.Font_Arial, "Starting game...", 16);
+            m_startGameButton.Enabled = false;
+
             // Send start game request to server
             Client.StaticClient.StartGame();
 
